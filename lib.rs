@@ -2,7 +2,7 @@
 #[crate_type = "lib"];
 #[feature(link_args)];
 
-use std::ptr;
+extern mod cgmath;
 
 #[link(name="ovr_wrapper")]
 extern {}
@@ -11,6 +11,8 @@ extern {}
 extern {}
 
 mod ll {
+    use std::libc::{c_uint, c_int, c_float, c_long, c_char};
+
     pub enum DeviceManager {}
     pub enum HMDInfo {}
     pub enum HMDDevice {}
@@ -25,6 +27,21 @@ mod ll {
         pub fn OVR_HDMDevice_GetSensor(hmd: *HMDDevice) -> *SensorDevice;
         pub fn OVR_SensorFusion() -> *SensorFusion;
         pub fn OVR_SensorFusion_AttachToSensor(sf: *SensorFusion, sd: *SensorDevice) -> bool;
+        
+        pub fn OVR_HMDInfo_GetScreenHResolution(info: *HMDInfo) -> c_uint;
+        pub fn OVR_HMDInfo_GetScreenVResolution(info: *HMDInfo) -> c_uint;
+        pub fn OVR_HMDInfo_GetHScreenSize(info: *HMDInfo) -> c_float;
+        pub fn OVR_HMDInfo_GetVScreenSize(info: *HMDInfo) -> c_float;
+        pub fn OVR_HMDInfo_GetVScreenCenter(info: *HMDInfo) -> c_float;
+        pub fn OVR_HMDInfo_GetEyeToScreenDistance(info: *HMDInfo) -> c_float;
+        pub fn OVR_HMDInfo_GetLensSeparationDistance(info: *HMDInfo) -> c_float;
+        pub fn OVR_HMDInfo_GetInterpupillaryDistance(info: *HMDInfo) -> c_float;
+        pub fn OVR_HMDInfo_GetDistortionK(info: *HMDInfo, idx: c_int) -> c_float;
+        pub fn OVR_HMDInfo_GetChromaAbCorrection(info: *HMDInfo, idx: c_int) -> c_float;
+        pub fn OVR_HMDInfo_GetDesktopX(info: *HMDInfo) -> c_uint;
+        pub fn OVR_HMDInfo_GetDesktopY(info: *HMDInfo) -> c_uint;
+        pub fn OVR_HMDInfo_GetDisplayDeviceName(info: *HMDInfo) -> *c_char;
+        pub fn OVR_HMDInfo_GetDisplayId(info: *HMDInfo) -> c_long;
     }
 }
 
@@ -109,6 +126,101 @@ impl HMDDevice {
 
 pub struct HMDInfo {
     priv ptr: *ll::HMDInfo
+}
+
+impl HMDInfo
+{
+    pub fn resolution(&self) -> (uint, uint)
+    {
+        unsafe {
+            let h = ll::OVR_HMDInfo_GetScreenHResolution(self.ptr);
+            let v = ll::OVR_HMDInfo_GetScreenVResolution(self.ptr);
+
+            (h as uint, v as uint)
+        }
+    }
+
+    pub fn size(&self) -> (f32, f32)
+    {
+        unsafe {
+            let h = ll::OVR_HMDInfo_GetHScreenSize(self.ptr);
+            let v = ll::OVR_HMDInfo_GetVScreenSize(self.ptr);
+
+            (h as f32, v as f32)
+        }
+    }
+
+    pub fn desktop(&self) -> (int, int)
+    {
+        unsafe {
+            let h = ll::OVR_HMDInfo_GetDesktopX(self.ptr);
+            let v = ll::OVR_HMDInfo_GetDesktopY(self.ptr);
+
+            (h as int, v as int)
+        }
+    }
+
+    pub fn vertical_center(&self) -> f32
+    {
+        unsafe {
+            ll::OVR_HMDInfo_GetVScreenCenter(self.ptr) as f32
+        }
+    }
+
+    pub fn eye_to_screen_distance(&self) -> f32
+    {
+        unsafe {
+            ll::OVR_HMDInfo_GetEyeToScreenDistance(self.ptr) as f32
+        }
+    }
+
+    pub fn lens_separation_distance(&self) -> f32
+    {
+        unsafe {
+            ll::OVR_HMDInfo_GetLensSeparationDistance(self.ptr) as f32
+        }
+    }
+
+    pub fn interpupillary_distance(&self) -> f32
+    {
+        unsafe {
+            ll::OVR_HMDInfo_GetInterpupillaryDistance(self.ptr) as f32
+        }
+    }
+
+    pub fn distortion_K(&self) -> [f32, ..4]
+    {
+        unsafe {
+            [ll::OVR_HMDInfo_GetDistortionK(self.ptr, 0) as f32,
+             ll::OVR_HMDInfo_GetDistortionK(self.ptr, 1) as f32,
+             ll::OVR_HMDInfo_GetDistortionK(self.ptr, 2) as f32,
+             ll::OVR_HMDInfo_GetDistortionK(self.ptr, 3) as f32]
+        }
+    }
+
+    pub fn chroma_ab_correction(&self) -> [f32, ..4]
+    {
+        unsafe {
+            [ll::OVR_HMDInfo_GetChromaAbCorrection(self.ptr, 0) as f32,
+             ll::OVR_HMDInfo_GetChromaAbCorrection(self.ptr, 1) as f32,
+             ll::OVR_HMDInfo_GetChromaAbCorrection(self.ptr, 2) as f32,
+             ll::OVR_HMDInfo_GetChromaAbCorrection(self.ptr, 3) as f32]
+        }
+    }
+
+    pub fn name(&self) -> ~str
+    {
+        unsafe {
+            std::str::raw::from_c_str(ll::OVR_HMDInfo_GetDisplayDeviceName(self.ptr))
+        }
+    }
+
+    pub fn id(&self) -> int
+    {
+        unsafe {
+            ll::OVR_HMDInfo_GetDisplayId(self.ptr) as int
+        }
+    }
 }
 
 pub struct SensorFusion {
