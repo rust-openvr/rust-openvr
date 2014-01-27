@@ -4,14 +4,15 @@ extern mod ovr = "ovr-rs";
 
 fn main()
 {
-    unsafe {
-       ovr::OVR_system_init();
+    ovr::init();
 
-       let dm = ovr::OVR_DeviceManager_Create();
-       println!("dm {:?}", dm);
+    let dm = ovr::DeviceManager::new().unwrap();
+    let dev = dm.enumerate().unwrap();
+    let info = dev.get_info();
 
-       let em = ovr::OVR_DeviceManager_EnumerateDevices(dm);
-       println!("dm {:?}", em);
+    let sf = ovr::SensorFusion::new().unwrap();
+    let sensor = dev.get_sensor().unwrap();
 
-    }
+    sf.attach_to_sensor(&sensor);
+
 }
