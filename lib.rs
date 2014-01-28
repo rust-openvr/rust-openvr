@@ -11,9 +11,11 @@ use cgmath::quaternion::Quat;
 use cgmath::vector::Vec3;
 use cgmath::matrix::Mat4;
 
+#[cfg(target_os = "linux")]
+#[link(name="udev")]
+#[link(name="stdc++")]
+#[link(name="Xinerama")]
 #[link(name="ovr_wrapper")]
-extern {}
-
 #[link(name="ovr")]
 extern {}
 

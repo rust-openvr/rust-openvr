@@ -15,4 +15,4 @@ libovr-rs-44316370-0.1.so: libovr_wrapper.a lib.rs
 	rustc lib.rs -L .
 
 test: test.rs libovr-rs-44316370-0.1.so
-	rustc test.rs -L . --link-args="-lovr -ludev -lstdc++ -lc -lX11 -lm -lpthread -lXinerama"
+	rustc test.rs -L .
