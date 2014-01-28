@@ -308,7 +308,7 @@ impl SensorFusion {
     {
         unsafe {
             let out = ll::OVR_SensorFusion_GetOrientation(self.ptr);
-            Quat::new(out.x, out.y, out.z, out.w)
+            Quat::new(out.w, out.x, out.y, out.z)
         }
     }
 
@@ -319,7 +319,7 @@ impl SensorFusion {
                 Some(dt) => ll::OVR_SensorFusion_GetPredictedOrientation_opt(self.ptr, dt as c_float),
                 None => ll::OVR_SensorFusion_GetPredictedOrientation(self.ptr)
             };
-            Quat::new(out.x, out.y, out.z, out.w)
+            Quat::new(out.w, out.x, out.y, out.z)
         }
     }
 
