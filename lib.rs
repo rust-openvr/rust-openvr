@@ -9,7 +9,10 @@ use std::c_str::ToCStr;
 
 use cgmath::quaternion::Quat;
 use cgmath::vector::Vec3;
-use cgmath::matrix::Mat4;
+use cgmath::matrix::{Matrix, Mat4, ToMat4};
+use cgmath::projection::perspective;
+use cgmath::transform::Transform3D;
+use cgmath::angle::rad;
 
 #[cfg(target_os = "linux")]
 #[link(name="udev")]
@@ -532,4 +535,38 @@ impl SensorFusion {
 
 pub struct SensorDevice {
     priv ptr: *ll::SensorDevice
+}
+
+
+pub fn create_reference_matrices(hmd: &HMDInfo, view_center: &Mat4<f32>) -> ((Mat4<f32>, Mat4<f32>),
+                                                                             (Mat4<f32>, Mat4<f32>))
+{
+    let (h_res, v_res) = hmd.resolution();
+    let (h_size, v_size) = hmd.size();
+    let eye_to_screen = hmd.eye_to_screen_distance();
+    let interpupillary_distance = hmd.interpupillary_distance();
+    let lens_separation_distance = hmd.lens_separation_distance();
+
+    let aspect_ratio = (h_res as f32 * 0.5) / (v_res as f32);
+    let half_screen_distance = v_size / 2f32;
+    let yfov = 2f32 * (half_screen_distance/eye_to_screen).atan();
+
+    let eye_project_shift = h_size * 0.25 - lens_separation_distance*0.5f32;
+    let proj_off_center = 4f32 * eye_project_shift / h_size;
+
+    let proj_center = perspective(rad(yfov), aspect_ratio, 0.3f32, 1000f32);
+    let proj_left = Transform3D::new(1., Quat::zero(), Vec3::new(proj_off_center, 0., 0.)).get().to_mat4();
+    let proj_right = Transform3D::new(1., Quat::zero(), Vec3::new(-proj_off_center, 0., 0.)).get().to_mat4();
+    let proj_left = proj_left.mul_m(&proj_center);
+    let proj_right = proj_right.mul_m(&proj_center);
+
+    let halfIPD = interpupillary_distance / 2f32;
+
+    let view_left = Transform3D::new(1., Quat::zero(), Vec3::new(halfIPD, 0., 0.)).get().to_mat4();
+    let view_right = Transform3D::new(1., Quat::zero(), Vec3::new(-halfIPD, 0., 0.)).get().to_mat4();
+    let view_left = view_left.mul_m(view_center);
+    let view_right = view_right.mul_m(view_center);
+    ((proj_left, proj_right),
+     (view_left, view_right))
+
 }
