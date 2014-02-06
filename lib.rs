@@ -15,18 +15,35 @@ use cgmath::transform::Transform3D;
 use cgmath::angle::rad;
 
 #[cfg(target_os = "linux")]
-#[link(name="udev")]
-#[link(name="stdc++")]
-#[link(name="Xinerama")]
 #[link(name="ovr_wrapper")]
-#[link(name="ovr")]
+#[link(name="OculusVR")]
+#[link(name="stdc++")]
+#[link(name="udev")]
+#[link(name="Xinerama")]
+#[link(name="edid")]
 extern {}
 
 pub mod ll {
     use std::libc::{c_uint, c_int, c_float, c_long, c_char, time_t};
 
     pub enum DeviceManager {}
-    pub enum HMDInfo {}
+    pub struct HMDInfo {
+        HResolution: c_uint,
+        VResolution: c_uint,
+        HScreenSize: c_float,
+        VScreenSize: c_float,
+        VScreenCenter: c_float,
+        EyeToScreenDistance: c_float,
+        LensSeparationDistance: c_float,
+        InterpupillaryDistance: c_float,
+        DistortionK: [c_float, ..4],
+        ChromaAbCorrection: [c_float, ..4],
+        DesktopX: c_int,
+        DesktopY: c_int,
+        DisplayDeviceName: [c_char, ..32],
+        DisplayId: c_long
+
+    }
     pub enum HMDDevice {}
     pub enum SensorDevice {}
     pub enum SensorFusion {}
@@ -42,7 +59,7 @@ pub mod ll {
         pub fn OVR_system_init();
         pub fn OVR_DeviceManager_Create() -> *DeviceManager;
         pub fn OVR_DeviceManager_EnumerateDevices(dm :*DeviceManager) -> *HMDDevice;
-        pub fn OVR_HDMDevice_GetDeviceInfo(hmd: *HMDDevice) -> *HMDInfo;
+        pub fn OVR_HDMDevice_GetDeviceInfo(hmd: *HMDDevice) -> HMDInfo;
         pub fn OVR_HDMDevice_GetSensor(hmd: *HMDDevice) -> *SensorDevice;
 
         pub fn OVR_SensorFusion() -> *SensorFusion;
@@ -80,20 +97,6 @@ pub mod ll {
         //pub fn OVR_SensorFusion_OnMessage(sf: *SensorFusion, msg: *MessageBodyFrame)
         //pub fn OVR_SensorFusion_SetDelegateMessageHandler(sf: *SensorFusion, handle: *MessageHandler)
         
-        pub fn OVR_HMDInfo_GetScreenHResolution(info: *HMDInfo) -> c_uint;
-        pub fn OVR_HMDInfo_GetScreenVResolution(info: *HMDInfo) -> c_uint;
-        pub fn OVR_HMDInfo_GetHScreenSize(info: *HMDInfo) -> c_float;
-        pub fn OVR_HMDInfo_GetVScreenSize(info: *HMDInfo) -> c_float;
-        pub fn OVR_HMDInfo_GetVScreenCenter(info: *HMDInfo) -> c_float;
-        pub fn OVR_HMDInfo_GetEyeToScreenDistance(info: *HMDInfo) -> c_float;
-        pub fn OVR_HMDInfo_GetLensSeparationDistance(info: *HMDInfo) -> c_float;
-        pub fn OVR_HMDInfo_GetInterpupillaryDistance(info: *HMDInfo) -> c_float;
-        pub fn OVR_HMDInfo_GetDistortionK(info: *HMDInfo, idx: c_int) -> c_float;
-        pub fn OVR_HMDInfo_GetChromaAbCorrection(info: *HMDInfo, idx: c_int) -> c_float;
-        pub fn OVR_HMDInfo_GetDesktopX(info: *HMDInfo) -> c_uint;
-        pub fn OVR_HMDInfo_GetDesktopY(info: *HMDInfo) -> c_uint;
-        pub fn OVR_HMDInfo_GetDisplayDeviceName(info: *HMDInfo) -> *c_char;
-        pub fn OVR_HMDInfo_GetDisplayId(info: *HMDInfo) -> c_long;
     }
 }
 
@@ -145,17 +148,12 @@ pub struct HMDDevice {
 }
 
 impl HMDDevice {
-    pub fn get_info(&self) -> Option<HMDInfo>
+    pub fn get_info(&self) -> HMDInfo
     {
         unsafe {
-            let ptr = ll::OVR_HDMDevice_GetDeviceInfo(self.ptr);
-
-            if ptr.is_null() {
-                None
-            } else {
-                Some(HMDInfo{
-                    ptr: ptr
-                })
+            println!("{:?}", self);
+            HMDInfo{
+                dat: ll::OVR_HDMDevice_GetDeviceInfo(self.ptr)
             }
         }        
     }
@@ -163,6 +161,7 @@ impl HMDDevice {
     pub fn get_sensor(&self) -> Option<SensorDevice>
     {
         unsafe {
+            println!("{:?}", self);
             let ptr = ll::OVR_HDMDevice_GetSensor(self.ptr);
 
             if ptr.is_null() {
@@ -177,101 +176,72 @@ impl HMDDevice {
 }
 
 pub struct HMDInfo {
-    priv ptr: *ll::HMDInfo
+    priv dat: ll::HMDInfo
 }
 
 impl HMDInfo
 {
     pub fn resolution(&self) -> (uint, uint)
     {
-        unsafe {
-            let h = ll::OVR_HMDInfo_GetScreenHResolution(self.ptr);
-            let v = ll::OVR_HMDInfo_GetScreenVResolution(self.ptr);
-
-            (h as uint, v as uint)
-        }
+        (self.dat.HResolution as uint, self.dat.VResolution as uint)
     }
 
     pub fn size(&self) -> (f32, f32)
     {
-        unsafe {
-            let h = ll::OVR_HMDInfo_GetHScreenSize(self.ptr);
-            let v = ll::OVR_HMDInfo_GetVScreenSize(self.ptr);
-
-            (h as f32, v as f32)
-        }
+        (self.dat.HScreenSize as f32, self.dat.VScreenSize as f32)
     }
 
     pub fn desktop(&self) -> (int, int)
     {
-        unsafe {
-            let h = ll::OVR_HMDInfo_GetDesktopX(self.ptr);
-            let v = ll::OVR_HMDInfo_GetDesktopY(self.ptr);
-
-            (h as int, v as int)
-        }
+        (self.dat.DesktopX as int, self.dat.DesktopY as int)
     }
 
     pub fn vertical_center(&self) -> f32
     {
-        unsafe {
-            ll::OVR_HMDInfo_GetVScreenCenter(self.ptr) as f32
-        }
+        self.dat.VScreenCenter as f32
     }
 
     pub fn eye_to_screen_distance(&self) -> f32
     {
-        unsafe {
-            ll::OVR_HMDInfo_GetEyeToScreenDistance(self.ptr) as f32
-        }
+        self.dat.EyeToScreenDistance as f32
     }
 
     pub fn lens_separation_distance(&self) -> f32
     {
-        unsafe {
-            ll::OVR_HMDInfo_GetLensSeparationDistance(self.ptr) as f32
-        }
+        self.dat.LensSeparationDistance as f32
     }
 
     pub fn interpupillary_distance(&self) -> f32
     {
-        unsafe {
-            ll::OVR_HMDInfo_GetInterpupillaryDistance(self.ptr) as f32
-        }
+        self.dat.InterpupillaryDistance as f32
     }
 
     pub fn distortion_K(&self) -> [f32, ..4]
     {
-        unsafe {
-            [ll::OVR_HMDInfo_GetDistortionK(self.ptr, 0) as f32,
-             ll::OVR_HMDInfo_GetDistortionK(self.ptr, 1) as f32,
-             ll::OVR_HMDInfo_GetDistortionK(self.ptr, 2) as f32,
-             ll::OVR_HMDInfo_GetDistortionK(self.ptr, 3) as f32]
-        }
+        [self.dat.DistortionK[0] as f32,
+         self.dat.DistortionK[1] as f32,
+         self.dat.DistortionK[2] as f32,
+         self.dat.DistortionK[3] as f32]
     }
 
     pub fn chroma_ab_correction(&self) -> [f32, ..4]
     {
-        unsafe {
-            [ll::OVR_HMDInfo_GetChromaAbCorrection(self.ptr, 0) as f32,
-             ll::OVR_HMDInfo_GetChromaAbCorrection(self.ptr, 1) as f32,
-             ll::OVR_HMDInfo_GetChromaAbCorrection(self.ptr, 2) as f32,
-             ll::OVR_HMDInfo_GetChromaAbCorrection(self.ptr, 3) as f32]
-        }
+        [self.dat.ChromaAbCorrection[0] as f32,
+         self.dat.ChromaAbCorrection[1] as f32,
+         self.dat.ChromaAbCorrection[2] as f32,
+         self.dat.ChromaAbCorrection[3] as f32]
     }
 
     pub fn name(&self) -> ~str
     {
         unsafe {
-            std::str::raw::from_c_str(ll::OVR_HMDInfo_GetDisplayDeviceName(self.ptr))
+        std::str::raw::from_c_str(&self.dat.DisplayDeviceName[0])
         }
     }
 
     pub fn id(&self) -> int
     {
-        unsafe {
-            ll::OVR_HMDInfo_GetDisplayId(self.ptr) as int
-        }
+        self.dat.DisplayId as int
     }
 }
 
@@ -538,8 +508,8 @@ pub struct SensorDevice {
 }
 
 
-pub fn create_reference_matrices(hmd: &HMDInfo, view_center: &Mat4<f32>) -> ((Mat4<f32>, Mat4<f32>),
-                                                                             (Mat4<f32>, Mat4<f32>))
+pub fn create_reference_matrices(hmd: &HMDInfo, view_center: &Mat4<f32>, scale: f32) -> ((Mat4<f32>, Mat4<f32>),
+                                                                                         (Mat4<f32>, Mat4<f32>))
 {
     let (h_res, v_res) = hmd.resolution();
     let (h_size, v_size) = hmd.size();
@@ -549,12 +519,12 @@ pub fn create_reference_matrices(hmd: &HMDInfo, view_center: &Mat4<f32>) -> ((Ma
 
     let aspect_ratio = (h_res as f32 * 0.5) / (v_res as f32);
     let half_screen_distance = v_size / 2f32;
-    let yfov = 2f32 * (half_screen_distance/eye_to_screen).atan();
+    let yfov = 2f32 * (half_screen_distance*scale/eye_to_screen).atan();
 
     let eye_project_shift = h_size * 0.25 - lens_separation_distance*0.5f32;
     let proj_off_center = 4f32 * eye_project_shift / h_size;
 
-    let proj_center = perspective(rad(yfov), aspect_ratio, 0.3f32, 1000f32);
+    let proj_center = perspective(rad(yfov), aspect_ratio, 0.1f32, 1000f32);
     let proj_left = Transform3D::new(1., Quat::zero(), Vec3::new(proj_off_center, 0., 0.)).get().to_mat4();
     let proj_right = Transform3D::new(1., Quat::zero(), Vec3::new(-proj_off_center, 0., 0.)).get().to_mat4();
     let proj_left = proj_left.mul_m(&proj_center);
@@ -570,3 +540,49 @@ pub fn create_reference_matrices(hmd: &HMDInfo, view_center: &Mat4<f32>) -> ((Ma
      (view_left, view_right))
 
 }
+
+pub static SHADER_FRAG_CHROMAB: &'static str =
+"#version 400
+uniform vec2 LensCenter;
+uniform vec2 ScreenCenter;
+uniform vec2 ScaleIn;
+uniform vec2 ScaleOut;
+uniform vec4 HmdWarpParam;
+uniform vec4 ChromAbParam;
+uniform sampler2D Texture0;
+
+in vec2 TexPos;
+out vec4 color;
+
+void main()
+{
+    vec2 pos = vec2(TexPos.x, TexPos.y);
+    
+    vec2 theta = (pos - LensCenter) * ScaleIn;
+    float rSq = theta.x * theta.x + theta.y * theta.y;
+    vec2 theta1 = theta * (HmdWarpParam.x + HmdWarpParam.y * rSq +
+                            HmdWarpParam.z * rSq * rSq +
+                            HmdWarpParam.w * rSq * rSq * rSq);
+    
+    vec2 thetaBlue = theta1 * (ChromAbParam.z + ChromAbParam.w * rSq);
+    vec2 tcBlue = LensCenter + ScaleOut * thetaBlue;
+
+
+    if (!all(equal(clamp(tcBlue, ScreenCenter-vec2(0.25,0.5), ScreenCenter+vec2(0.25,0.5)), tcBlue))) {
+        color = vec4(0.);
+        return;
+    }
+
+
+    float blue = texture2D(Texture0, tcBlue).b;
+    
+    vec2  tcGreen = LensCenter + ScaleOut * theta1;
+    vec4  center = texture2D(Texture0, tcGreen);
+    
+    vec2  thetaRed = theta1 * (ChromAbParam.x + ChromAbParam.y * rSq);
+    vec2  tcRed = LensCenter + ScaleOut * thetaRed;
+    float red = texture2D(Texture0, tcRed).r;
+    
+    color = vec4(red, center.g, blue, center.a);
+}
+";

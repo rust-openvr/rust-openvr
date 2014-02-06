@@ -1,0 +1,3 @@
+[submodule "OculusSDK"]
+	path = OculusSDK
+	url = https://github.com/csherratt/OculusSDK.git

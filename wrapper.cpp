@@ -17,6 +17,23 @@ extern "C"
               m41, m42, m43, m44;
     };
 
+    struct HMDInfoC {
+        uint HResolution;
+        uint VResolution;
+        float HScreenSize;
+        float VScreenSize;
+        float VScreenCenter;
+        float EyeToScreenDistance;
+        float LensSeparationDistance;
+        float InterpupillaryDistance;
+        float DistortionK[4];
+        float ChromaAbCorrection[4];
+        int DesktopX;
+        int DesktopY;
+        char DisplayDeviceName[32];
+        long DisplayId;
+    };
+
     void OVR_system_init(void)
     {
         OVR::System::Init(OVR::Log::ConfigureDefaultLog(OVR::LogMask_All));
@@ -32,11 +49,28 @@ extern "C"
         return pManager->EnumerateDevices<OVR::HMDDevice>().CreateDevice();
     }
 
-    OVR::HMDInfo* OVR_HDMDevice_GetDeviceInfo(OVR::HMDDevice* pHMD)
+    struct HMDInfoC OVR_HDMDevice_GetDeviceInfo(OVR::HMDDevice* pHMD)
     {
-        OVR::HMDInfo *hdm = new OVR::HMDInfo;
-        pHMD->GetDeviceInfo(hdm);
-        return hdm;
+        OVR::HMDInfo hmd;
+        struct HMDInfoC out_hmd;
+        pHMD->GetDeviceInfo(&hmd);
+
+        out_hmd.HResolution = hmd.HResolution;
+        out_hmd.VResolution = hmd.VResolution;
+        out_hmd.HScreenSize = hmd.HScreenSize;
+        out_hmd.VScreenSize = hmd.VScreenSize;
+        out_hmd.VScreenCenter = hmd.VScreenCenter;
+        out_hmd.EyeToScreenDistance = hmd.EyeToScreenDistance;
+        out_hmd.LensSeparationDistance = hmd.LensSeparationDistance;
+        out_hmd.InterpupillaryDistance = hmd.InterpupillaryDistance;
+        out_hmd.DesktopX = hmd.DesktopX;
+        out_hmd.DesktopY = hmd.DesktopY;
+        out_hmd.DisplayId = hmd.DisplayId;
+        
+        memcpy(out_hmd.DistortionK, hmd.DistortionK, sizeof(hmd.DistortionK));
+        memcpy(out_hmd.ChromaAbCorrection, hmd.ChromaAbCorrection, sizeof(hmd.ChromaAbCorrection));
+        memcpy(out_hmd.DisplayDeviceName, hmd.DisplayDeviceName, sizeof(hmd.DisplayDeviceName));
+        return out_hmd;
     }
 
     OVR::SensorDevice* OVR_HDMDevice_GetSensor(OVR::HMDDevice* pHMD)
