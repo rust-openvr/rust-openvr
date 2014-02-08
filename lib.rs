@@ -28,6 +28,7 @@ pub mod ll {
     use std::libc::{c_uint, c_int, c_float, c_long, c_char, time_t, c_void};
 
     pub enum DeviceManager {}
+
     pub struct HMDInfo {
         HResolution: c_uint,
         VResolution: c_uint,
@@ -45,18 +46,47 @@ pub mod ll {
         DisplayId: c_long
 
     }
+
+    impl Clone for HMDInfo {
+        fn clone(&self) -> HMDInfo
+        {
+            HMDInfo {
+                HResolution: self.HResolution,
+                VResolution: self.VResolution,
+                HScreenSize: self.HScreenSize,
+                VScreenSize: self.VScreenSize,
+                VScreenCenter: self.VScreenCenter,
+                EyeToScreenDistance: self.EyeToScreenDistance,
+                LensSeparationDistance: self.LensSeparationDistance,
+                InterpupillaryDistance: self.InterpupillaryDistance,
+                DistortionK: self.DistortionK,
+                ChromaAbCorrection: self.ChromaAbCorrection,
+                DesktopX: self.DesktopX,
+                DesktopY: self.DesktopY,
+                DisplayDeviceName: self.DisplayDeviceName,
+                DisplayId: self.DisplayId,
+            }
+        }
+    }
+
     pub enum HMDDevice {}
     pub enum SensorDevice {}
     pub enum SensorFusion {}
     pub enum MessageHandler {}
 
+    #[deriving(Clone)]
     pub struct Vector3f {x: c_float, y: c_float, z: c_float}
+
+    #[deriving(Clone)]
     pub struct Quatf {x: c_float, y: c_float, z: c_float, w: c_float}
+
+    #[deriving(Clone)]
     pub struct Matrix4f {m11: c_float, m12: c_float, m13: c_float, m14: c_float,
                          m21: c_float, m22: c_float, m23: c_float, m24: c_float,
                          m31: c_float, m32: c_float, m33: c_float, m34: c_float,
                          m41: c_float, m42: c_float, m43: c_float, m44: c_float}
 
+    #[deriving(Clone)]
     pub struct MessageBodyFrame {
         Acceleration: Vector3f,
         RotationRate: Vector3f,
@@ -205,6 +235,7 @@ impl HMDDevice {
     }
 }
 
+#[deriving(Clone)]
 pub struct HMDInfo {
     priv dat: ll::HMDInfo
 }
