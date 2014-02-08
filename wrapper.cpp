@@ -34,6 +34,59 @@ extern "C"
         long DisplayId;
     };
 
+    struct MessageBodyFrame {
+        struct Vector3f Acceleration;
+        struct Vector3f RotationRate;
+        struct Vector3f MagneticField;
+        float Temperature;
+        float TimeDelta;
+    };
+
+
+    class RustMessageHandler : public OVR::MessageHandler
+    {
+    public:
+        RustMessageHandler(void *_ptr, void (*_BodyFrame)(void *ptr, struct MessageBodyFrame *msg)) {
+            ptr = _ptr;
+            BodyFrame = _BodyFrame;
+        }
+
+        void OnMessage(const OVR::Message& msg)
+        {
+            if (msg.Type == OVR::Message_BodyFrame) {
+                const OVR::MessageBodyFrame& bf = static_cast<const OVR::MessageBodyFrame&>(msg);
+                struct MessageBodyFrame mbf = {
+                    {bf.Acceleration.x, bf.Acceleration.y, bf.Acceleration.z},
+                    {bf.RotationRate.x, bf.RotationRate.y, bf.RotationRate.z},
+                    {bf.MagneticField.x, bf.MagneticField.y, bf.MagneticField.z},
+                    bf.Temperature,
+                    bf.TimeDelta
+                };
+                BodyFrame(ptr, &mbf);
+
+            }   
+        }
+        void *ptr;
+        void (*BodyFrame)(void *ptr, struct MessageBodyFrame *msg);
+    };
+
+    RustMessageHandler* OVR_MessageHandler(void *_ptr, void (*_BodyFrame)(void *ptr, struct MessageBodyFrame *msg))
+    {
+        return new RustMessageHandler(_ptr, _BodyFrame);
+    }
+
+    void* OVR_MessageHandler_move_ptr(RustMessageHandler* mh)
+    {
+        void *ptr = mh->ptr;
+        mh->ptr = NULL;
+        return ptr;
+    }
+
+    void OVR_MessageHandler_drop(RustMessageHandler* mh)
+    {
+        delete mh;
+    }
+
     void OVR_system_init(void)
     {
         OVR::System::Init(OVR::Log::ConfigureDefaultLog(OVR::LogMask_All));
@@ -44,12 +97,17 @@ extern "C"
         return OVR::DeviceManager::Create();
     }
 
+    void OVR_DeviceManager_drop(OVR::DeviceManager *dm)
+    {
+        delete dm;
+    }
+
     OVR::HMDDevice* OVR_DeviceManager_EnumerateDevices(OVR::DeviceManager* pManager)
     {
         return pManager->EnumerateDevices<OVR::HMDDevice>().CreateDevice();
     }
 
-    struct HMDInfoC OVR_HDMDevice_GetDeviceInfo(OVR::HMDDevice* pHMD)
+    struct HMDInfoC OVR_HMDDevice_GetDeviceInfo(OVR::HMDDevice* pHMD)
     {
         OVR::HMDInfo hmd;
         struct HMDInfoC out_hmd;
@@ -73,9 +131,19 @@ extern "C"
         return out_hmd;
     }
 
-    OVR::SensorDevice* OVR_HDMDevice_GetSensor(OVR::HMDDevice* pHMD)
+    OVR::SensorDevice* OVR_HMDDevice_GetSensor(OVR::HMDDevice* pHMD)
     {
         return pHMD->GetSensor();
+    }
+
+    void OVR_SensorDevice_drop(OVR::SensorDevice* sd)
+    {
+        delete sd;
+    }
+
+    void OVR_SensorDevice_SetMessageHandler(OVR::SensorDevice* sensor, RustMessageHandler* mh)
+    {
+        sensor->SetMessageHandler(mh);
     }
 
     OVR::SensorFusion* OVR_SensorFusion(OVR::HMDDevice* pHMD)
@@ -268,73 +336,22 @@ extern "C"
         return (*SFusion).AttachToSensor(pSensor);
     }
 
-    unsigned OVR_HMDInfo_GetScreenHResolution(OVR::HMDInfo* info)
+    void OVR_SensorFusion_OnMessage(OVR::SensorFusion* SFusion, const MessageBodyFrame *msg)
     {
-        return info->HResolution;
+        OVR::MessageBodyFrame sensor(NULL);
+
+        sensor.TimeDelta = msg->TimeDelta;
+        sensor.Temperature = msg->Temperature;
+
+        sensor.Acceleration = OVR::Vector3f(msg->Acceleration.x, msg->Acceleration.y, msg->Acceleration.z);
+        sensor.RotationRate = OVR::Vector3f(msg->RotationRate.x, msg->RotationRate.y, msg->RotationRate.z);
+        sensor.MagneticField = OVR::Vector3f(msg->MagneticField.x, msg->MagneticField.y, msg->MagneticField.z);
+
+        SFusion->OnMessage(sensor);
     }
 
-    unsigned OVR_HMDInfo_GetScreenVResolution(OVR::HMDInfo* info)
+    void OVR_SensorFusion_drop(OVR::SensorFusion *sf)
     {
-        return info->VResolution;
-    }
-
-    float OVR_HMDInfo_GetHScreenSize(OVR::HMDInfo* info)
-    {
-        return info->HScreenSize;
-    }
-
-    float OVR_HMDInfo_GetVScreenSize(OVR::HMDInfo* info)
-    {
-        return info->VScreenSize;
-    }
-
-    float OVR_HMDInfo_GetVScreenCenter(OVR::HMDInfo* info)
-    {
-        return info->VScreenCenter;
-    }
-
-    float OVR_HMDInfo_GetEyeToScreenDistance(OVR::HMDInfo* info)
-    {
-        return info->EyeToScreenDistance;
-    }
-
-    float OVR_HMDInfo_GetLensSeparationDistance(OVR::HMDInfo* info)
-    {
-        return info->LensSeparationDistance;
-    }
-
-    float OVR_HMDInfo_GetInterpupillaryDistance(OVR::HMDInfo* info)
-    {
-        return info->InterpupillaryDistance;
-    }
-
-    float OVR_HMDInfo_GetDistortionK(OVR::HMDInfo* info, int idx)
-    {
-        return info->DistortionK[idx];
-    }
-
-    float OVR_HMDInfo_GetChromaAbCorrection(OVR::HMDInfo* info, int idx)
-    {
-        return info->ChromaAbCorrection[idx];
-    }
-
-    unsigned OVR_HMDInfo_GetDesktopX(OVR::HMDInfo* info)
-    {
-        return info->HResolution;
-    }
-
-    unsigned OVR_HMDInfo_GetDesktopY(OVR::HMDInfo* info)
-    {
-        return info->DesktopY;
-    }
-
-    char* OVR_HMDInfo_GetDisplayDeviceName(OVR::HMDInfo* info)
-    {
-        return info->DisplayDeviceName;
-    }
-
-    long OVR_HMDInfo_GetDisplayId(OVR::HMDInfo* info)
-    {
-        return info->DisplayId;
+        delete sf;
     }
 }

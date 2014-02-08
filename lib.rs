@@ -4,8 +4,9 @@
 
 extern mod cgmath;
 
-use std::libc::{c_float, time_t};
+use std::libc::{c_float, time_t, c_void};
 use std::c_str::ToCStr;
+use std::cast::transmute;
 
 use cgmath::quaternion::Quat;
 use cgmath::vector::Vec3;
@@ -24,7 +25,7 @@ use cgmath::angle::rad;
 extern {}
 
 pub mod ll {
-    use std::libc::{c_uint, c_int, c_float, c_long, c_char, time_t};
+    use std::libc::{c_uint, c_int, c_float, c_long, c_char, time_t, c_void};
 
     pub enum DeviceManager {}
     pub struct HMDInfo {
@@ -47,6 +48,7 @@ pub mod ll {
     pub enum HMDDevice {}
     pub enum SensorDevice {}
     pub enum SensorFusion {}
+    pub enum MessageHandler {}
 
     pub struct Vector3f {x: c_float, y: c_float, z: c_float}
     pub struct Quatf {x: c_float, y: c_float, z: c_float, w: c_float}
@@ -55,12 +57,29 @@ pub mod ll {
                          m31: c_float, m32: c_float, m33: c_float, m34: c_float,
                          m41: c_float, m42: c_float, m43: c_float, m44: c_float}
 
+    pub struct MessageBodyFrame {
+        Acceleration: Vector3f,
+        RotationRate: Vector3f,
+        MagneticField: Vector3f,
+        Temperature: f32,
+        TimeDelta: f32,
+    }
+
     extern "C" {
         pub fn OVR_system_init();
         pub fn OVR_DeviceManager_Create() -> *DeviceManager;
         pub fn OVR_DeviceManager_EnumerateDevices(dm :*DeviceManager) -> *HMDDevice;
-        pub fn OVR_HDMDevice_GetDeviceInfo(hmd: *HMDDevice) -> HMDInfo;
-        pub fn OVR_HDMDevice_GetSensor(hmd: *HMDDevice) -> *SensorDevice;
+        pub fn OVR_DeviceManager_drop(dm: *DeviceManager);
+
+        pub fn OVR_HMDDevice_GetDeviceInfo(hmd: *HMDDevice) -> HMDInfo;
+        pub fn OVR_HMDDevice_GetSensor(hmd: *HMDDevice) -> *SensorDevice;
+
+        pub fn OVR_MessageHandler(ptr: *c_void, cb: extern "C" fn(ptr: *c_void, msg: *MessageBodyFrame)) -> *MessageHandler;
+        pub fn OVR_MessageHandler_move_ptr(mh: *MessageHandler) -> *c_void;
+        pub fn OVR_MessageHandler_drop(mh: *MessageHandler);
+
+        pub fn OVR_SensorDevice_SetMessageHandler(sd: *SensorDevice, mh: *MessageHandler);
+        pub fn OVR_SensorDevice_drop(sd: *SensorDevice);
 
         pub fn OVR_SensorFusion() -> *SensorFusion;
         pub fn OVR_SensorFusion_AttachToSensor(sf: *SensorFusion, sd: *SensorDevice) -> bool;
@@ -94,8 +113,9 @@ pub mod ll {
         pub fn OVR_SensorFusion_ClearMagCalibration(sf: *SensorFusion);
         pub fn OVR_SensorFusion_ClearMagReferences(sf: *SensorFusion, rawMag: *Vector3f);
         pub fn OVR_SensorFusion_GetCalibratedMagValue(sf: *SensorFusion) -> Vector3f;
-        //pub fn OVR_SensorFusion_OnMessage(sf: *SensorFusion, msg: *MessageBodyFrame)
+        pub fn OVR_SensorFusion_OnMessage(sf: *SensorFusion, msg: *MessageBodyFrame);
         //pub fn OVR_SensorFusion_SetDelegateMessageHandler(sf: *SensorFusion, handle: *MessageHandler)
+        pub fn OVR_SensorFusion_drop(sf: *SensorFusion);
         
     }
 }
@@ -109,6 +129,15 @@ pub fn init()
 
 pub struct DeviceManager {
     priv ptr: *ll::DeviceManager
+}
+
+impl Drop for DeviceManager {
+    fn drop(&mut self)
+    {
+        unsafe {
+            ll::OVR_DeviceManager_drop(self.ptr);
+        }
+    }
 }
 
 impl DeviceManager {
@@ -153,7 +182,7 @@ impl HMDDevice {
         unsafe {
             println!("{:?}", self);
             HMDInfo{
-                dat: ll::OVR_HDMDevice_GetDeviceInfo(self.ptr)
+                dat: ll::OVR_HMDDevice_GetDeviceInfo(self.ptr)
             }
         }        
     }
@@ -162,13 +191,14 @@ impl HMDDevice {
     {
         unsafe {
             println!("{:?}", self);
-            let ptr = ll::OVR_HDMDevice_GetSensor(self.ptr);
+            let ptr = ll::OVR_HMDDevice_GetSensor(self.ptr);
 
             if ptr.is_null() {
                 None
             } else {
                 Some(SensorDevice{
-                    ptr: ptr
+                    ptr: ptr,
+                    msg: None
                 })
             }
         }        
@@ -247,6 +277,14 @@ impl HMDInfo
 
 pub struct SensorFusion {
     priv ptr: *ll::SensorFusion
+}
+
+impl Drop for SensorFusion {
+    fn drop(&mut self) {
+        unsafe {
+            ll::OVR_SensorFusion_drop(self.ptr);
+        }
+    }
 }
 
 impl SensorFusion {
@@ -501,10 +539,91 @@ impl SensorFusion {
             Vec3::new(vec.x, vec.y, vec.z)
         }
     }
+
+    pub fn on_message(&self, msg: &Message)
+    {
+        unsafe {
+            match *msg {
+                MsgBody(ref body) => {
+                    ll::OVR_SensorFusion_OnMessage(self.ptr, transmute(body));
+                }
+            }
+        }
+    }
+}
+
+extern "C" fn chan_callback(chan: *c_void, msg: *ll::MessageBodyFrame)
+{
+    if chan.is_null() || msg.is_null() {
+        return;
+    }
+
+    unsafe {
+        let chan: &Chan<Message> = transmute(chan);
+        let msg: &ll::MessageBodyFrame = transmute(msg);
+
+        chan.send(MsgBody(MessageBody::from_raw(msg)));
+    }
 }
 
 pub struct SensorDevice {
-    priv ptr: *ll::SensorDevice
+    priv ptr: *ll::SensorDevice,
+    priv msg: Option<*ll::MessageHandler>
+}
+
+impl Drop for SensorDevice
+{
+    fn drop(&mut self)
+    {
+        unsafe {
+            // free chan
+            match self.msg {
+                Some(msg) => {
+                    let chan = ll::OVR_MessageHandler_move_ptr(msg);
+                    let _: ~Chan<Message> = transmute(chan);
+                    ll::OVR_MessageHandler_drop(msg);
+                },
+                None => ()
+            }
+
+            ll::OVR_SensorDevice_drop(self.ptr); 
+        }
+    }
+}
+
+impl SensorDevice {
+    pub fn register_chan(&mut self, chan: ~Chan<Message>)
+    {
+        if self.msg.is_none() {
+            unsafe {
+                self.msg = Some(ll::OVR_MessageHandler(transmute(chan), chan_callback));
+                let msg = self.msg.as_ref().unwrap();
+
+                ll::OVR_SensorDevice_SetMessageHandler(self.ptr, *msg);
+            }
+        }
+    }
+}
+
+struct MessageBody {
+    acceleration: Vec3<f32>,
+    rotation_rate: Vec3<f32>,
+    magnetic_field: Vec3<f32>,
+    temperature: f32,
+    time_delta: f32
+}
+
+impl MessageBody {
+    fn from_raw(mbf: &ll::MessageBodyFrame) -> MessageBody
+    {
+        unsafe {
+            transmute(*mbf)
+        }
+    }
+}
+
+pub enum Message {
+    MsgBody(MessageBody)
 }
 
 
