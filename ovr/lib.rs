@@ -597,7 +597,7 @@ extern "C" fn chan_callback(chan: *c_void, msg: *ll::MessageBodyFrame)
     }
 }
 
-pub struct SensorDevice {
+/*pub struct SensorDevice {
     priv ptr: *ll::SensorDevice,
     priv msg: Option<*ll::MessageHandler>
 }
@@ -634,7 +634,7 @@ impl SensorDevice {
             }
         }
     }
-}
+}*/
 
 struct MessageBody {
     acceleration: Vec3<f32>,
