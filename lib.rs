@@ -2,7 +2,7 @@
 #[crate_type = "lib"];
 #[feature(link_args)];
 
-extern mod cgmath;
+extern crate cgmath;
 
 use std::libc::{c_float, time_t, c_void};
 use std::c_str::ToCStr;
