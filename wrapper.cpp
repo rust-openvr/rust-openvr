@@ -18,8 +18,8 @@ extern "C"
     };
 
     struct HMDInfoC {
-        uint HResolution;
-        uint VResolution;
+        unsigned int HResolution;
+        unsigned int VResolution;
         float HScreenSize;
         float VScreenSize;
         float VScreenCenter;
