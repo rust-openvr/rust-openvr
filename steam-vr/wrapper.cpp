@@ -3,16 +3,6 @@
 
 extern "C"
 {
-    vr::IHmd* VR_Init(vr::HmdError *peError)
-    {
-        vr::VR_Init(peError);
-    }
-
-    void VR_Shutdown(void)
-    {
-        vr::VR_Shutdown();
-    }
-
     const char* const VR_IHmd_Version(void)
     {
         return vr::IHmd_Version;
@@ -82,7 +72,7 @@ extern "C"
         ihmd->ZeroTracker();
     }
 
-    uint32_t VR_IHmd_GetDeviceId(vr::IHmd *ihmd, char *pchBuffer, uint32_t unBufferLen )
+    uint32_t VR_IHmd_GetDriverId(vr::IHmd *ihmd, char *pchBuffer, uint32_t unBufferLen )
     {
         ihmd->GetDriverId(pchBuffer, unBufferLen);
     }
