@@ -2,7 +2,7 @@
 #[crate_type = "lib"];
 #[feature(link_args)];
 
-extern mod cgmath;
+extern crate cgmath;
 
 use std::libc::{c_float, time_t, c_void};
 use std::c_str::ToCStr;
@@ -22,6 +22,12 @@ use cgmath::angle::rad;
 #[link(name="udev")]
 #[link(name="Xinerama")]
 #[link(name="edid")]
+extern {}
+
+#[cfg(target_os = "macos")]
+#[link(name="ovr_wrapper")]
+#[link(name="OculusVR")]
+#[link(name="stdc++")]
 extern {}
 
 pub mod ll {
@@ -724,14 +730,14 @@ void main()
     }
 
 
-    float blue = texture2D(Texture0, tcBlue).b;
+    float blue = texture(Texture0, tcBlue).b;
     
     vec2  tcGreen = LensCenter + ScaleOut * theta1;
-    vec4  center = texture2D(Texture0, tcGreen);
+    vec4  center = texture(Texture0, tcGreen);
     
     vec2  thetaRed = theta1 * (ChromAbParam.x + ChromAbParam.y * rSq);
     vec2  tcRed = LensCenter + ScaleOut * thetaRed;
-    float red = texture2D(Texture0, tcRed).r;
+    float red = texture(Texture0, tcRed).r;
     
     color = vec4(red, center.g, blue, center.a);
 }

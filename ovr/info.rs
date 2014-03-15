@@ -1,6 +1,6 @@
 
 
-extern crate ovr = "ovr-rs";
+extern mod ovr = "ovr-rs";
 
 fn main()
 {
