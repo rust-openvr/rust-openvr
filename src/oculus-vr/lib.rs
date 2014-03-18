@@ -1,12 +1,11 @@
-#[crate_id = "ovr-rs#0.1"];
+#[crate_id = "oculus-vr#0.1"];
 #[crate_type = "lib"];
 #[feature(link_args)];
 
 extern crate cgmath;
 
-use std::libc::{c_float, time_t, c_void};
+use std::libc::{c_float, time_t};
 use std::c_str::ToCStr;
-use std::cast::transmute;
 
 use cgmath::quaternion::Quat;
 use cgmath::vector::Vec3;
@@ -17,11 +16,10 @@ use cgmath::angle::rad;
 
 #[cfg(target_os = "linux")]
 #[link(name="ovr_wrapper")]
-#[link(name="OculusVR")]
+#[link(name="ovr")]
 #[link(name="stdc++")]
 #[link(name="udev")]
 #[link(name="Xinerama")]
-#[link(name="edid")]
 extern {}
 
 #[cfg(target_os = "macos")]
@@ -36,20 +34,20 @@ pub mod ll {
     pub enum DeviceManager {}
 
     pub struct HMDInfo {
-        HResolution: c_uint,
-        VResolution: c_uint,
-        HScreenSize: c_float,
-        VScreenSize: c_float,
-        VScreenCenter: c_float,
-        EyeToScreenDistance: c_float,
-        LensSeparationDistance: c_float,
-        InterpupillaryDistance: c_float,
-        DistortionK: [c_float, ..4],
-        ChromaAbCorrection: [c_float, ..4],
-        DesktopX: c_int,
-        DesktopY: c_int,
-        DisplayDeviceName: [c_char, ..32],
-        DisplayId: c_long
+        horizontal_resolution: c_uint,
+        vertical_resolution: c_uint,
+        horizontal_screen_size: c_float,
+        vertical_screen_size: c_float,
+        vertical_screen_center: c_float,
+        eye_to_screen_distance: c_float,
+        lens_separation_distance: c_float,
+        interpupillary_distance: c_float,
+        distortion_k: [c_float, ..4],
+        chroma_ab_correction: [c_float, ..4],
+        desktop_x: c_int,
+        desktop_y: c_int,
+        display_device_name: [c_char, ..32],
+        display_id: c_long
 
     }
 
@@ -57,20 +55,20 @@ pub mod ll {
         fn clone(&self) -> HMDInfo
         {
             HMDInfo {
-                HResolution: self.HResolution,
-                VResolution: self.VResolution,
-                HScreenSize: self.HScreenSize,
-                VScreenSize: self.VScreenSize,
-                VScreenCenter: self.VScreenCenter,
-                EyeToScreenDistance: self.EyeToScreenDistance,
-                LensSeparationDistance: self.LensSeparationDistance,
-                InterpupillaryDistance: self.InterpupillaryDistance,
-                DistortionK: self.DistortionK,
-                ChromaAbCorrection: self.ChromaAbCorrection,
-                DesktopX: self.DesktopX,
-                DesktopY: self.DesktopY,
-                DisplayDeviceName: self.DisplayDeviceName,
-                DisplayId: self.DisplayId,
+                horizontal_resolution: self.horizontal_resolution,
+                vertical_resolution: self.vertical_resolution,
+                horizontal_screen_size: self.horizontal_screen_size,
+                vertical_screen_size: self.vertical_screen_size,
+                vertical_screen_center: self.vertical_screen_center,
+                eye_to_screen_distance: self.eye_to_screen_distance,
+                lens_separation_distance: self.lens_separation_distance,
+                interpupillary_distance: self.interpupillary_distance,
+                distortion_k: self.distortion_k,
+                chroma_ab_correction: self.chroma_ab_correction,
+                desktop_x: self.desktop_x,
+                desktop_y: self.desktop_y,
+                display_device_name: self.display_device_name,
+                display_id: self.display_id,
             }
         }
     }
@@ -93,13 +91,8 @@ pub mod ll {
                          m41: c_float, m42: c_float, m43: c_float, m44: c_float}
 
     #[deriving(Clone)]
-    pub struct MessageBodyFrame {
-        Acceleration: Vector3f,
-        RotationRate: Vector3f,
-        MagneticField: Vector3f,
-        Temperature: f32,
-        TimeDelta: f32,
-    }
+    pub enum MessageBodyFrame {}
+
 
     extern "C" {
         pub fn OVR_system_init();
@@ -250,65 +243,65 @@ impl HMDInfo
 {
     pub fn resolution(&self) -> (uint, uint)
     {
-        (self.dat.HResolution as uint, self.dat.VResolution as uint)
+        (self.dat.horizontal_resolution as uint, self.dat.vertical_resolution as uint)
     }
 
     pub fn size(&self) -> (f32, f32)
     {
-        (self.dat.HScreenSize as f32, self.dat.VScreenSize as f32)
+        (self.dat.horizontal_screen_size as f32, self.dat.vertical_screen_size as f32)
     }
 
     pub fn desktop(&self) -> (int, int)
     {
-        (self.dat.DesktopX as int, self.dat.DesktopY as int)
+        (self.dat.desktop_x as int, self.dat.desktop_y as int)
     }
 
     pub fn vertical_center(&self) -> f32
     {
-        self.dat.VScreenCenter as f32
+        self.dat.vertical_screen_center as f32
     }
 
     pub fn eye_to_screen_distance(&self) -> f32
     {
-        self.dat.EyeToScreenDistance as f32
+        self.dat.eye_to_screen_distance as f32
     }
 
     pub fn lens_separation_distance(&self) -> f32
     {
-        self.dat.LensSeparationDistance as f32
+        self.dat.lens_separation_distance as f32
     }
 
     pub fn interpupillary_distance(&self) -> f32
     {
-        self.dat.InterpupillaryDistance as f32
+        self.dat.interpupillary_distance as f32
     }
 
     pub fn distortion_K(&self) -> [f32, ..4]
     {
-        [self.dat.DistortionK[0] as f32,
-         self.dat.DistortionK[1] as f32,
-         self.dat.DistortionK[2] as f32,
-         self.dat.DistortionK[3] as f32]
+        [self.dat.distortion_k[0] as f32,
+         self.dat.distortion_k[1] as f32,
+         self.dat.distortion_k[2] as f32,
+         self.dat.distortion_k[3] as f32]
     }
 
     pub fn chroma_ab_correction(&self) -> [f32, ..4]
     {
-        [self.dat.ChromaAbCorrection[0] as f32,
-         self.dat.ChromaAbCorrection[1] as f32,
-         self.dat.ChromaAbCorrection[2] as f32,
-         self.dat.ChromaAbCorrection[3] as f32]
+        [self.dat.chroma_ab_correction[0] as f32,
+         self.dat.chroma_ab_correction[1] as f32,
+         self.dat.chroma_ab_correction[2] as f32,
+         self.dat.chroma_ab_correction[3] as f32]
     }
 
     pub fn name(&self) -> ~str
     {
         unsafe {
-        std::str::raw::from_c_str(&self.dat.DisplayDeviceName[0])
+        std::str::raw::from_c_str(&self.dat.display_device_name[0])
         }
     }
 
     pub fn id(&self) -> int
     {
-        self.dat.DisplayId as int
+        self.dat.display_id as int
     }
 }
 
@@ -576,34 +569,9 @@ impl SensorFusion {
             Vec3::new(vec.x, vec.y, vec.z)
         }
     }
-
-    pub fn on_message(&self, msg: &Message)
-    {
-        unsafe {
-            match *msg {
-                MsgBody(ref body) => {
-                    ll::OVR_SensorFusion_OnMessage(self.ptr, transmute(body));
-                }
-            }
-        }
-    }
 }
 
-extern "C" fn chan_callback(chan: *c_void, msg: *ll::MessageBodyFrame)
-{
-    if chan.is_null() || msg.is_null() {
-        return;
-    }
-
-    unsafe {
-        let chan: &Chan<Message> = transmute(chan);
-        let msg: &ll::MessageBodyFrame = transmute(msg);
-
-        chan.send(MsgBody(MessageBody::from_raw(msg)));
-    }
-}
-
-/*pub struct SensorDevice {
+pub struct SensorDevice {
     priv ptr: *ll::SensorDevice,
     priv msg: Option<*ll::MessageHandler>
 }
@@ -613,54 +581,9 @@ impl Drop for SensorDevice
     fn drop(&mut self)
     {
         unsafe {
-            // free chan
-            match self.msg {
-                Some(msg) => {
-                    let chan = ll::OVR_MessageHandler_move_ptr(msg);
-                    let _: ~Chan<Message> = transmute(chan);
-                    ll::OVR_MessageHandler_drop(msg);
-                },
-                None => ()
-            }
-
             ll::OVR_SensorDevice_drop(self.ptr); 
         }
     }
-}
-
-impl SensorDevice {
-    pub fn register_chan(&mut self, chan: ~Chan<Message>)
-    {
-        if self.msg.is_none() {
-            unsafe {
-                self.msg = Some(ll::OVR_MessageHandler(transmute(chan), chan_callback));
-                let msg = self.msg.as_ref().unwrap();
-
-                ll::OVR_SensorDevice_SetMessageHandler(self.ptr, *msg);
-            }
-        }
-    }
-}*/
-
-struct MessageBody {
-    acceleration: Vec3<f32>,
-    rotation_rate: Vec3<f32>,
-    magnetic_field: Vec3<f32>,
-    temperature: f32,
-    time_delta: f32
-}
-
-impl MessageBody {
-    fn from_raw(mbf: &ll::MessageBodyFrame) -> MessageBody
-    {
-        unsafe {
-            transmute(*mbf)
-        }
-    }
-}
-
-pub enum Message {
-    MsgBody(MessageBody)
 }
 
 
@@ -700,7 +623,7 @@ pub fn create_reference_matrices(hmd: &HMDInfo, view_center: &Mat4<f32>, scale: 
 pub static SHADER_FRAG_CHROMAB: &'static str =
 "#version 400
 uniform vec2 LensCenter;
-uniform vec2 ScreenCenter;
+uniform vec2 screen_center;
 uniform vec2 ScaleIn;
 uniform vec2 ScaleOut;
 uniform vec4 HmdWarpParam;
@@ -724,7 +647,7 @@ void main()
     vec2 tcBlue = LensCenter + ScaleOut * thetaBlue;
 
 
-    if (!all(equal(clamp(tcBlue, ScreenCenter-vec2(0.25,0.5), ScreenCenter+vec2(0.25,0.5)), tcBlue))) {
+    if (!all(equal(clamp(tcBlue, screen_center-vec2(0.25,0.5), screen_center+vec2(0.25,0.5)), tcBlue))) {
         color = vec4(0.);
         return;
     }
