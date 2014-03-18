@@ -209,7 +209,6 @@ impl HMDDevice {
     pub fn get_info(&self) -> HMDInfo
     {
         unsafe {
-            println!("{:?}", self);
             HMDInfo{
                 dat: ll::OVR_HMDDevice_GetDeviceInfo(self.ptr)
             }
@@ -219,7 +218,6 @@ impl HMDDevice {
     pub fn get_sensor(&self) -> Option<SensorDevice>
     {
         unsafe {
-            println!("{:?}", self);
             let ptr = ll::OVR_HMDDevice_GetSensor(self.ptr);
 
             if ptr.is_null() {

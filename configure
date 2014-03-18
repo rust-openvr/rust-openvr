@@ -173,7 +173,8 @@ modules = [Bin("oculus-info", ["oculus-vr"]),
            Lib("oculus-vr", ["cgmath", "libovr_wrapper.a"]),
            LibMakefile("libovr_wrapper.a", "src/oculus-vr/", "src/oculus-vr/libovr_wrapper.a", ["libovr.a"]),
            LibMakefile("libovr.a", "thirdparty/OculusSDK/", "thirdparty/OculusSDK/LibOVR/Lib/Linux/Release/x86_64/libovr.a"),
-           Lib("steamworks-vr", ["cgmath"]),
+           Lib("steamworks-vr", ["cgmath", "libsteamvr_wrapper.a"]),
+           LibMakefile("libsteamvr_wrapper.a", "src/steamworks-vr/", "src/steamworks-vr/libsteamvr_wrapper.a"),
            Lib("cgmath")]
 
 
