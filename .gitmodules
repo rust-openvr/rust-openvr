@@ -1,6 +1,3 @@
-[submodule "src/cgmath"]
-	path = src/cgmath
-	url = https://github.com/bjz/cgmath-rs
 [submodule "modules/cgmath"]
 	path = modules/cgmath
 	url = https://github.com/bjz/cgmath-rs

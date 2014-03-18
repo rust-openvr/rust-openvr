@@ -1,6 +1,9 @@
-#[crate_id = "steam-vr-rs#0.1"];
+#[allow(non_camel_case_types)];
+
+#[crate_id = "steamworks-vr#0.1"];
 #[crate_type = "lib"];
 #[feature(link_args)];
+
 
 extern crate cgmath;
 use std::libc::{c_float};
@@ -121,7 +124,7 @@ pub struct Hmd
     priv ptr: *ll::IHmd
 }
 
-enum HmdErrorInit
+pub enum HmdErrorInit
 {
     InstallationNotFound,
     InstallationCorrupt,
@@ -135,14 +138,14 @@ enum HmdErrorInit
     NotInitialized,    
 }
 
-enum IPCError
+pub enum IPCError
 {
     ServerInitFailed,
     ConnectFailed,
     SharedStateInitFailed,    
 }
 
-enum HmdError {
+pub enum HmdError {
     Init(HmdErrorInit),
     Driver_Failed,
     IPC(IPCError),
@@ -176,7 +179,7 @@ impl HmdError
     }
 }
 
-enum HmdEye
+pub enum HmdEye
 {
     EyeLeft,
     EyeRight
@@ -192,7 +195,7 @@ impl HmdEye {
     }
 }
 
-enum GraphicsAPIConvention
+pub enum GraphicsAPIConvention
 {
     DirectX,
     OpenGL
@@ -209,26 +212,26 @@ impl GraphicsAPIConvention
     }
 }
 
-struct DistortionCoordinates
+pub struct DistortionCoordinates
 {
     red: [f32, ..2],
     green: [f32, ..2],
     blue: [f32, ..2]    
 }
 
-enum HmdTrackingResultCalibrating
+pub enum HmdTrackingResultCalibrating
 {
     Calibrating_InProgress,
     Calibrating_OutOfRange
 }
 
-enum HmdTrackingResultRunning
+pub enum HmdTrackingResultRunning
 {
     Running_OK,
     Running_OutOfRange
 }
 
-enum HmdTrackingResult
+pub enum HmdTrackingResult
 {
     Uninitialized,
     Calibration(HmdTrackingResultCalibrating),
