@@ -1,5 +1,6 @@
+#[crate_id = "steamworks-info#0.1"];
 
-extern crate vr = "steam-vr-rs";
+extern crate vr = "steamworks-vr";
 
 fn main()
 {
@@ -19,5 +20,4 @@ fn main()
     println!("{:?}", device.get_eye_output_viewport(vr::EyeRight));
     println!("{:?}", device.will_drift_in_yaw());
     println!("{:?}", device.get_driver_id());
-    println!("{:?}", device.get_display_id());
 }
