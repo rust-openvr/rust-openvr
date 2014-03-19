@@ -500,7 +500,6 @@ impl Hmd
         }
     }
 
-
     pub fn get_display_id(&self) -> ~str
     {
         let mut buf = std::vec::from_elem(128, 0i8);
