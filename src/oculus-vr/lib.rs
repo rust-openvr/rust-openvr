@@ -16,7 +16,7 @@ use cgmath::angle::rad;
 
 #[cfg(target_os = "linux")]
 #[link(name="ovr_wrapper")]
-#[link(name="ovr")]
+#[link(name="OculusVR")]
 #[link(name="stdc++")]
 #[link(name="udev")]
 #[link(name="Xinerama")]
