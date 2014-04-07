@@ -1,10 +1,11 @@
-#[crate_id = "oculus-vr#0.1"];
-#[crate_type = "lib"];
-#[feature(link_args)];
+#![crate_id = "oculus-vr#0.1"]
+#![crate_type = "lib"]
+#![feature(link_args)]
 
 extern crate cgmath;
+extern crate libc;
 
-use std::libc::{c_float, time_t};
+use libc::{c_float, time_t};
 use std::c_str::ToCStr;
 
 use cgmath::quaternion::Quat;
@@ -29,25 +30,25 @@ extern {}
 extern {}
 
 pub mod ll {
-    use std::libc::{c_uint, c_int, c_float, c_long, c_char, time_t, c_void};
+    use libc::{c_uint, c_int, c_float, c_long, c_char, time_t, c_void};
 
     pub enum DeviceManager {}
 
     pub struct HMDInfo {
-        horizontal_resolution: c_uint,
-        vertical_resolution: c_uint,
-        horizontal_screen_size: c_float,
-        vertical_screen_size: c_float,
-        vertical_screen_center: c_float,
-        eye_to_screen_distance: c_float,
-        lens_separation_distance: c_float,
-        interpupillary_distance: c_float,
-        distortion_k: [c_float, ..4],
-        chroma_ab_correction: [c_float, ..4],
-        desktop_x: c_int,
-        desktop_y: c_int,
-        display_device_name: [c_char, ..32],
-        display_id: c_long
+        pub horizontal_resolution: c_uint,
+        pub vertical_resolution: c_uint,
+        pub horizontal_screen_size: c_float,
+        pub vertical_screen_size: c_float,
+        pub vertical_screen_center: c_float,
+        pub eye_to_screen_distance: c_float,
+        pub lens_separation_distance: c_float,
+        pub interpupillary_distance: c_float,
+        pub distortion_k: [c_float, ..4],
+        pub chroma_ab_correction: [c_float, ..4],
+        pub desktop_x: c_int,
+        pub desktop_y: c_int,
+        pub display_device_name: [c_char, ..32],
+        pub display_id: c_long
 
     }
 
@@ -79,16 +80,16 @@ pub mod ll {
     pub enum MessageHandler {}
 
     #[deriving(Clone)]
-    pub struct Vector3f {x: c_float, y: c_float, z: c_float}
+    pub struct Vector3f {pub x: c_float, pub y: c_float, pub z: c_float}
 
     #[deriving(Clone)]
-    pub struct Quatf {x: c_float, y: c_float, z: c_float, w: c_float}
+    pub struct Quatf {pub x: c_float, pub y: c_float, pub z: c_float, pub w: c_float}
 
     #[deriving(Clone)]
-    pub struct Matrix4f {m11: c_float, m12: c_float, m13: c_float, m14: c_float,
-                         m21: c_float, m22: c_float, m23: c_float, m24: c_float,
-                         m31: c_float, m32: c_float, m33: c_float, m34: c_float,
-                         m41: c_float, m42: c_float, m43: c_float, m44: c_float}
+    pub struct Matrix4f {pub m11: c_float, pub m12: c_float, pub m13: c_float, pub m14: c_float,
+                         pub m21: c_float, pub m22: c_float, pub m23: c_float, pub m24: c_float,
+                         pub m31: c_float, pub m32: c_float, pub m33: c_float, pub m34: c_float,
+                         pub m41: c_float, pub m42: c_float, pub m43: c_float, pub m44: c_float}
 
     #[deriving(Clone)]
     pub enum MessageBodyFrame {}
@@ -157,7 +158,7 @@ pub fn init()
 }
 
 pub struct DeviceManager {
-    priv ptr: *ll::DeviceManager
+    ptr: *ll::DeviceManager
 }
 
 impl Drop for DeviceManager {
@@ -202,7 +203,7 @@ impl DeviceManager {
 }
 
 pub struct HMDDevice {
-    priv ptr: *ll::HMDDevice
+    ptr: *ll::HMDDevice
 }
 
 impl HMDDevice {
@@ -234,7 +235,7 @@ impl HMDDevice {
 
 #[deriving(Clone)]
 pub struct HMDInfo {
-    priv dat: ll::HMDInfo
+    dat: ll::HMDInfo
 }
 
 impl HMDInfo
@@ -304,7 +305,7 @@ impl HMDInfo
 }
 
 pub struct SensorFusion {
-    priv ptr: *ll::SensorFusion
+    ptr: *ll::SensorFusion
 }
 
 impl Drop for SensorFusion {
@@ -570,8 +571,8 @@ impl SensorFusion {
 }
 
 pub struct SensorDevice {
-    priv ptr: *ll::SensorDevice,
-    priv msg: Option<*ll::MessageHandler>
+    ptr: *ll::SensorDevice,
+    msg: Option<*ll::MessageHandler>
 }
 
 impl Drop for SensorDevice
