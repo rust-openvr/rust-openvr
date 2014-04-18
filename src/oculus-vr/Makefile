@@ -4,6 +4,9 @@ LIBOVR_LIB_PATH=../../thirdparty/OculusSDK/LibOVR/Lib/Linux/Release/x86_64/libov
 
 all: libovr_wrapper.a
 
+clean:
+	-rm wrapper.o libovr_wrapper.a
+
 libovr_wrapper.a: wrapper.o
 	ar rcs libovr_wrapper.a wrapper.o
 
