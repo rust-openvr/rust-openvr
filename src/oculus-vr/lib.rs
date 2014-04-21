@@ -21,6 +21,7 @@ use cgmath::angle::rad;
 #[link(name="stdc++")]
 #[link(name="udev")]
 #[link(name="Xinerama")]
+#[link(name="edid")]
 extern {}
 
 #[cfg(target_os = "macos")]
