@@ -8,9 +8,9 @@ extern crate libc;
 use libc::{c_float, time_t};
 use std::c_str::ToCStr;
 
-use cgmath::quaternion::Quat;
-use cgmath::vector::Vec3;
-use cgmath::matrix::{Matrix, Mat4, ToMat4};
+use cgmath::quaternion::Quaternion;
+use cgmath::vector::Vector3;
+use cgmath::matrix::{Matrix, Matrix4, ToMatrix4};
 use cgmath::projection::perspective;
 use cgmath::transform::Transform3D;
 use cgmath::angle::rad;
@@ -84,7 +84,7 @@ pub mod ll {
     pub struct Vector3f {pub x: c_float, pub y: c_float, pub z: c_float}
 
     #[deriving(Clone)]
-    pub struct Quatf {pub x: c_float, pub y: c_float, pub z: c_float, pub w: c_float}
+    pub struct Quaternionf {pub x: c_float, pub y: c_float, pub z: c_float, pub w: c_float}
 
     #[deriving(Clone)]
     pub struct Matrix4f {pub m11: c_float, pub m12: c_float, pub m13: c_float, pub m14: c_float,
@@ -115,9 +115,9 @@ pub mod ll {
         pub fn OVR_SensorFusion() -> *SensorFusion;
         pub fn OVR_SensorFusion_AttachToSensor(sf: *SensorFusion, sd: *SensorDevice) -> bool;
         pub fn OVR_SensorFusion_IsAttachedToSensor(sf: *SensorFusion) -> bool;
-        pub fn OVR_SensorFusion_GetOrientation(sf: *SensorFusion) -> Quatf;
-        pub fn OVR_SensorFusion_GetPredictedOrientation(sf: *SensorFusion) -> Quatf;
-        pub fn OVR_SensorFusion_GetPredictedOrientation_opt(sf: *SensorFusion, dt: c_float) -> Quatf;
+        pub fn OVR_SensorFusion_GetOrientation(sf: *SensorFusion) -> Quaternionf;
+        pub fn OVR_SensorFusion_GetPredictedOrientation(sf: *SensorFusion) -> Quaternionf;
+        pub fn OVR_SensorFusion_GetPredictedOrientation_opt(sf: *SensorFusion, dt: c_float) -> Quaternionf;
         pub fn OVR_SensorFusion_GetAcceleration(sf: *SensorFusion) -> Vector3f;
         pub fn OVR_SensorFusion_GetAngularVelocity(sf: *SensorFusion) -> Vector3f;
         pub fn OVR_SensorFusion_GetMagnetometer(sf: *SensorFusion) -> Vector3f;
@@ -347,54 +347,54 @@ impl SensorFusion {
         }
     }
 
-    pub fn get_orientation(&self) -> Quat<f32>
+    pub fn get_orientation(&self) -> Quaternion<f32>
     {
         unsafe {
             let out = ll::OVR_SensorFusion_GetOrientation(self.ptr);
-            Quat::new(out.w, out.x, out.y, out.z)
+            Quaternion::new(out.w, out.x, out.y, out.z)
         }
     }
 
-    pub fn get_predicted_orientation(&self, dt: Option<f32>) -> Quat<f32>
+    pub fn get_predicted_orientation(&self, dt: Option<f32>) -> Quaternion<f32>
     {
         unsafe {
             let out = match dt {
                 Some(dt) => ll::OVR_SensorFusion_GetPredictedOrientation_opt(self.ptr, dt as c_float),
                 None => ll::OVR_SensorFusion_GetPredictedOrientation(self.ptr)
             };
-            Quat::new(out.w, out.x, out.y, out.z)
+            Quaternion::new(out.w, out.x, out.y, out.z)
         }
     }
 
-    pub fn get_acceleration(&self) -> Vec3<f32>
+    pub fn get_acceleration(&self) -> Vector3<f32>
     {
         unsafe {
             let out = ll::OVR_SensorFusion_GetAcceleration(self.ptr);
-            Vec3::new(out.x, out.y, out.z)
+            Vector3::new(out.x, out.y, out.z)
         }
     }
 
-    pub fn get_angular_velocity(&self) -> Vec3<f32>
+    pub fn get_angular_velocity(&self) -> Vector3<f32>
     {
         unsafe {
             let out = ll::OVR_SensorFusion_GetAngularVelocity(self.ptr);
-            Vec3::new(out.x, out.y, out.z)
+            Vector3::new(out.x, out.y, out.z)
         }
     }
 
-    pub fn get_magnetometer(&self) -> Vec3<f32>
+    pub fn get_magnetometer(&self) -> Vector3<f32>
     {
         unsafe {
             let out = ll::OVR_SensorFusion_GetMagnetometer(self.ptr);
-            Vec3::new(out.x, out.y, out.z)
+            Vector3::new(out.x, out.y, out.z)
         }
     }
 
-    pub fn get_calibrated_magnetometer(&self) -> Vec3<f32>
+    pub fn get_calibrated_magnetometer(&self) -> Vector3<f32>
     {
         unsafe {
             let out = ll::OVR_SensorFusion_GetCalibratedMagnetometer(self.ptr);
-            Vec3::new(out.x, out.y, out.z)
+            Vector3::new(out.x, out.y, out.z)
         }
     }
 
@@ -505,7 +505,7 @@ impl SensorFusion {
         }
     }
 
-    pub fn set_mag_calibration(&self, m: &Mat4<f32>)
+    pub fn set_mag_calibration(&self, m: &Matrix4<f32>)
     {
         let mat = ll::Matrix4f{
             m11: m.x.x as c_float, m12: m.x.y as c_float, m13: m.x.z as c_float, m14: m.x.w as c_float,
@@ -519,12 +519,12 @@ impl SensorFusion {
         }
     }
 
-    pub fn get_mag_calibration(&self) -> Mat4<f32>
+    pub fn get_mag_calibration(&self) -> Matrix4<f32>
     {
         unsafe {
             let m = ll::OVR_SensorFusion_GetMagCalibration(self.ptr);
 
-            Mat4::new(m.m11 as f32, m.m12 as f32, m.m13 as f32, m.m14 as f32,
+            Matrix4::new(m.m11 as f32, m.m12 as f32, m.m13 as f32, m.m14 as f32,
                       m.m21 as f32, m.m22 as f32, m.m23 as f32, m.m24 as f32,
                       m.m31 as f32, m.m32 as f32, m.m33 as f32, m.m34 as f32,
                       m.m41 as f32, m.m42 as f32, m.m43 as f32, m.m44 as f32)
@@ -553,7 +553,7 @@ impl SensorFusion {
         }
     }
 
-    pub fn clear_mag_references(&self, vec: &Vec3<f32>)
+    pub fn clear_mag_references(&self, vec: &Vector3<f32>)
     {
         let vec = ll::Vector3f{x: vec.x, y: vec.y, z: vec.z};
 
@@ -562,11 +562,11 @@ impl SensorFusion {
         }
     }
 
-    pub fn get_calibrated_mag_value(&self) -> Vec3<f32>
+    pub fn get_calibrated_mag_value(&self) -> Vector3<f32>
     {
         unsafe {
             let vec = ll::OVR_SensorFusion_GetCalibratedMagValue(self.ptr);
-            Vec3::new(vec.x, vec.y, vec.z)
+            Vector3::new(vec.x, vec.y, vec.z)
         }
     }
 }
@@ -587,8 +587,8 @@ impl Drop for SensorDevice
 }
 
 
-pub fn create_reference_matrices(hmd: &HMDInfo, view_center: &Mat4<f32>, scale: f32) -> ((Mat4<f32>, Mat4<f32>),
-                                                                                         (Mat4<f32>, Mat4<f32>))
+pub fn create_reference_matrices(hmd: &HMDInfo, view_center: &Matrix4<f32>, scale: f32) -> ((Matrix4<f32>, Matrix4<f32>),
+                                                                                            (Matrix4<f32>, Matrix4<f32>))
 {
     let (h_res, v_res) = hmd.resolution();
     let (h_size, v_size) = hmd.size();
@@ -604,15 +604,15 @@ pub fn create_reference_matrices(hmd: &HMDInfo, view_center: &Mat4<f32>, scale: 
     let proj_off_center = 4f32 * eye_project_shift / h_size;
 
     let proj_center = perspective(rad(yfov), aspect_ratio, 0.1f32, 1000f32);
-    let proj_left = Transform3D::new(1., Quat::zero(), Vec3::new(proj_off_center, 0., 0.)).get().to_mat4();
-    let proj_right = Transform3D::new(1., Quat::zero(), Vec3::new(-proj_off_center, 0., 0.)).get().to_mat4();
+    let proj_left = Transform3D::new(1., Quaternion::zero(), Vector3::new(proj_off_center, 0., 0.)).get().to_matrix4();
+    let proj_right = Transform3D::new(1., Quaternion::zero(), Vector3::new(-proj_off_center, 0., 0.)).get().to_matrix4();
     let proj_left = proj_left.mul_m(&proj_center);
     let proj_right = proj_right.mul_m(&proj_center);
 
     let halfIPD = interpupillary_distance / 2f32;
 
-    let view_left = Transform3D::new(1., Quat::zero(), Vec3::new(halfIPD, 0., 0.)).get().to_mat4();
-    let view_right = Transform3D::new(1., Quat::zero(), Vec3::new(-halfIPD, 0., 0.)).get().to_mat4();
+    let view_left = Transform3D::new(1., Quaternion::zero(), Vector3::new(halfIPD, 0., 0.)).get().to_matrix4();
+    let view_right = Transform3D::new(1., Quaternion::zero(), Vector3::new(-halfIPD, 0., 0.)).get().to_matrix4();
     let view_left = view_left.mul_m(view_center);
     let view_right = view_right.mul_m(view_center);
     ((proj_left, proj_right),
