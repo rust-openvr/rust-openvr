@@ -22,12 +22,16 @@ use cgmath::angle::rad;
 #[link(name="udev")]
 #[link(name="Xinerama")]
 #[link(name="edid")]
+#[link(name="Xrandr")]
 extern {}
 
 #[cfg(target_os = "macos")]
 #[link(name="ovr_wrapper")]
 #[link(name="OculusVR")]
 #[link(name="stdc++")]
+#[link(name = "Cocoa", kind = "framework")]
+#[link(name = "IOKit", kind = "framework")]
+#[link(name = "CoreFoundation", kind = "framework")]
 extern {}
 
 pub mod ll {

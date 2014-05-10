@@ -1,8 +1,8 @@
-#[allow(non_camel_case_types)];
+#![allow(non_camel_case_types)]
 
-#[crate_id = "steamworks-vr#0.1"];
-#[crate_type = "lib"];
-#[feature(link_args)];
+#![crate_id = "steamworks-vr#0.1"]
+#![crate_type = "lib"]
+#![feature(link_args)]
 
 
 extern crate cgmath;
@@ -121,7 +121,7 @@ pub mod ll {
 
 pub struct Hmd
 {
-    priv ptr: *ll::IHmd
+    ptr: *ll::IHmd
 }
 
 pub enum HmdErrorInit

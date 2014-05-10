@@ -1,4 +1,4 @@
-#[crate_id = "oculus-info#0.1"];
+#![crate_id = "oculus-info#0.1"]
 
 extern crate ovr = "oculus-vr";
 
