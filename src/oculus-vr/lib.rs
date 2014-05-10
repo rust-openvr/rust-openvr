@@ -623,7 +623,7 @@ pub fn create_reference_matrices(hmd: &HMDInfo, view_center: &Matrix4<f32>, scal
 pub static SHADER_FRAG_CHROMAB: &'static str =
 "#version 400
 uniform vec2 LensCenter;
-uniform vec2 screen_center;
+uniform vec2 ScreenCenter;
 uniform vec2 ScaleIn;
 uniform vec2 ScaleOut;
 uniform vec4 HmdWarpParam;
@@ -647,11 +647,10 @@ void main()
     vec2 tcBlue = LensCenter + ScaleOut * thetaBlue;
 
 
-    if (!all(equal(clamp(tcBlue, screen_center-vec2(0.25,0.5), screen_center+vec2(0.25,0.5)), tcBlue))) {
+    if (!all(equal(clamp(tcBlue, ScreenCenter-vec2(0.25,0.5), ScreenCenter+vec2(0.25,0.5)), tcBlue))) {
         color = vec4(0.);
         return;
     }
-
 
     float blue = texture(Texture0, tcBlue).b;
     
