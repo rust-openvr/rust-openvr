@@ -1,4 +1,4 @@
-#[crate_id = "steamworks-info#0.1"];
+#![crate_id = "steamworks-info#0.1"]
 
 extern crate vr = "steamworks-vr";
 

@@ -170,13 +170,18 @@ def write_makefile(modules):
 
 
 modules = [Bin("oculus-info", ["oculus-vr"]),
-           Lib("oculus-vr", ["cgmath", "libovr_wrapper.a"]),
-           LibMakefile("libovr_wrapper.a", "src/oculus-vr/", "src/oculus-vr/libovr_wrapper.a", ["libovr.a"]),
-           LibMakefile("libovr.a", "thirdparty/OculusSDK/", "thirdparty/OculusSDK/LibOVR/Lib/Linux/Release/x86_64/libovr.a"),
-           Bin("steamworks-info", ["steamworks-vr"], other_flags="-L thirdparty/Steamworks/redistributable_bin/linux64/"),
-           Lib("steamworks-vr", ["cgmath", "libsteamvr_wrapper.a"]),
-           LibMakefile("libsteamvr_wrapper.a", "src/steamworks-vr/", "src/steamworks-vr/libsteamvr_wrapper.a"),
+           LibMakefile("libovr_wrapper.a", "src/oculus-vr/", "src/oculus-vr/libovr_wrapper.a", ["cgmath", "libOculusVR.a"]),
+           LibCMake("libOculusVR.a", "modules/OculusSDK/LibOVR/", "modules/OculusSDK/LibOVR/libOculusVR.a"),
+           #Bin("steamworks-info", ["steamworks-vr"], other_flags="-L thirdparty/Steamworks/redistributable_bin/linux64/"),
+           #Lib("steamworks-vr", ["cgmath", "libsteamvr_wrapper.a"]),
+           #LibMakefile("libsteamvr_wrapper.a", "src/steamworks-vr/", "src/steamworks-vr/libsteamvr_wrapper.a"),
            Lib("cgmath")]
 
+if platform.system() == "Linux":
+    modules += [Lib("oculus-vr", ["libOculusVR.a", "libedid.a", "cgmath", "libovr_wrapper.a"]),
+                LibCMake("libedid.a", "modules/OculusSDK/3rdParty/EDID/", "modules/OculusSDK/3rdParty/EDID/libedid.a")]
+
+elif platform.system() == "Darwin":
+    modules += [Lib("oculus-vr", ["libOculusVR.a", "cgmath", "libovr_wrapper.a"])]
 
 write_makefile(modules)
