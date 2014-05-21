@@ -23,6 +23,7 @@ use cgmath::angle::rad;
 #[link(name="Xinerama")]
 #[link(name="edid")]
 #[link(name="Xrandr")]
+#[link(name="X11")]
 extern {}
 
 #[cfg(target_os = "macos")]
@@ -58,8 +59,7 @@ pub mod ll {
     }
 
     impl Clone for HMDInfo {
-        fn clone(&self) -> HMDInfo
-        {
+        fn clone(&self) -> HMDInfo {
             HMDInfo {
                 horizontal_resolution: self.horizontal_resolution,
                 vertical_resolution: self.vertical_resolution,
@@ -167,8 +167,7 @@ pub struct DeviceManager {
 }
 
 impl Drop for DeviceManager {
-    fn drop(&mut self)
-    {
+    fn drop(&mut self) {
         unsafe {
             ll::OVR_DeviceManager_drop(self.ptr);
         }
@@ -176,8 +175,7 @@ impl Drop for DeviceManager {
 }
 
 impl DeviceManager {
-    pub fn new() -> Option<DeviceManager>
-    {
+    pub fn new() -> Option<DeviceManager> {
         unsafe {
             let ptr = ll::OVR_DeviceManager_Create();
 
@@ -191,8 +189,7 @@ impl DeviceManager {
         }
     }
 
-    pub fn enumerate(&self) -> Option<HMDDevice>
-    {
+    pub fn enumerate(&self) -> Option<HMDDevice> {
         unsafe {
             let ptr = ll::OVR_DeviceManager_EnumerateDevices(self.ptr);
 
@@ -212,8 +209,7 @@ pub struct HMDDevice {
 }
 
 impl HMDDevice {
-    pub fn get_info(&self) -> HMDInfo
-    {
+    pub fn get_info(&self) -> HMDInfo {
         unsafe {
             HMDInfo{
                 dat: ll::OVR_HMDDevice_GetDeviceInfo(self.ptr)
@@ -221,8 +217,7 @@ impl HMDDevice {
         }        
     }
 
-    pub fn get_sensor(&self) -> Option<SensorDevice>
-    {
+    pub fn get_sensor(&self) -> Option<SensorDevice> {
         unsafe {
             let ptr = ll::OVR_HMDDevice_GetSensor(self.ptr);
 
@@ -245,66 +240,55 @@ pub struct HMDInfo {
 
 impl HMDInfo
 {
-    pub fn resolution(&self) -> (uint, uint)
-    {
+    pub fn resolution(&self) -> (uint, uint) {
         (self.dat.horizontal_resolution as uint, self.dat.vertical_resolution as uint)
     }
 
-    pub fn size(&self) -> (f32, f32)
-    {
+    pub fn size(&self) -> (f32, f32) {
         (self.dat.horizontal_screen_size as f32, self.dat.vertical_screen_size as f32)
     }
 
-    pub fn desktop(&self) -> (int, int)
-    {
+    pub fn desktop(&self) -> (int, int) {
         (self.dat.desktop_x as int, self.dat.desktop_y as int)
     }
 
-    pub fn vertical_center(&self) -> f32
-    {
+    pub fn vertical_center(&self) -> f32 {
         self.dat.vertical_screen_center as f32
     }
 
-    pub fn eye_to_screen_distance(&self) -> f32
-    {
+    pub fn eye_to_screen_distance(&self) -> f32 {
         self.dat.eye_to_screen_distance as f32
     }
 
-    pub fn lens_separation_distance(&self) -> f32
-    {
+    pub fn lens_separation_distance(&self) -> f32 {
         self.dat.lens_separation_distance as f32
     }
 
-    pub fn interpupillary_distance(&self) -> f32
-    {
+    pub fn interpupillary_distance(&self) -> f32 {
         self.dat.interpupillary_distance as f32
     }
 
-    pub fn distortion_K(&self) -> [f32, ..4]
-    {
+    pub fn distortion_K(&self) -> [f32, ..4] {
         [self.dat.distortion_k[0] as f32,
          self.dat.distortion_k[1] as f32,
          self.dat.distortion_k[2] as f32,
          self.dat.distortion_k[3] as f32]
     }
 
-    pub fn chroma_ab_correction(&self) -> [f32, ..4]
-    {
+    pub fn chroma_ab_correction(&self) -> [f32, ..4] {
         [self.dat.chroma_ab_correction[0] as f32,
          self.dat.chroma_ab_correction[1] as f32,
          self.dat.chroma_ab_correction[2] as f32,
          self.dat.chroma_ab_correction[3] as f32]
     }
 
-    pub fn name(&self) -> ~str
-    {
+    pub fn name(&self) -> ~str {
         unsafe {
         std::str::raw::from_c_str(&self.dat.display_device_name[0])
         }
     }
 
-    pub fn id(&self) -> int
-    {
+    pub fn id(&self) -> int {
         self.dat.display_id as int
     }
 }
@@ -322,8 +306,7 @@ impl Drop for SensorFusion {
 }
 
 impl SensorFusion {
-    pub fn new() -> Option<SensorFusion>
-    {
+    pub fn new() -> Option<SensorFusion> {
         unsafe {
             let ptr = ll::OVR_SensorFusion();
 
@@ -337,30 +320,26 @@ impl SensorFusion {
         } 
     }
 
-    pub fn attach_to_sensor(&self, sensor: &SensorDevice) -> bool
-    {
+    pub fn attach_to_sensor(&self, sensor: &SensorDevice) -> bool {
         unsafe {
             ll::OVR_SensorFusion_AttachToSensor(self.ptr, sensor.ptr)
         } 
     }
 
-    pub fn is_attached_to_sensor(&self) -> bool
-    {
+    pub fn is_attached_to_sensor(&self) -> bool {
         unsafe {
             ll::OVR_SensorFusion_IsAttachedToSensor(self.ptr)
         }
     }
 
-    pub fn get_orientation(&self) -> Quaternion<f32>
-    {
+    pub fn get_orientation(&self) -> Quaternion<f32> {
         unsafe {
             let out = ll::OVR_SensorFusion_GetOrientation(self.ptr);
             Quaternion::new(out.w, out.x, out.y, out.z)
         }
     }
 
-    pub fn get_predicted_orientation(&self, dt: Option<f32>) -> Quaternion<f32>
-    {
+    pub fn get_predicted_orientation(&self, dt: Option<f32>) -> Quaternion<f32> {
         unsafe {
             let out = match dt {
                 Some(dt) => ll::OVR_SensorFusion_GetPredictedOrientation_opt(self.ptr, dt as c_float),
@@ -370,147 +349,127 @@ impl SensorFusion {
         }
     }
 
-    pub fn get_acceleration(&self) -> Vector3<f32>
-    {
+    pub fn get_acceleration(&self) -> Vector3<f32> {
         unsafe {
             let out = ll::OVR_SensorFusion_GetAcceleration(self.ptr);
             Vector3::new(out.x, out.y, out.z)
         }
     }
 
-    pub fn get_angular_velocity(&self) -> Vector3<f32>
-    {
+    pub fn get_angular_velocity(&self) -> Vector3<f32> {
         unsafe {
             let out = ll::OVR_SensorFusion_GetAngularVelocity(self.ptr);
             Vector3::new(out.x, out.y, out.z)
         }
     }
 
-    pub fn get_magnetometer(&self) -> Vector3<f32>
-    {
+    pub fn get_magnetometer(&self) -> Vector3<f32> {
         unsafe {
             let out = ll::OVR_SensorFusion_GetMagnetometer(self.ptr);
             Vector3::new(out.x, out.y, out.z)
         }
     }
 
-    pub fn get_calibrated_magnetometer(&self) -> Vector3<f32>
-    {
+    pub fn get_calibrated_magnetometer(&self) -> Vector3<f32> {
         unsafe {
             let out = ll::OVR_SensorFusion_GetCalibratedMagnetometer(self.ptr);
             Vector3::new(out.x, out.y, out.z)
         }
     }
 
-    pub fn reset(&self)
-    {
+    pub fn reset(&self) {
         unsafe {
             ll::OVR_SensorFusion_Reset(self.ptr);
         }
     }
 
-    pub fn enable_motion_tracking(&self, enable: bool)
-    {
+    pub fn enable_motion_tracking(&self, enable: bool) {
         unsafe {
             ll::OVR_SensorFusion_EnableMotionTracking(self.ptr, enable)
         }
     }
 
-    pub fn is_motion_tracking_enabled(&self) -> bool
-    {
+    pub fn is_motion_tracking_enabled(&self) -> bool {
         unsafe {
             ll::OVR_SensorFusion_IsMotionTrackingEnabled(self.ptr)
         }
     }
 
-    pub fn get_prediction_delta(&self) -> f32
-    {
+    pub fn get_prediction_delta(&self) -> f32 {
         unsafe {
             ll::OVR_SensorFusion_GetPredictionDelta(self.ptr) as f32
         }
     }
 
-    pub fn set_prediction(&self, dt: f32, enable: bool)
-    {
+    pub fn set_prediction(&self, dt: f32, enable: bool) {
         unsafe {
             ll::OVR_SensorFusion_SetPrediction(self.ptr, dt as c_float, enable)
         }
     }
 
-    pub fn set_prediction_enabled(&self, enable: bool)
-    {
+    pub fn set_prediction_enabled(&self, enable: bool) {
         unsafe {
             ll::OVR_SensorFusion_SetPredictionEnabled(self.ptr, enable)
         }
     }
 
-    pub fn is_prediction_enabled(&self) -> bool
-    {
+    pub fn is_prediction_enabled(&self) -> bool {
         unsafe {
             ll::OVR_SensorFusion_IsPredictionEnabled(self.ptr)
         }       
     }
 
-    pub fn set_gravity_enabled(&self, enable_gravity: bool)
-    {
+    pub fn set_gravity_enabled(&self, enable_gravity: bool) {
         unsafe {
             ll::OVR_SensorFusion_SetGravityEnabled(self.ptr, enable_gravity)
         }
     }
 
-    pub fn is_gravity_enabled(&self) -> bool
-    {
+    pub fn is_gravity_enabled(&self) -> bool {
         unsafe {
             ll::OVR_SensorFusion_IsGravityEnabled(self.ptr)
         }
     }
 
-    pub fn get_accel_gain(&self) -> f32
-    {
+    pub fn get_accel_gain(&self) -> f32 {
         unsafe {
             ll::OVR_SensorFusion_GetAccelGain(self.ptr) as f32
         }
     }
 
-    pub fn set_accel_gain(&self, ag: f32)
-    {
+    pub fn set_accel_gain(&self, ag: f32) {
         unsafe {
             ll::OVR_SensorFusion_SetAccelGain(self.ptr, ag as c_float)
         }
     }
 
-    pub fn save_mag_calibration(&self, calibration_name: &str) -> bool
-    {
+    pub fn save_mag_calibration(&self, calibration_name: &str) -> bool {
         let cn = calibration_name.to_c_str();
         unsafe {
             ll::OVR_SensorFusion_SaveMagCalibration(self.ptr, cn.unwrap())
         }
     }
 
-    pub fn load_mag_calibration(&self, calibration_name: &str) -> bool
-    {
+    pub fn load_mag_calibration(&self, calibration_name: &str) -> bool {
         let cn = calibration_name.to_c_str();
         unsafe {
             ll::OVR_SensorFusion_LoadMagCalibration(self.ptr, cn.unwrap())
         }
     }
 
-    pub fn set_yaw_correction_enabled(&self, enable: bool)
-    {
+    pub fn set_yaw_correction_enabled(&self, enable: bool) {
         unsafe {
             ll::OVR_SensorFusion_SetYawCorrectionEnabled(self.ptr, enable)
         }
     }
 
-    pub fn is_yaw_correction_enabled(&self) -> bool
-    {
+    pub fn is_yaw_correction_enabled(&self) -> bool {
         unsafe {
             ll::OVR_SensorFusion_IsYawCorrectionEnabled(self.ptr)
         }
     }
 
-    pub fn set_mag_calibration(&self, m: &Matrix4<f32>)
-    {
+    pub fn set_mag_calibration(&self, m: &Matrix4<f32>) {
         let mat = ll::Matrix4f{
             m11: m.x.x as c_float, m12: m.x.y as c_float, m13: m.x.z as c_float, m14: m.x.w as c_float,
             m21: m.y.x as c_float, m22: m.y.y as c_float, m23: m.y.z as c_float, m24: m.y.w as c_float,
@@ -523,8 +482,7 @@ impl SensorFusion {
         }
     }
 
-    pub fn get_mag_calibration(&self) -> Matrix4<f32>
-    {
+    pub fn get_mag_calibration(&self) -> Matrix4<f32> {
         unsafe {
             let m = ll::OVR_SensorFusion_GetMagCalibration(self.ptr);
 
@@ -536,29 +494,25 @@ impl SensorFusion {
     }
 
     /// TODO this should not return a time_t!
-    pub fn get_mag_calibration_time(&self) -> time_t
-    {
+    pub fn get_mag_calibration_time(&self) -> time_t {
         unsafe {
             ll::OVR_SensorFusion_GetMagCalibrationTime(self.ptr)
         }
     }
 
-    pub fn has_mag_calibration(&self) -> bool
-    {
+    pub fn has_mag_calibration(&self) -> bool {
         unsafe {
             ll::OVR_SensorFusion_HasMagCalibration(self.ptr)
         }
     }
 
-    pub fn clear_mag_calibration(&self)
-    {
+    pub fn clear_mag_calibration(&self) {
         unsafe {
             ll::OVR_SensorFusion_ClearMagCalibration(self.ptr)
         }
     }
 
-    pub fn clear_mag_references(&self, vec: &Vector3<f32>)
-    {
+    pub fn clear_mag_references(&self, vec: &Vector3<f32>) {
         let vec = ll::Vector3f{x: vec.x, y: vec.y, z: vec.z};
 
         unsafe {
@@ -566,8 +520,7 @@ impl SensorFusion {
         }
     }
 
-    pub fn get_calibrated_mag_value(&self) -> Vector3<f32>
-    {
+    pub fn get_calibrated_mag_value(&self) -> Vector3<f32> {
         unsafe {
             let vec = ll::OVR_SensorFusion_GetCalibratedMagValue(self.ptr);
             Vector3::new(vec.x, vec.y, vec.z)
@@ -580,10 +533,8 @@ pub struct SensorDevice {
     msg: Option<*ll::MessageHandler>
 }
 
-impl Drop for SensorDevice
-{
-    fn drop(&mut self)
-    {
+impl Drop for SensorDevice {
+    fn drop(&mut self) {
         unsafe {
             ll::OVR_SensorDevice_drop(self.ptr); 
         }

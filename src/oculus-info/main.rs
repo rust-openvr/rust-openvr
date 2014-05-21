@@ -2,17 +2,43 @@
 
 extern crate ovr = "oculus-vr";
 
-fn main()
-{
+fn main() {
     ovr::init();
 
-    let dm = ovr::DeviceManager::new().unwrap();
-    let dev = dm.enumerate().unwrap();
+    let dm = match ovr::DeviceManager::new() {
+        Some(dm) => dm,
+        None => {
+            println!("Could not initialize Oculus Device Manager");
+            return;
+        }
+    };
+
+    let dev = match dm.enumerate() {
+        Some(d) => d,
+        None => {
+            println!("Could not enumerate Oculus HMD.");
+            println!("Was it unplugged?");
+            return;
+        }
+    };
+
+    let sf = match ovr::SensorFusion::new() {
+        Some(sf) => sf,
+        None => {
+            println!("Could not allocate Sensor Fusion")
+            return;
+        }
+    };
+
+    let sensor = match dev.get_sensor() {
+        Some(sensor) => sensor,
+        None => {
+            println!("Could not get the sensor from HMD");
+            return;
+        }
+    };
+
     let info = dev.get_info();
-
-    let sf = ovr::SensorFusion::new().unwrap();
-    let sensor = dev.get_sensor().unwrap();
-
     sf.attach_to_sensor(&sensor);
 
     match info.resolution() {
