@@ -5,12 +5,14 @@
 extern crate cgmath;
 extern crate libc;
 
-use libc::{c_int, c_uint, c_void};
+use libc::{c_int, c_uint, c_void, c_float};
 use std::str::raw::from_c_str;
 use std::default::Default;
+use std::ptr;
 
 use cgmath::quaternion::Quaternion;
 use cgmath::vector::{Vector2, Vector3};
+use cgmath::matrix::{Matrix4};
 
 #[cfg(target_os = "linux")]
 #[link(name="ovr")]
@@ -167,7 +169,8 @@ pub mod ll {
     pub struct RenderApiConfig {
         pub header: RenderApiConfigHeader,
         pub display: *c_void,
-        pub window: *c_void
+        pub window: *c_void,
+        pub padd: [*c_void, ..6]
     }
 
     pub struct FrameTiming {
@@ -266,6 +269,10 @@ pub mod ll {
         pub fn ovrHmd_BeginEyeRender(hmd: *Hmd, eye: c_uint) -> Posef;
         pub fn ovrHmd_EndEyeRender(hmd: *Hmd, eye: c_uint, 
                                    pose: Posef, texture: *Texture);
+        pub fn ovrMatrix4f_Projection(fov: FovPort,
+                                      znear: c_float,
+                                      zfar: c_float,
+                                      right_handed: bool) -> Matrix4f;
     }
 }
 
@@ -435,12 +442,12 @@ impl Hmd {
 
     pub fn get_fov_texture_size(&self,
                                 eye: EyeType,
-                                fov: ll::FovPort,
+                                fov: FovPort,
                                 pixels_per_display_pixel: f32) -> ll::Sizei {
         unsafe {
             ll::ovrHmd_GetFovTextureSize(self.ptr,
                                          eye.to_ll(),
-                                         fov,
+                                         fov.to_ll(),
                                          pixels_per_display_pixel)
         }
     }
@@ -448,7 +455,7 @@ impl Hmd {
     pub fn configure_rendering<RC: ToRenderConfig>(&self,
                                api_config: &RC,
                                cap: DistortionCapabilities,
-                               eye_fov: PerEye<ll::FovPort>) -> Option<PerEye<EyeRenderDescriptor>> {
+                               eye_fov: PerEye<FovPort>) -> Option<PerEye<EyeRenderDescriptor>> {
         unsafe {
             let out: PerEye<ll::EyeRenderDesc> 
                 = PerEye::new(Default::default(),
@@ -457,7 +464,7 @@ impl Hmd {
                 self.ptr,
                 &api_config.to_render_config(),
                 cap.flags,
-                eye_fov.ptr(),
+                eye_fov.map(|_, d| d.to_ll()).ptr(),
                 out.ptr()
             );
 
@@ -469,7 +476,7 @@ impl Hmd {
         }
     }
 
-    pub fn being_frame(&self, frame_index: uint) -> FrameTiming {
+    pub fn begin_frame(&self, frame_index: uint) -> FrameTiming {
         unsafe {
             FrameTiming::from_ll(
                 ll::ovrHmd_BeginFrame(self.ptr, frame_index as c_uint)
@@ -720,13 +727,21 @@ impl Status {
 }
 
 fn to_quat(q: ll::Quaternionf) -> Quaternion<f32> {
-    Quaternion::new(q.x, q.y, q.z, q.w)
+    Quaternion::new(q.w, q.x, q.y, q.z)
 }
 
 fn to_vec3(v: ll::Vector3f) -> Vector3<f32> {
     Vector3::new(v.x, v.y, v.z)
 }
 
+fn to_mat4(ll: ll::Matrix4f) -> Matrix4<f32> {
+    Matrix4::new(
+        ll.m11, ll.m21, ll.m31, ll.m41,
+        ll.m12, ll.m22, ll.m32, ll.m42,
+        ll.m13, ll.m23, ll.m33, ll.m43,
+        ll.m14, ll.m24, ll.m34, ll.m44
+    )
+}
 
 fn from_quat(q: Quaternion<f32>) -> ll::Quaternionf {
     ll::Quaternionf {
@@ -869,14 +884,18 @@ impl<T> PerEye<T> {
         )
     }
 
-    unsafe fn ptr(&self) -> *T {
+    pub unsafe fn ptr(&self) -> *T {
         &self.left as *T
+    }
+
+    pub unsafe fn mut_ptr(&mut self) -> *mut T {
+        &mut self.left as *mut T
     }
 }
 
 pub struct HmdDescriptionEye {
-    default_eye_fov: ll::FovPort,
-    max_eye_fov: ll::FovPort,
+    pub default_eye_fov: FovPort,
+    pub max_eye_fov: FovPort,
 }
 
 pub struct HmdDescription {
@@ -914,12 +933,12 @@ impl HmdDescription {
                 window_position: sd.window_position,
                 eye_fovs: PerEye::new(
                     HmdDescriptionEye {
-                        default_eye_fov: sd.default_eye_fov[ll::Eye_Left as uint],
-                        max_eye_fov: sd.max_eye_fov[ll::Eye_Left as uint]
+                        default_eye_fov: FovPort::from_ll(sd.default_eye_fov[ll::Eye_Left as uint]),
+                        max_eye_fov: FovPort::from_ll(sd.max_eye_fov[ll::Eye_Left as uint])
                     },
                     HmdDescriptionEye {
-                        default_eye_fov: sd.default_eye_fov[ll::Eye_Right as uint],
-                        max_eye_fov: sd.max_eye_fov[ll::Eye_Right as uint]
+                        default_eye_fov: FovPort::from_ll(sd.default_eye_fov[ll::Eye_Right as uint]),
+                        max_eye_fov: FovPort::from_ll(sd.max_eye_fov[ll::Eye_Right as uint])
                     }
                 ),
                 eye_render_order: [EyeType::from_ll(sd.eye_render_order[0]),
@@ -933,7 +952,7 @@ impl HmdDescription {
 
 pub struct EyeRenderDescriptor {
     pub eye: EyeType,
-    pub fov: ll::FovPort,
+    pub fov: FovPort,
     pub distorted_viewport: ll::Recti,
     pub pixels_per_tan_angle_at_center: Vector2<f32>,
     pub view_adjust: Vector3<f32>
@@ -943,7 +962,7 @@ impl EyeRenderDescriptor {
     fn from_ll(d: &ll::EyeRenderDesc) -> EyeRenderDescriptor {
         EyeRenderDescriptor {
             eye: EyeType::from_ll(d.eye),
-            fov: d.fov,
+            fov: FovPort::from_ll(d.fov),
             distorted_viewport: d.distorted_viewport,
             pixels_per_tan_angle_at_center: 
                 Vector2::new(d.pixels_per_tan_angle_at_center.x,
@@ -958,8 +977,8 @@ impl EyeRenderDescriptor {
 pub struct RenderGLConfig {
     pub size: ll::Sizei,
     pub multisample: int,
-    pub display: *c_void,
-    pub window: *c_void
+    pub display: Option<*c_void>,
+    pub window: Option<*c_void>
 }
 
 pub trait ToRenderConfig {
@@ -974,8 +993,10 @@ impl ToRenderConfig for RenderGLConfig {
                 rt_size: self.size,
                 multisample: self.multisample as c_int,
             },
-            display: self.display,
-            window: self.window
+            display: match self.display { Some(p) => p, None => ptr::null() },
+            window: match self.window { Some(p) => p, None => ptr::null() },
+            padd: [ptr::null(), ptr::null(), ptr::null(),
+                   ptr::null(), ptr::null(), ptr::null()]
         }
     }
 }
@@ -1050,6 +1071,40 @@ impl ToTexture for Texture {
                 viewport: self.viewport,
             },
             texture_id: self.texture
+        }
+    }
+}
+
+pub struct FovPort {
+    pub up: f32,
+    pub down: f32,
+    pub left: f32,
+    pub right: f32
+}
+
+impl FovPort {
+    fn from_ll(ll: ll::FovPort) -> FovPort {
+        FovPort {
+            up: ll.upTan as f32,
+            down: ll.downTan as f32,
+            left: ll.leftTan as f32,
+            right: ll.rightTan as f32
+        }
+    }
+
+    fn to_ll(&self) -> ll::FovPort {
+        ll::FovPort {
+            upTan: self.up as c_float,
+            downTan: self.down as c_float,
+            leftTan: self.left as c_float,
+            rightTan: self.right as c_float
+        }        
+    }
+
+    pub fn projection(&self, znear: f32, zfar: f32, right_handed: bool) -> Matrix4<f32> {
+        unsafe {
+            let mat = ll::ovrMatrix4f_Projection(self.to_ll(), znear, zfar, right_handed);
+            to_mat4(mat)
         }
     }
 }
