@@ -170,15 +170,15 @@ def write_makefile(modules):
 
 
 modules = [Bin("oculus-info", ["oculus-vr"]),
-           LibMakefile("libovr_wrapper.a", "src/oculus-vr/", "src/oculus-vr/libovr_wrapper.a", ["cgmath", "libOculusVR.a"]),
-           LibCMake("libOculusVR.a", "modules/OculusSDK/LibOVR/", "modules/OculusSDK/LibOVR/libOculusVR.a"),
            Lib("cgmath")]
 
 if platform.system() == "Linux":
-    modules += [Lib("oculus-vr", ["libOculusVR.a", "libedid.a", "cgmath", "libovr_wrapper.a"]),
-                LibCMake("libedid.a", "modules/OculusSDK/3rdParty/EDID/", "modules/OculusSDK/3rdParty/EDID/libedid.a")]
+    modules += [Lib("oculus-vr", ["libovr.a", "cgmath"]),
+                LibMakefile("libovr.a",
+                            "modules/OculusSDK/",
+                            "modules/OculusSDK/LibOVR/Lib/Linux/Release/x86_64/libovr.a")]
 
 elif platform.system() == "Darwin":
-    modules += [Lib("oculus-vr", ["libOculusVR.a", "cgmath", "libovr_wrapper.a"])]
+    modules += [Lib("oculus-vr", ["libovr.a", "cgmath"])]
 
 write_makefile(modules)

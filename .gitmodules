@@ -1,6 +1,3 @@
 [submodule "modules/cgmath"]
 	path = modules/cgmath
 	url = https://github.com/bjz/cgmath-rs
-[submodule "thirdparty/OculusSDK"]
-	path = modules/OculusSDK
-	url = https://github.com/jherico/OculusSDK.git
