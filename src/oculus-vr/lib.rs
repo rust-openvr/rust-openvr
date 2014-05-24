@@ -165,6 +165,13 @@ pub mod ll {
     pub static Status_PositionConnected      : c_uint = 0x0020;
     pub static Status_HmdConnected           : c_uint = 0x0080;
 
+    pub static DistortionCap_Chromatic       : c_uint = 0x01;
+    pub static DistortionCap_TimeWarp        : c_uint = 0x02;
+    pub static DistortionCap_Vignette        : c_uint = 0x08;
+
+    pub static Eye_Left                      : c_uint = 0;
+    pub static Eye_Right                     : c_uint = 1;
+
     extern "C" {
         pub fn ovr_Initialize() -> bool;
         pub fn ovr_Shutdown();
@@ -186,7 +193,10 @@ pub mod ll {
                                     sensor_desc: *SensorDesc) -> bool;
         pub fn ovrHmd_GetDesc(hmd: *Hmd,
                               size: *HmdDesc);
-        //pub fn ovrHmd_GetFovTextureSize(hmd: *Hmd);
+        pub fn ovrHmd_GetFovTextureSize(hmd: *Hmd,
+                                        eye: c_uint,
+                                        fov: FovPort,
+                                        pixels: c_float) -> Sizei;
     }
 }
 
@@ -353,6 +363,18 @@ impl Hmd {
             HmdDescription::from_ll(c_desc)
         }
     }
+
+    pub fn get_fov_texture_size(&self,
+                                eye: EyeType,
+                                fov: ll::FovPort,
+                                pixels_per_display_pixel: f32) -> ll::Sizei {
+        unsafe {
+            ll::ovrHmd_GetFovTextureSize(self.ptr,
+                                         eye.to_ll(),
+                                         fov,
+                                         pixels_per_display_pixel)
+        }
+    }
 }
 
 pub struct HmdCapabilities {
@@ -488,16 +510,65 @@ impl SensorCapabilities {
     }
 }
 
-fn to_quat(q: ll::Quaternionf) -> Quaternion<f32> {
-    Quaternion::new(q.x, q.y, q.z, q.w)
+pub struct DistortionCapabilities {
+    flags: c_uint
 }
 
-fn to_vec3(v: ll::Vector3f) -> Vector3<f32> {
-    Vector3::new(v.x, v.y, v.z)
+impl DistortionCapabilities {
+    pub fn new() -> DistortionCapabilities {
+        DistortionCapabilities {
+            flags: 0
+        }
+    }
+
+    pub fn chromatic(&self) -> bool {
+        self.flags & ll::DistortionCap_Chromatic ==
+            ll::DistortionCap_Chromatic
+    }
+
+    pub fn timewarp(&self) -> bool {
+        self.flags & ll::DistortionCap_TimeWarp ==
+            ll::DistortionCap_TimeWarp
+    }
+
+    pub fn vignette(&self) -> bool {
+        self.flags & ll::DistortionCap_Vignette ==
+            ll::DistortionCap_Vignette
+    }
+
+    pub fn set_chromatic(&self, flag: bool) -> DistortionCapabilities {
+        DistortionCapabilities {flags: 
+            if flag {
+                self.flags | ll::DistortionCap_Chromatic
+            } else {
+                self.flags & !ll::DistortionCap_Chromatic
+            }
+        }
+    }
+
+    pub fn set_timewarp(&self, flag: bool) -> DistortionCapabilities {
+        DistortionCapabilities {flags: 
+            if flag {
+                self.flags | ll::DistortionCap_TimeWarp
+            } else {
+                self.flags & !ll::DistortionCap_TimeWarp
+            }
+        }
+    }
+
+    pub fn set_vignette(&self, flag: bool) -> DistortionCapabilities {
+        DistortionCapabilities {flags: 
+            if flag {
+                self.flags | ll::DistortionCap_Vignette
+            } else {
+                self.flags & !ll::DistortionCap_Vignette
+            }
+        }
+    }
 }
 
 #[deriving(Clone)]
-struct Status {
+pub struct Status {
     flags: u32
 }
 
@@ -522,6 +593,15 @@ impl Status {
             ll::Status_HmdConnected
     }
 }
+
+fn to_quat(q: ll::Quaternionf) -> Quaternion<f32> {
+    Quaternion::new(q.x, q.y, q.z, q.w)
+}
+
+fn to_vec3(v: ll::Vector3f) -> Vector3<f32> {
+    Vector3::new(v.x, v.y, v.z)
+}
+
 
 #[deriving(Clone)]
 pub struct Pose {
@@ -596,18 +676,45 @@ impl SensorDescription {
     }
 }
 
+pub enum EyeType {
+    EyeLeft,
+    EyeRight
+}
+
+impl EyeType {
+    fn from_ll(c: c_uint) -> EyeType {
+        match c {
+            ll::Eye_Left => EyeLeft,
+            ll::Eye_Right => EyeRight,
+            _ => fail!("Invalid eye type {:?}", c)
+        }
+    }
+
+    fn to_ll(&self) -> c_uint {
+        match *self {
+            EyeLeft => ll::Eye_Left,
+            EyeRight => ll::Eye_Right
+        }
+    }
+}
+
+pub struct HmdDescriptionEye {
+    default_eye_fov: ll::FovPort,
+    max_eye_fov: ll::FovPort,
+}
+
 pub struct HmdDescription {
     pub hmd_type: HmdType,
     pub product_name: ~str,
     pub manufacture: ~str,
     pub hmd_capabilities: HmdCapabilities,
     pub sensor_capabilities: SensorCapabilities,
-    pub distortion_capabilities: c_uint,
+    pub distortion_capabilities: DistortionCapabilities,
     pub resolution: ll::Sizei,
     pub window_position: ll::Vector2i,
-    pub default_eye_fov: [ll::FovPort, ..2],
-    pub max_eye_fov: [ll::FovPort, ..2],
-    pub eye_render_order: [c_uint, ..2],
+    pub left: HmdDescriptionEye,
+    pub right: HmdDescriptionEye,
+    pub eye_render_order: [EyeType, ..2],
     pub display_device_name: ~str,
     pub display_id: c_int
 }
@@ -619,20 +726,37 @@ impl HmdDescription {
                 hmd_type: HmdType::from_ll(sd.hmd_type),
                 product_name: from_c_str(sd.product_name),
                 manufacture: from_c_str(sd.manufacture),
-                hmd_capabilities: HmdCapabilities{flags: sd.hmd_capabilities},
-                sensor_capabilities: SensorCapabilities{flags: sd.sensor_capabilities},
-                distortion_capabilities: sd.distortion_capabilities,
+                hmd_capabilities: HmdCapabilities{
+                    flags: sd.hmd_capabilities
+                },
+                sensor_capabilities: SensorCapabilities{
+                    flags: sd.sensor_capabilities
+                },
+                distortion_capabilities: DistortionCapabilities{
+                    flags: sd.distortion_capabilities
+                },
                 resolution: sd.resolution,
                 window_position: sd.window_position,
-                default_eye_fov: [sd.default_eye_fov[0],
-                                  sd.default_eye_fov[1]],
-                max_eye_fov: [sd.max_eye_fov[0],
-                              sd.max_eye_fov[1]],
-                eye_render_order: [sd.eye_render_order[0],
-                                   sd.eye_render_order[1]],
+                left: HmdDescriptionEye {
+                    default_eye_fov: sd.default_eye_fov[ll::Eye_Left as uint],
+                    max_eye_fov: sd.max_eye_fov[ll::Eye_Left as uint]
+                },
+                right: HmdDescriptionEye {
+                    default_eye_fov: sd.default_eye_fov[ll::Eye_Right as uint],
+                    max_eye_fov: sd.max_eye_fov[ll::Eye_Right as uint]
+                },
+                eye_render_order: [EyeType::from_ll(sd.eye_render_order[0]),
+                                   EyeType::from_ll(sd.eye_render_order[1])],
                 display_device_name: from_c_str(sd.display_device_name),
                 display_id: sd.display_id
             }
+        }
+    }
+
+    pub fn eye<'a>(&'a self, eye: EyeType) -> &'a HmdDescriptionEye {
+        match eye {
+            EyeLeft => &self.left,
+            EyeRight => &self.right
         }
     }
 }

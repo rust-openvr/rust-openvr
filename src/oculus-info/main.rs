@@ -46,11 +46,11 @@ fn main() {
     println!("Manufacture: {:s}", hmd_desc.manufacture);
     println!("Hmd Capabilities: {:?}", hmd_desc.hmd_capabilities);
     println!("Sensor Capabilities: {:?}", hmd_desc.sensor_capabilities);
-    println!("Distorion Capabilities: {}", hmd_desc.distortion_capabilities);
+    println!("Distorion Capabilities: {:?}", hmd_desc.distortion_capabilities);
     println!("Resolution: {:?}", hmd_desc.resolution);
     println!("Window Position: {:?}", hmd_desc.window_position);
-    println!("Default eye field of view: {:?}", hmd_desc.default_eye_fov);
-    println!("Max eye field of view: {:?}", hmd_desc.max_eye_fov);
+    println!("right: {:?}", hmd_desc.right);
+    println!("left {:?}", hmd_desc.left);
     println!("Eyes render order: {:?}", hmd_desc.eye_render_order);
     println!("Display device name: {:s}", hmd_desc.display_device_name);
     println!("Display idr: {}", hmd_desc.display_id);
@@ -58,7 +58,7 @@ fn main() {
 
     /*let dm = match ovr::DeviceManager::new() {
         Some(dm) => dm,
-        None => {
+        None => {s
             println!("Could not initialize Oculus Device Manager");
             return;
         }
