@@ -5,18 +5,12 @@
 extern crate cgmath;
 extern crate libc;
 
-use libc::{c_int, c_uint, c_float, time_t, c_void};
-use std::c_str::ToCStr;
+use libc::{c_int, c_uint, c_void};
 use std::str::raw::from_c_str;
-use std::ptr;
 use std::default::Default;
 
 use cgmath::quaternion::Quaternion;
 use cgmath::vector::{Vector2, Vector3};
-use cgmath::matrix::{Matrix, Matrix4, ToMatrix4};
-use cgmath::projection::perspective;
-use cgmath::transform::Transform3D;
-use cgmath::angle::rad;
 
 #[cfg(target_os = "linux")]
 #[link(name="ovr")]
@@ -38,8 +32,7 @@ extern {}
 
 
 pub mod ll {
-    use libc::{c_uint, c_int, c_float, c_long, c_char, time_t, c_void, c_double};
-    use libc::{c_short};
+    use libc::{c_uint, c_int, c_float, c_char, c_void, c_double, c_short};
     use std::ptr;
     use std::default::Default;
 
@@ -87,14 +80,14 @@ pub mod ll {
 
 
     #[deriving(Clone, Default)]
-    pub struct Pose {
+    pub struct Posef {
         pub orientation: Quaternionf,
         pub position: Vector3f
     }
 
     #[deriving(Clone, Default)]
     pub struct PoseState {
-        pub pose: Pose,
+        pub pose: Posef,
         pub angular_velocity: Vector3f,
         pub linear_velocity: Vector3f,
         pub angular_acceleration: Vector3f,
@@ -177,6 +170,26 @@ pub mod ll {
         pub window: *c_void
     }
 
+    pub struct FrameTiming {
+        pub delta_seconds: f32,
+        pub this_frame_seconds: f64,
+        pub timewarp_point_seconds: f64,
+        pub next_frame_seconds: f64,
+        pub scanout_midpoint_seconds: f64,
+        pub eye_scanout_seconds: [f64, ..2]        
+    }
+
+    pub struct TextureHeader {
+        pub render_api_type: c_uint,
+        pub size: Sizei,
+        pub viewport: Recti    
+    }
+
+    pub struct Texture {
+        pub header: TextureHeader,
+        pub texture_id: u32
+    }
+
     pub static Hmd_None                      : c_int = 0;
     pub static Hmd_DK1                       : c_int = 3;
     pub static Hmd_DKHD                      : c_int = 4;
@@ -247,6 +260,12 @@ pub mod ll {
                                          distortionCaps: c_uint,
                                          fov_in: *FovPort,
                                          render_desc_out: *EyeRenderDesc) -> bool;
+        pub fn ovrHmd_BeginFrame(hmd: *Hmd,
+                                 frame_index: c_uint) -> FrameTiming;
+        pub fn ovrHmd_EndFrame(hmd: *Hmd);
+        pub fn ovrHmd_BeginEyeRender(hmd: *Hmd, eye: c_uint) -> Posef;
+        pub fn ovrHmd_EndEyeRender(hmd: *Hmd, eye: c_uint, 
+                                   pose: Posef, texture: *Texture);
     }
 }
 
@@ -447,6 +466,38 @@ impl Hmd {
             } else {
                 None
             }
+        }
+    }
+
+    pub fn being_frame(&self, frame_index: uint) -> FrameTiming {
+        unsafe {
+            FrameTiming::from_ll(
+                ll::ovrHmd_BeginFrame(self.ptr, frame_index as c_uint)
+            )
+        }
+    }
+
+    pub fn end_frame(&self) {
+        unsafe {
+            ll::ovrHmd_EndFrame(self.ptr);
+        }
+    }
+
+    pub fn begin_eye_render(&self, eye: EyeType) -> Pose {
+        unsafe {
+            Pose::from_ll(ll::ovrHmd_BeginEyeRender(self.ptr, eye.to_ll()))
+        }
+    }
+
+    pub fn end_eye_render<T: ToTexture>(&self,
+                                        eye: EyeType,
+                                        pose: Pose,
+                                        texture: &T) {
+        unsafe {
+            ll::ovrHmd_EndEyeRender(self.ptr,
+                                    eye.to_ll(),
+                                    pose.to_ll(),
+                                    &texture.to_texture());
         }
     }
 }
@@ -677,6 +728,18 @@ fn to_vec3(v: ll::Vector3f) -> Vector3<f32> {
 }
 
 
+fn from_quat(q: Quaternion<f32>) -> ll::Quaternionf {
+    ll::Quaternionf {
+        x: q.v.x, y: q.v.y, z: q.v.z, w: q.s
+    }
+}
+
+fn from_vec3(v: Vector3<f32>) -> ll::Vector3f {
+    ll::Vector3f {
+        x: v.x, y: v.y, z: v.z
+    }
+}
+
 #[deriving(Clone)]
 pub struct Pose {
     pub orientation: Quaternion<f32>,
@@ -684,10 +747,17 @@ pub struct Pose {
 }
 
 impl Pose {
-    fn from_ll(pose: ll::Pose) -> Pose {
+    fn from_ll(pose: ll::Posef) -> Pose {
         Pose {
             orientation: to_quat(pose.orientation),
             position: to_vec3(pose.position),
+        }
+    }
+
+    fn to_ll(&self) -> ll::Posef {
+        ll::Posef {
+            orientation: from_quat(self.orientation),
+            position: from_vec3(self.position),
         }
     }
 }
@@ -906,6 +976,80 @@ impl ToRenderConfig for RenderGLConfig {
             },
             display: self.display,
             window: self.window
+        }
+    }
+}
+
+pub struct FrameTiming {
+    pub delta_seconds: f32,
+    pub this_frame_seconds: f64,
+    pub timewarp_point_seconds: f64,
+    pub next_frame_seconds: f64,
+    pub scanout_midpoint_seconds: f64,
+    pub eye_scanout_seconds: PerEye<f64>
+}
+
+impl FrameTiming {
+    fn from_ll(old: ll::FrameTiming) -> FrameTiming {
+        FrameTiming {
+            delta_seconds: old.delta_seconds,
+            this_frame_seconds: old.this_frame_seconds,
+            timewarp_point_seconds: old.timewarp_point_seconds,
+            next_frame_seconds: old.next_frame_seconds,
+            scanout_midpoint_seconds: old.scanout_midpoint_seconds,
+            eye_scanout_seconds: PerEye::new(old.eye_scanout_seconds[ll::Eye_Left as uint],
+                                             old.eye_scanout_seconds[ll::Eye_Right as uint])
+        }
+    }
+}
+
+trait ToTexture {
+    fn to_texture(&self) -> ll::Texture;
+}
+
+pub struct Texture {
+    pub size: ll::Sizei,
+    pub viewport: ll::Recti,
+    pub texture: u32
+}
+
+impl Texture {
+    pub fn new(width: int,
+               height: int,
+               viewport_x: int,
+               viewport_y: int,
+               viewport_width: int,
+               viewport_height: int,
+               opengl_texture: u32) -> Texture {
+        Texture {
+            size: ll::Sizei {
+                x: width as i32,
+                y: height as i32
+            },
+            viewport: ll::Recti {
+                pos: ll::Vector2i {
+                    x: viewport_x as i32,
+                    y: viewport_y as i32
+                },
+                size: ll::Sizei {
+                    x: viewport_width as i32,
+                    y: viewport_height as i32
+                }
+            },
+            texture: opengl_texture
+        }
+    }
+}
+
+impl ToTexture for Texture {
+    fn to_texture(&self) -> ll::Texture {
+        ll::Texture {
+            header: ll::TextureHeader {
+                render_api_type: ll::RenderAPI_OpenGL,
+                size: self.size,
+                viewport: self.viewport,
+            },
+            texture_id: self.texture
         }
     }
 }
