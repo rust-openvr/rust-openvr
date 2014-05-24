@@ -49,8 +49,8 @@ fn main() {
     println!("Distorion Capabilities: {:?}", hmd_desc.distortion_capabilities);
     println!("Resolution: {:?}", hmd_desc.resolution);
     println!("Window Position: {:?}", hmd_desc.window_position);
-    println!("right: {:?}", hmd_desc.right);
-    println!("left {:?}", hmd_desc.left);
+    println!("right: {:?}", hmd_desc.eye_fovs.right);
+    println!("left {:?}", hmd_desc.eye_fovs.left);
     println!("Eyes render order: {:?}", hmd_desc.eye_render_order);
     println!("Display device name: {:s}", hmd_desc.display_device_name);
     println!("Display idr: {}", hmd_desc.display_id);

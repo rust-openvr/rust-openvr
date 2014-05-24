@@ -5,14 +5,14 @@
 extern crate cgmath;
 extern crate libc;
 
-use libc::{c_int, c_uint, c_float, time_t};
+use libc::{c_int, c_uint, c_float, time_t, c_void};
 use std::c_str::ToCStr;
 use std::str::raw::from_c_str;
 use std::ptr;
 use std::default::Default;
 
 use cgmath::quaternion::Quaternion;
-use cgmath::vector::Vector3;
+use cgmath::vector::{Vector2, Vector3};
 use cgmath::matrix::{Matrix, Matrix4, ToMatrix4};
 use cgmath::projection::perspective;
 use cgmath::transform::Transform3D;
@@ -44,10 +44,23 @@ pub mod ll {
     use std::default::Default;
 
     #[deriving(Clone, Default)]
-    pub struct Vector2i{pub x: c_int, pub y: c_int}
+    pub struct Vector2i {
+        pub x: c_int,
+        pub y: c_int
+    }
 
     #[deriving(Clone, Default)]
-    pub struct Sizei{pub x: c_int, pub y: c_int}
+    pub struct Sizei {
+        pub x: c_int,
+        pub y: c_int
+    }
+
+    #[deriving(Clone, Default)]
+    pub struct Recti {
+        pub pos: Vector2i,
+        pub size: Sizei
+    }
+
 
     #[deriving(Clone, Default)]
     pub struct FovPort {
@@ -56,6 +69,9 @@ pub mod ll {
         pub leftTan: c_float,
         pub rightTan: c_float
     }
+
+    #[deriving(Clone, Default)]
+    pub struct Vector2f {pub x: c_float, pub y: c_float}
 
     #[deriving(Clone, Default)]
     pub struct Vector3f {pub x: c_float, pub y: c_float, pub z: c_float}
@@ -140,6 +156,27 @@ pub mod ll {
         pub serial_number: [c_char, ..24]
     }
 
+    #[deriving(Clone, Default)]
+    pub struct EyeRenderDesc {
+        pub eye: c_uint,
+        pub fov: FovPort,
+        pub distorted_viewport: Recti,
+        pub pixels_per_tan_angle_at_center: Vector2f,
+        pub view_adjust: Vector3f
+    }
+
+    pub struct RenderApiConfigHeader {
+        pub render_api_type: c_uint,
+        pub rt_size: Sizei,
+        pub multisample: c_int,
+    }
+
+    pub struct RenderApiConfig {
+        pub header: RenderApiConfigHeader,
+        pub display: *c_void,
+        pub window: *c_void
+    }
+
     pub static Hmd_None                      : c_int = 0;
     pub static Hmd_DK1                       : c_int = 3;
     pub static Hmd_DKHD                      : c_int = 4;
@@ -172,6 +209,14 @@ pub mod ll {
     pub static Eye_Left                      : c_uint = 0;
     pub static Eye_Right                     : c_uint = 1;
 
+    pub static RenderAPI_None                : c_uint = 0;
+    pub static RenderAPI_OpenGL              : c_uint = 1;
+    pub static RenderAPI_Android_GLES        : c_uint = 2;
+    pub static RenderAPI_D3D9                : c_uint = 3;
+    pub static RenderAPI_D3D10               : c_uint = 4;
+    pub static RenderAPI_D3D11               : c_uint = 5;
+    pub static RenderAPI_Count               : c_uint = 6;
+
     extern "C" {
         pub fn ovr_Initialize() -> bool;
         pub fn ovr_Shutdown();
@@ -197,6 +242,11 @@ pub mod ll {
                                         eye: c_uint,
                                         fov: FovPort,
                                         pixels: c_float) -> Sizei;
+        pub fn ovrHmd_ConfigureRendering(hmd: *Hmd,
+                                         apiConfig: *RenderApiConfig,
+                                         distortionCaps: c_uint,
+                                         fov_in: *FovPort,
+                                         render_desc_out: *EyeRenderDesc) -> bool;
     }
 }
 
@@ -373,6 +423,30 @@ impl Hmd {
                                          eye.to_ll(),
                                          fov,
                                          pixels_per_display_pixel)
+        }
+    }
+
+    pub fn configure_rendering<RC: ToRenderConfig>(&self,
+                               api_config: &RC,
+                               cap: DistortionCapabilities,
+                               eye_fov: PerEye<ll::FovPort>) -> Option<PerEye<EyeRenderDescriptor>> {
+        unsafe {
+            let out: PerEye<ll::EyeRenderDesc> 
+                = PerEye::new(Default::default(),
+                              Default::default());
+            let was_started = ll::ovrHmd_ConfigureRendering(
+                self.ptr,
+                &api_config.to_render_config(),
+                cap.flags,
+                eye_fov.ptr(),
+                out.ptr()
+            );
+
+            if was_started {
+                Some(out.map(|_, d| EyeRenderDescriptor::from_ll(d)))
+            } else {
+                None
+            }
         }
     }
 }
@@ -698,6 +772,38 @@ impl EyeType {
     }
 }
 
+pub struct PerEye<T> {
+    pub left: T,
+    pub right: T
+}
+
+impl<T> PerEye<T> {
+    pub fn new(left: T, right: T) -> PerEye<T> {
+        PerEye {
+            left: left,
+            right: right
+        }
+    }
+
+    pub fn eye<'a>(&'a self, eye: EyeType) -> &'a T {
+        match eye {
+            EyeLeft => &self.left,
+            EyeRight => &self.right
+        }
+    }
+
+    pub fn map<U>(&self, f: |EyeType, &T| -> U) -> PerEye<U> {
+        PerEye::new(
+            f(EyeLeft, &self.left),
+            f(EyeRight, &self.right)
+        )
+    }
+
+    unsafe fn ptr(&self) -> *T {
+        &self.left as *T
+    }
+}
+
 pub struct HmdDescriptionEye {
     default_eye_fov: ll::FovPort,
     max_eye_fov: ll::FovPort,
@@ -712,8 +818,7 @@ pub struct HmdDescription {
     pub distortion_capabilities: DistortionCapabilities,
     pub resolution: ll::Sizei,
     pub window_position: ll::Vector2i,
-    pub left: HmdDescriptionEye,
-    pub right: HmdDescriptionEye,
+    pub eye_fovs: PerEye<HmdDescriptionEye>,
     pub eye_render_order: [EyeType, ..2],
     pub display_device_name: ~str,
     pub display_id: c_int
@@ -737,14 +842,16 @@ impl HmdDescription {
                 },
                 resolution: sd.resolution,
                 window_position: sd.window_position,
-                left: HmdDescriptionEye {
-                    default_eye_fov: sd.default_eye_fov[ll::Eye_Left as uint],
-                    max_eye_fov: sd.max_eye_fov[ll::Eye_Left as uint]
-                },
-                right: HmdDescriptionEye {
-                    default_eye_fov: sd.default_eye_fov[ll::Eye_Right as uint],
-                    max_eye_fov: sd.max_eye_fov[ll::Eye_Right as uint]
-                },
+                eye_fovs: PerEye::new(
+                    HmdDescriptionEye {
+                        default_eye_fov: sd.default_eye_fov[ll::Eye_Left as uint],
+                        max_eye_fov: sd.max_eye_fov[ll::Eye_Left as uint]
+                    },
+                    HmdDescriptionEye {
+                        default_eye_fov: sd.default_eye_fov[ll::Eye_Right as uint],
+                        max_eye_fov: sd.max_eye_fov[ll::Eye_Right as uint]
+                    }
+                ),
                 eye_render_order: [EyeType::from_ll(sd.eye_render_order[0]),
                                    EyeType::from_ll(sd.eye_render_order[1])],
                 display_device_name: from_c_str(sd.display_device_name),
@@ -752,11 +859,53 @@ impl HmdDescription {
             }
         }
     }
+}
 
-    pub fn eye<'a>(&'a self, eye: EyeType) -> &'a HmdDescriptionEye {
-        match eye {
-            EyeLeft => &self.left,
-            EyeRight => &self.right
+pub struct EyeRenderDescriptor {
+    pub eye: EyeType,
+    pub fov: ll::FovPort,
+    pub distorted_viewport: ll::Recti,
+    pub pixels_per_tan_angle_at_center: Vector2<f32>,
+    pub view_adjust: Vector3<f32>
+}
+
+impl EyeRenderDescriptor {
+    fn from_ll(d: &ll::EyeRenderDesc) -> EyeRenderDescriptor {
+        EyeRenderDescriptor {
+            eye: EyeType::from_ll(d.eye),
+            fov: d.fov,
+            distorted_viewport: d.distorted_viewport,
+            pixels_per_tan_angle_at_center: 
+                Vector2::new(d.pixels_per_tan_angle_at_center.x,
+                             d.pixels_per_tan_angle_at_center.y),
+            view_adjust: Vector3::new(d.view_adjust.x,
+                                      d.view_adjust.y,
+                                      d.view_adjust.z)
+        }
+    }
+}
+
+pub struct RenderGLConfig {
+    pub size: ll::Sizei,
+    pub multisample: int,
+    pub display: *c_void,
+    pub window: *c_void
+}
+
+pub trait ToRenderConfig {
+    fn to_render_config(&self) -> ll::RenderApiConfig;
+}
+
+impl ToRenderConfig for RenderGLConfig {
+    fn to_render_config(&self) -> ll::RenderApiConfig {
+        ll::RenderApiConfig {
+            header: ll::RenderApiConfigHeader {
+                render_api_type: ll::RenderAPI_OpenGL,
+                rt_size: self.size,
+                multisample: self.multisample as c_int,
+            },
+            display: self.display,
+            window: self.window
         }
     }
 }
