@@ -173,10 +173,10 @@ modules = [Bin("oculus-info", ["oculus-vr"]),
            Lib("cgmath")]
 
 if platform.system() == "Linux":
-    modules += [Lib("oculus-vr", ["libovr.a", "cgmath"]),
-                LibMakefile("libovr.a",
-                            "modules/OculusSDK/",
-                            "modules/OculusSDK/LibOVR/Lib/Linux/Release/x86_64/libovr.a")]
+    modules += [Lib("oculus-vr", ["libOVR_C.so", "cgmath"]),
+                LibCMake("libOVR_C.so",
+                         "modules/OculusSDK/",
+                         "modules/OculusSDK/output/libOVR_C.so")]
 
 elif platform.system() == "Darwin":
     modules += [Lib("oculus-vr", ["libovr.a", "cgmath"])]
