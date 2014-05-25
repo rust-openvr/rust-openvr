@@ -190,7 +190,8 @@ pub mod ll {
 
     pub struct Texture {
         pub header: TextureHeader,
-        pub texture_id: u32
+        pub texture_id: u32,
+        pub padd: [*c_void, ..7]
     }
 
     pub static Hmd_None                      : c_int = 0;
@@ -1070,7 +1071,9 @@ impl ToTexture for Texture {
                 size: self.size,
                 viewport: self.viewport,
             },
-            texture_id: self.texture
+            texture_id: self.texture,
+            padd: [ptr::null(), ptr::null(), ptr::null(), ptr::null(),
+                   ptr::null(), ptr::null(), ptr::null()]
         }
     }
 }
