@@ -15,7 +15,7 @@ use cgmath::vector::{Vector2, Vector3};
 use cgmath::matrix::{Matrix4};
 
 #[cfg(target_os = "linux")]
-#[link(name="OVR_C")]
+#[link(name="ovr")]
 #[link(name="stdc++")]
 #[link(name="udev")]
 #[link(name="Xinerama")]
@@ -25,7 +25,7 @@ use cgmath::matrix::{Matrix4};
 extern {}
  
 #[cfg(target_os = "macos")]
-#[link(name="OVR_C")]
+#[link(name="ovr")]
 #[link(name="stdc++")]
 #[link(name = "Cocoa", kind = "framework")]
 #[link(name = "IOKit", kind = "framework")]

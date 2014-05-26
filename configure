@@ -7,18 +7,39 @@ import os.path
 import platform
 
 class Module:
+    def set_source_dir(self, source_dir):
+        self.source_dir = source_dir
+
+    def set_output_dir(self, output_dir):
+        self.output_dir = output_dir
+
+    def get_base_dir(self):
+        return self.source_dir
+
+    def get_output_dir(self):
+        return os.path.join(self.output_dir, self.dir)
+
+    def get_source_dir(self):
+        return os.path.join(self.get_base_dir(), "src")
+
+    def get_source_crate(self):
+        return os.path.join(self.get_source_dir(), self.name, self.ext)
+
+    def get_test_dir(self):
+        return os.path.join(self.get_source_dir(), self.name, "test.rs")
+
     def has_tests(self):
-        return os.path.isfile("src/%s/test.rs" % self.name)
+        return os.path.isfile(self.get_test_dir())
 
     def get_dep(self):
-        args = ["rustc", "src/%s/%s" % (self.name, self.ext),
-                "--dep-info", ".tmp.txt", "--no-analysis", "--no-trans", "--out-dir=%s" % self.dir]
+        args = ["rustc", self.get_source_crate(),
+                "--dep-info", ".tmp.txt", "--no-analysis", "--no-trans", "--out-dir=%s" % self.get_output_dir()]
         subprocess.call(args)
         with open(".tmp.txt", "r") as f:
             return f.read().split("\n")[0]
 
     def get_name(self):
-        args = ["rustc", "--crate-file-name", "src/%s/%s" % (self.name, self.ext)]
+        args = ["rustc", "--crate-file-name", self.get_source_crate()]
         with open(".tmp.txt", "w+") as f:
             subprocess.call(args, stdout=f)
             f.seek(0)
@@ -36,18 +57,41 @@ class Module:
 
     def make_rule(self, mods):
         dep = self.get_dep() + " "
-        dep +=  " ".join(mods[m].ename for m in self.dep_modules)
-        how = "%s\n\trustc $(RUST_FLAGS) --out-dir=%s %s src/%s/%s\n" % (dep, self.dir, self.get_flags(mods), self.name, self.ext)
+        dep +=  " ".join(mods[m].get_ename() for m in self.dep_modules)
+        setup = ""
+        if self.setup:
+            setup = "\tsh -c \"%s\"\n" % self.setup
+        how = "%s\n%s\trustc --out-dir=%s %s %s\n" % (
+            dep, setup, self.get_output_dir(), self.get_flags(mods), self.get_source_crate()
+        )
         return how
 
     def make_test_rules(self, mods):
         dep = self.get_dep() + " "
-        dep +=  " ".join(mods[m].ename for m in self.dep_modules)
-        dep = ": ".join(["test/%s" % self.name, " ".join([self.ename, "src/%s/test.rs" % self.name, dep.split(": ", 2)[1]])])
-        how = "%s\n\trustc $(RUST_FLAGS) --test -o test/%s %s src/%s/test.rs\n" % (dep, self.name, self.get_flags(mods), self.name)
+        dep +=  " ".join(mods[m].get_ename() for m in self.dep_modules)
+        dep = ": ".join(["test/%s" % self.name, " ".join(
+            [self.get_ename(), os.path.join(self.get_source_dir()), self.get_test_dir(), dep.split(": ", 2)[1]])]
+        )
+        how = "%s\n\trustc --test -o test/%s %s %s\n" % (
+            dep, self.name, self.get_flags(mods), self.get_test_dir()
+        )
         how += "\ntest/.%s.check: test/%s\n" % (self.name, self.name)
         how += "\t./test/%s && touch test/.%s.check\n" % (self.name, self.name)
         return how
+
+    def pre_setup(self):
+        if self.presetup:
+            p = subprocess.Popen(["sh", "-c", self.presetup])
+            p.wait()
+
+    def write_cleanup(self, f):
+        pass
+
+    def get_ename(self):
+        if self.ename == None:
+            self.ename = os.path.join(self.dir, self.get_name())
+        return self.ename
+
 
 class cd:
     """Context manager for changing the current working directory, creating if necessary"""
@@ -68,89 +112,193 @@ class Lib(Module):
     ext = "lib.rs"
     dir = "lib"
     flags = ""
-    def __init__(self, name, dep_modules=None, other_flags=""):
+    def __init__(self, name, dep_modules=None, other_flags="", setup=None, presetup=None):
+        self.source_dir = ""
         self.name = name
-        self.ename = "lib/%s" % self.get_name()
+        self.ename = None
         self.other_flags = other_flags
+        self.setup = setup
+        self.presetup = presetup
         if dep_modules:
             self.dep_modules = dep_modules
         else:
             self.dep_modules = []
+
+    def get_flags(self, mods):
+        flags = ["$(RUST_LIB_FLAGS)", self.flags] + self.collect_flags(mods)
+        return " ".join(flags) 
 
 class Bin(Module):
     ext = "main.rs"
     dir = "bin"
-    flags = "-Zlto"
-    def __init__(self, name, dep_modules=None, other_flags=""):
+    flags = ""
+
+    def __init__(self, name, dep_modules=None, other_flags="", setup=None, presetup=None):
+        self.source_dir = ""
         self.name = name
-        self.ename = "bin/%s" % self.get_name()
+        self.ename = None
         self.other_flags = other_flags
-        if dep_modules:
+        self.setup = setup
+        self.presetup = presetup
+        if dep_modules: 
             self.dep_modules = dep_modules
         else:
             self.dep_modules = []
 
-class LibMakefile(Module):
+    def get_flags(self, mods):
+        flags = ["$(RUST_BIN_FLAGS)", self.flags] + self.collect_flags(mods)
+        return " ".join(flags) 
+
+class LibXcodebuild(Module):
     ext = ""
-    dir = ""
+    dir = "lib"
     flags = ""
 
     def get_name(self):
         return self.name
 
-    def __init__(self, name, path_to_makefile_dir, path_to_output, dep_modules=None, other_flags=""):
+    def get_path_to_xcode_project(self):
+        return os.path.join(self.get_base_dir(), self.path_to_xcode_project)
+
+    def get_path_to_output_dir(self):
+        return " ".join(os.path.join(self.get_base_dir(), p) for p in self.path_to_output)
+
+    def __init__(self, name, path_to_xcode_project, path_to_output, dep_modules=None, other_flags=""):
+        self.source_dir = ""
         self.name = name
-        self.ename = "lib/%s" % self.get_name()
+        self.ename = None
         self.other_flags = other_flags
-        self.path_to_makefile_dir = path_to_makefile_dir
+        self.path_to_xcode_project = path_to_xcode_project
         self.path_to_output = path_to_output
+        self.setup = None
+        self.presetup = None
         if dep_modules:
             self.dep_modules = dep_modules
         else:
             self.dep_modules = []
 
     def make_rule(self, mods):
-        out  = "%s: %s\n" % (self.ename, self.path_to_makefile_dir + "Makefile")
-        out += "\tmake -C %s && cp %s %s\n" % (self.path_to_makefile_dir, self.path_to_output, self.ename)
+        out = "%s: %s\n" % (self.get_ename(),
+                            " ".join(mods[m].get_ename() for m in self.dep_modules))
+        out += "\txcodebuild -project %s build\n\tcp %s lib\n" % (
+            self.get_path_to_xcode_project(), self.get_path_to_output_dir()
+        )
         return out
 
-class LibCMake(Module):
+    def write_cleanup(self, f):
+        f.write("\t-xcodebuild -project %s clean\n" % self.get_path_to_xcode_project())
+
+class LibMakefile(Module):
     ext = ""
-    dir = ""
+    dir = "lib"
     flags = ""
 
     def get_name(self):
         return self.name
 
-    def __init__(self, name, path_to_makefile_dir, path_to_output, dep_modules=None, other_flags="", cmake_flags=""):
+    def get_path_to_makefile_dir(self):
+        return os.path.join(self.get_base_dir(), self.path_to_makefile_dir)
+
+    def get_path_to_output_dir(self):
+        return " ".join(os.path.join(self.get_base_dir(), p) for p in self.path_to_output)
+
+    def __init__(self, name, path_to_makefile_dir, path_to_output, dep_modules=None, other_flags=""):
+        self.source_dir = ""
         self.name = name
-        self.ename = "lib/%s" % self.get_name()
+        self.ename = None
+        self.other_flags = other_flags
+        self.path_to_makefile_dir = path_to_makefile_dir
+        self.path_to_output = path_to_output
+        self.setup = None
+        self.presetup = None
+        if dep_modules:
+            self.dep_modules = dep_modules
+        else:
+            self.dep_modules = []
+
+    def make_rule(self, mods):
+        out = "%s: %s %s\n" % (self.get_ename(),
+                                self.get_path_to_makefile_dir() + "Makefile",
+                                " ".join(mods[m].get_ename() for m in self.dep_modules))
+        out += "\tmake -j 16 -C %s\n\tcp %s lib\n" % (
+            self.get_path_to_makefile_dir(), self.get_path_to_output_dir()
+        )
+        return out
+
+    def write_cleanup(self, f):
+        f.write("\t-make -C %s clean\n" % self.path_to_makefile_dir)
+
+class LibConfigureMakefile(LibMakefile):
+    def make_rule(self, mods):
+        out  = "%s:\n" % (os.path.join(self.get_path_to_makefile_dir(), "Makefile"))
+        out += "\tcd %s && ./configure\n\n" % (
+            os.path.join(self.get_path_to_makefile_dir())
+        )
+        out += "%s: %s\n" % (self.get_ename(), os.path.join(self.get_path_to_makefile_dir(), "Makefile"))
+        out += "\tmake -j 16 -C %s\n\tcp %s lib\n" % (
+            self.get_path_to_makefile_dir(), self.get_path_to_output_dir()
+        )
+        return out    
+
+class LibCMake(Module):
+    ext = ""
+    dir = "lib"
+    flags = ""
+
+    def get_name(self):
+        return self.name
+
+    def get_path_to_makefile_dir(self):
+        return os.path.join(self.get_base_dir(), self.path_to_makefile_dir)
+
+    def get_path_to_output_dir(self):
+        return " ".join(os.path.join(self.get_base_dir(), p) for p in self.path_to_output)
+
+    def __init__(self, name, path_to_makefile_dir, path_to_output, dep_modules=None, other_flags="", cmake_flags=""):
+        self.source_dir = ""
+        self.name = name
+        self.ename = None
         self.other_flags = other_flags
         self.path_to_makefile_dir = path_to_makefile_dir
         self.path_to_output = path_to_output
         self.cmake_flags = cmake_flags
+        self.setup = None
+        self.presetup = None
         if dep_modules:
             self.dep_modules = dep_modules
         else:
             self.dep_modules = []
 
     def make_rule(self, mods):
-        out  = "%s:\n" % (self.path_to_makefile_dir + "Makefile")
-        out += "\tcd %s && cmake %s .\n\n" % (self.path_to_makefile_dir, self.cmake_flags)
-        out += "%s: %s\n" % (self.ename, self.path_to_makefile_dir + "Makefile")
-        out += "\tmake -C %s && cp %s %s\n" % (self.path_to_makefile_dir, self.path_to_output, self.ename)
+        out  = "%s:\n" % (self.get_path_to_makefile_dir() + "Makefile")
+        out += "\tcd %s && cmake %s .\n\n" % (self.get_path_to_makefile_dir(), self.cmake_flags)
+        out += "%s: %s %s\n" % (self.get_ename(),
+                                self.get_path_to_makefile_dir() + "Makefile",
+                                " ".join(mods[m].get_ename() for m in self.dep_modules))
+        out += "\tmake -j 16 -C %s && cp %s lib\n" % (
+            self.get_path_to_makefile_dir(), self.get_path_to_output_dir()
+        )
         return out
 
+    def write_cleanup(self, f):
+        f.write("\t-make -C %s clean\n" % self.path_to_makefile_dir)
+        f.write("\t-rm %s\n" % (os.path.join(self.path_to_makefile_dir, "Makefile")))
 
 def write_makefile(modules):
     modules = {m.name: m for m in modules}
 
+    for m in modules.values():
+        m.pre_setup()
+
     rules = "\n".join(m.make_rule(modules) for m in modules.values()) + "\n"
     rules += "\n".join(m.make_test_rules(modules) for m in modules.values() if m.has_tests())
-    all = " ".join(m.ename for m in modules.values())
+    all = " ".join(m.get_ename() for m in modules.values())
 
     with open("Makefile", "w+") as f:
-        f.write("RUST_FLAGS=--opt-level=3 -L lib\n")
+        f.write("RUST_FLAGS=-L lib --opt-level=3\n")
+        f.write("RUST_LIB_FLAGS=$(RUST_FLAGS)\n")
+        f.write("RUST_BIN_FLAGS=$(RUST_FLAGS) -Zlto\n")
+        f.write("RUST_TEST_FLAGS=$(RUST_FLAGS)\n")
         f.write("\n")
         f.write("all: lib bin test %s\n" % all)
         f.write("\n")
@@ -164,10 +312,21 @@ def write_makefile(modules):
         f.write("\n")
         f.write("test/.check: lib test %s\n" % " ".join("test/.%s.check" % m.name for m in modules.values() if m.has_tests()))
         f.write("\n")
-        f.write("clean:\n\trm -r lib bin test\n")
+        f.write("clean:\n\t-rm -r lib bin test\n")
+        for m in modules.values():
+            m.write_cleanup(f)
         f.write("\n")
         f.write(rules) 
 
+def set_output_dir(modules, output_dir):
+    for m in modules:
+        m.set_output_dir(output_dir)
+
+def set_source_dir(modules, source_dir):
+    for m in modules:
+        m.set_source_dir(source_dir)
+
+_base = os.path.abspath(os.path.dirname(__file__))
 
 modules = [Bin("oculus-info", ["oculus-vr"]),
            Lib("cgmath")]
@@ -179,6 +338,13 @@ if platform.system() == "Linux":
                          "modules/OculusSDK/output/libOVR_C.so")]
 
 elif platform.system() == "Darwin":
-    modules += [Lib("oculus-vr", ["libovr.a", "cgmath"])]
+    modules += [Lib("oculus-vr", ["libovr.a", "cgmath"]),
+                LibXcodebuild("libovr.a",
+                              "modules/oculus_sdk_mac/LibOVR/Projects/Mac/Xcode/LibOVR.xcodeproj",
+                              ["modules/oculus_sdk_mac/LibOVR/Lib/MacOS/Release/libovr.a"])]
 
-write_makefile(modules)
+set_output_dir(modules, ".")
+set_source_dir(modules, _base)
+
+if __name__ == "__main__":
+    write_makefile(modules)
