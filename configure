@@ -329,17 +329,16 @@ def set_source_dir(modules, source_dir):
 _base = os.path.abspath(os.path.dirname(__file__))
 
 modules = [Bin("oculus-info", ["oculus-vr"]),
+           Lib("oculus-vr", ["libovr.a", "cgmath"]),
            Lib("cgmath")]
 
 if platform.system() == "Linux":
-    modules += [Lib("oculus-vr", ["libOVR_C.so", "cgmath"]),
-                LibCMake("libOVR_C.so",
-                         "modules/OculusSDK/",
-                         "modules/OculusSDK/output/libOVR_C.so")]
+    modules += [LibMakefile("libovr.a",
+                            "modules/oculus_sdk_linux/",
+                            ["modules/oculus_sdk_linux/LibOVR/Lib/Linux/Release/x86_64/libovr.a"])]
 
 elif platform.system() == "Darwin":
-    modules += [Lib("oculus-vr", ["libovr.a", "cgmath"]),
-                LibXcodebuild("libovr.a",
+    modules += [LibXcodebuild("libovr.a",
                               "modules/oculus_sdk_mac/LibOVR/Projects/Mac/Xcode/LibOVR.xcodeproj",
                               ["modules/oculus_sdk_mac/LibOVR/Lib/MacOS/Release/libovr.a"])]
 
