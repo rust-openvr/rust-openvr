@@ -366,7 +366,7 @@ impl Drop for Hmd {
 }
 
 impl Hmd {
-    pub fn get_last_error(&self) -> Result<(), ~str> {
+    pub fn get_last_error(&self) -> Result<(), String> {
         unsafe {
             let ptr = ll::ovrHmd_GetLastError(self.ptr);
             if ptr.is_null() {
@@ -823,7 +823,7 @@ impl SensorState {
 pub struct SensorDescription {
     pub vendor_id: i16,
     pub product_id: i16,
-    pub serial_number: ~str,
+    pub serial_number: String,
 }
 
 impl SensorDescription {
@@ -846,7 +846,7 @@ impl EyeType {
         match c {
             ll::Eye_Left => EyeLeft,
             ll::Eye_Right => EyeRight,
-            _ => fail!("Invalid eye type {:?}", c)
+            _ => fail!("Invalid eye type {}", c)
         }
     }
 
@@ -901,8 +901,8 @@ pub struct HmdDescriptionEye {
 
 pub struct HmdDescription {
     pub hmd_type: HmdType,
-    pub product_name: ~str,
-    pub manufacture: ~str,
+    pub product_name: String,
+    pub manufacture: String,
     pub hmd_capabilities: HmdCapabilities,
     pub sensor_capabilities: SensorCapabilities,
     pub distortion_capabilities: DistortionCapabilities,
@@ -910,7 +910,7 @@ pub struct HmdDescription {
     pub window_position: ll::Vector2i,
     pub eye_fovs: PerEye<HmdDescriptionEye>,
     pub eye_render_order: [EyeType, ..2],
-    pub display_device_name: ~str,
+    pub display_device_name: String,
     pub display_id: c_int
 }
 
