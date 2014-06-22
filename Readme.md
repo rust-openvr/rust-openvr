@@ -27,82 +27,69 @@ Using VR-RS
 
 extern crate ovr = "oculus-vr";
 
+use ovr::{SensorCapabilities, Ovr};
+
 fn main() {
-    // initialize the library
-    ovr::init();
-
-    // create a device manager context
-    let dm = match ovr::DeviceManager::new() {
-        Some(dm) => dm,
+    // Initalize the Oculus VR library
+    let ovr = match Ovr::init() {
+        Some(ovr) => ovr,
         None => {
-            println!("Could not initialize Oculus Device Manager");
+             println!("Could not initialize Oculus SDK");
+            return;           
+        }
+    };
+
+    // get the first available HMD device, returns None
+    // if no HMD device is currently plugged in
+    let hmd = match ovr.first_hmd() {
+        Some(hmd) => hmd,
+        None => {
+            println!("Could not get hmd");
             return;
         }
     };
 
-    // create hmd instance
-    let hmd = match dm.enumerate() {
-        Some(d) => d,
-        None => {
-            println!("Could not enumerate Oculus HMD.");
-            println!("Was it unplugged?");
-            return;
-        }
-    };
-
-    // create a sensor fusion, this is used to gather sensor readings
-    let sensor_fusion = match ovr::SensorFusion::new() {
-        Some(sf) => sf,
-        None => {
-            println!("Could not allocate Sensor Fusion")
-            return;
-        }
-    };
-
-    // get a sensor device from the hmd.
-    let sensor = match hmd.get_sensor() {
-        Some(sensor) => sensor,
-        None => {
-            println!("Could not get the sensor from HMD");
-            return;
-        }
-    };
-
-    // when new sensor readings are ready they will automatically
-    // update the sensor fusions state
-    sensor_fusion.attach_to_sensor(&sensor);
-
-    let hmd_info = hmd.get_info();
+    // start the sensor recording, Require orientation tracking
+    let started = hmd.start_sensor(SensorCapabilities::new().set_orientation(true),
+                                   SensorCapabilities::new().set_orientation(true));
+    if !started {
+        println!("Could not start sensor");
+        return;
+    }
 }
 ```
 
-# Getting head tracking results
+# Render loop
+
+The Oculus SDK will handle most of the heavy lifting of the barrel distortion.
 
 ```rust
-// return a Quaternion of the predicted head's position
-let orientation = sensor_fusion.get_predicted_orientation(None);
+fn render(frame_index: uint, hmd: &ovr::Hmd, base_view: &Matrix4<f32>) {
+    // start a new frame, the frame_index should increment each frame
+    let frame_timing = hmd.begin_frame(frame_index);
+    let desc = hmd.get_description();
+
+    for &eye in [ovr::EyeLeft, ovr::EyeRight].iter() {
+        // start rendering a new eye, this will give the most current
+        // copy of the pose from the HMD tracking sensor
+        let pose = self.window.get_hmd().begin_eye_render(eye);
+
+        // base_view * pose * eye_view_adjustment
+        let view = base_view.mul_m(&pose.orientation.to_matrix4())
+                            .mul_m(&Matrix4::translate(&eye.view_adjust));
+        let projection = desc.eye_fovs.eye(eye).default_eye_fov;
+
+        // render to texture
+        render();
+
+        let texture = ovr::Texture(width, height,
+                                   viewport_offset_x, viewport_offset_y,
+                                   viewport_width, viewport_height,
+                                   opengl_texture_id);
+        hmd.end_eye_render(eye, pose, &texture);
+    }
+
+    // this will swap the buffers and frame sync
+    hmd.end_frame();
+}
 ```
-
-The orientation can be applied to your view matrix create a new view matrix that accurately tracks
-the position of the head.
-
-# Rendering the HMD barrel distortion.
-
-vr-rs includes the shader and some utilities that can help create the barrel distortion.
-
-First you must render an undistorted scene into a texture. vr-rs supplies a utility
-function `create_reference_matrices` that can be used to create the view / projection matrices.
-
-```rust
-let ((projection_left, projection_right),
-     (view_left, view_right)) = ovr::create_reference_matrices(&hmd_info, &view_matrix_base, scale);
-```
-
-`view_matrix_base` is the view matrix created by applying the head tracking with any other orientation
-or positions required to move the camera.
-
-`scale` is the scaled size of the texture compared to the hmd native resolution. `1.` is a good starting
-point.
-
-The best resource to drawing the barrel distortion is going to be the
-[Oculus VR pdf](http://static.oculusvr.com/sdk-downloads/documents/Oculus_SDK_Overview.pdf#subsection.5.5).
