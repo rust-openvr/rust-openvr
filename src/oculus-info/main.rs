@@ -1,5 +1,6 @@
 #![crate_id = "oculus-info#0.1"]
 
+extern crate debug;
 extern crate ovr = "oculus-vr";
 
 use ovr::{SensorCapabilities, Ovr};
