@@ -3,7 +3,7 @@ VR-RS
 
 [![Build Status](https://travis-ci.org/csherratt/vr-rs.svg?branch=master)](https://travis-ci.org/csherratt/vr-rs)
 
-VR-RS providers bindings for the Oculus's libovr. Currently it only provides bindings for 0.2.5c.
+VR-RS providers bindings for the Oculus's libovr. Currently it only provides bindings for 0.3.2c.
 
 Building
 --------
