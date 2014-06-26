@@ -1,0 +1,7 @@
+/.tmp.txt
+/Makefile
+/bin
+/lib
+/modules/oculus_sdk_mac/LibOVR/Lib/Mac/Xcode/Release/
+/target
+*.py[co]
