@@ -112,7 +112,7 @@ class Lib(Module):
     ext = "lib.rs"
     dir = "lib"
     flags = ""
-    def __init__(self, name, dep_modules=None, other_flags="", setup=None, presetup=None):
+    def __init__(self, name, dep_modules=None, other_flags="", setup=None, presetup=None, ext=None):
         self.source_dir = ""
         self.name = name
         self.ename = None
@@ -123,6 +123,10 @@ class Lib(Module):
             self.dep_modules = dep_modules
         else:
             self.dep_modules = []
+        if ext is None:
+            self.ext = Lib.ext
+        else:
+            self.ext = ext
 
     def get_flags(self, mods):
         flags = ["$(RUST_LIB_FLAGS)", self.flags] + self.collect_flags(mods)
@@ -342,7 +346,7 @@ elif platform.system() == "Darwin":
 
 modules_all = modules + \
               [Bin("oculus-info", ["oculus-vr"]),
-               Lib("cgmath")]
+               Lib("cgmath", ext="cgmath.rs")]
 
 set_output_dir(modules, ".")
 set_source_dir(modules, _base)
