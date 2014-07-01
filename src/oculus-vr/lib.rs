@@ -5,7 +5,7 @@
 extern crate cgmath;
 extern crate libc;
 
-use libc::{c_int, c_uint, c_void, c_float};
+use libc::{c_int, c_uint, c_void, c_float, c_double};
 use std::str::raw::from_c_str;
 use std::default::Default;
 use std::ptr;
@@ -108,10 +108,10 @@ pub mod ll {
     pub enum Hmd {}
 
     pub struct HmdDesc {
-        pub handle: *Hmd,
+        pub handle: *const Hmd,
         pub hmd_type: c_int,
-        pub product_name: *c_char,
-        pub manufacture: *c_char,
+        pub product_name: *const c_char,
+        pub manufacture: *const c_char,
         pub hmd_capabilities: c_uint,
         pub sensor_capabilities: c_uint,
         pub distortion_capabilities: c_uint,
@@ -120,7 +120,7 @@ pub mod ll {
         pub default_eye_fov: [FovPort, ..2],
         pub max_eye_fov: [FovPort, ..2],
         pub eye_render_order: [c_uint, ..2],
-        pub display_device_name: *c_char,
+        pub display_device_name: *const c_char,
         pub display_id: c_int
     }
 
@@ -168,9 +168,9 @@ pub mod ll {
 
     pub struct RenderApiConfig {
         pub header: RenderApiConfigHeader,
-        pub display: *c_void,
-        pub window: *c_void,
-        pub padd: [*c_void, ..6]
+        pub display: *const c_void,
+        pub window: *const c_void,
+        pub padd: [*const c_void, ..6]
     }
 
     pub struct FrameTiming {
@@ -191,7 +191,7 @@ pub mod ll {
     pub struct Texture {
         pub header: TextureHeader,
         pub texture_id: u32,
-        pub padd: [*c_void, ..7]
+        pub padd: [*const c_void, ..7]
     }
 
     pub static Hmd_None                      : c_int = 0;
@@ -238,64 +238,87 @@ pub mod ll {
         pub fn ovr_Initialize() -> bool;
         pub fn ovr_Shutdown();
         pub fn ovrHmd_Detect() -> c_int;
-        pub fn ovrHmd_Create(index: c_int) -> *Hmd;
-        pub fn ovrHmd_Destroy(hmd: *Hmd);
-        pub fn ovrHmd_CreateDebug(hmd_type: c_int) -> *Hmd;
-        pub fn ovrHmd_GetLastError(hmd: *Hmd) -> *c_char;
-        pub fn ovrHmd_GetEnabledCaps(hmd: *Hmd) -> c_uint;
-        pub fn ovrHmd_SetEnabledCaps(hmd: *Hmd, flags: c_uint);
-        pub fn ovrHmd_StartSensor(hmd: *Hmd,
+        pub fn ovrHmd_Create(index: c_int) -> *mut Hmd;
+        pub fn ovrHmd_Destroy(hmd: *mut Hmd);
+        pub fn ovrHmd_CreateDebug(hmd_type: c_int) -> *mut Hmd;
+        pub fn ovrHmd_GetLastError(hmd: *mut Hmd) -> *const c_char;
+        pub fn ovrHmd_GetEnabledCaps(hmd: *mut Hmd) -> c_uint;
+        pub fn ovrHmd_SetEnabledCaps(hmd: *mut Hmd, flags: c_uint);
+        pub fn ovrHmd_StartSensor(hmd: *mut Hmd,
                                   supported: c_uint,
                                   required: c_uint) -> bool;
-        pub fn ovrHmd_StopSensor(hmd: *Hmd);
-        pub fn ovrHmd_ResetSensor(hmd: *Hmd);
-        pub fn ovrHmd_GetSensorState(hmd: *Hmd,
+        pub fn ovrHmd_StopSensor(hmd: *mut Hmd);
+        pub fn ovrHmd_ResetSensor(hmd: *mut Hmd);
+        pub fn ovrHmd_GetSensorState(hmd: *mut Hmd,
                                      absTime: c_double) -> SensorState;
-        pub fn ovrHmd_GetSensorDesc(hmd: *Hmd,
-                                    sensor_desc: *SensorDesc) -> bool;
-        pub fn ovrHmd_GetDesc(hmd: *Hmd,
-                              size: *HmdDesc);
-        pub fn ovrHmd_GetFovTextureSize(hmd: *Hmd,
+        pub fn ovrHmd_GetSensorDesc(hmd: *mut Hmd,
+                                    sensor_desc: *mut SensorDesc) -> bool;
+        pub fn ovrHmd_GetDesc(hmd: *mut Hmd,
+                              size: *mut HmdDesc);
+        pub fn ovrHmd_GetFovTextureSize(hmd: *mut Hmd,
                                         eye: c_uint,
                                         fov: FovPort,
                                         pixels: c_float) -> Sizei;
-        pub fn ovrHmd_ConfigureRendering(hmd: *Hmd,
-                                         apiConfig: *RenderApiConfig,
+        pub fn ovrHmd_ConfigureRendering(hmd: *mut Hmd,
+                                         apiConfig: *const RenderApiConfig,
                                          distortionCaps: c_uint,
-                                         fov_in: *FovPort,
-                                         render_desc_out: *EyeRenderDesc) -> bool;
-        pub fn ovrHmd_BeginFrame(hmd: *Hmd,
+                                         fov_in: *const FovPort,
+                                         render_desc_out: *mut EyeRenderDesc) -> bool;
+        pub fn ovrHmd_BeginFrame(hmd: *mut Hmd,
                                  frame_index: c_uint) -> FrameTiming;
-        pub fn ovrHmd_EndFrame(hmd: *Hmd);
-        pub fn ovrHmd_BeginEyeRender(hmd: *Hmd, eye: c_uint) -> Posef;
-        pub fn ovrHmd_EndEyeRender(hmd: *Hmd, eye: c_uint, 
-                                   pose: Posef, texture: *Texture);
+        pub fn ovrHmd_EndFrame(hmd: *mut Hmd);
+        pub fn ovrHmd_BeginEyeRender(hmd: *mut Hmd, eye: c_uint) -> Posef;
+        pub fn ovrHmd_EndEyeRender(hmd: *mut Hmd, eye: c_uint, 
+                                   pose: Posef, texture: *const Texture);
         pub fn ovrMatrix4f_Projection(fov: FovPort,
                                       znear: c_float,
                                       zfar: c_float,
                                       right_handed: bool) -> Matrix4f;
+
+        pub fn ovr_WaitTillTime(absTime: c_double) -> c_double;
+        pub fn ovr_GetTimeInSeconds() -> c_double;
     }
 }
 
-#[repr(C)]
+
+pub fn get_time() -> f64 {
+    unsafe{ ll::ovr_GetTimeInSeconds() as f64 }
+}
+
+pub fn wait_till_time(time: f64) -> f64 {
+    unsafe{ ll::ovr_WaitTillTime(time as c_double) as f64 }
+}
+
+
 pub enum HmdType {
-    HmdNone                 = ll::Hmd_None,
-    HmdDK1                  = ll::Hmd_DK1,
-    HmdDKHD                 = ll::Hmd_DKHD,
-    HmdCrystalCoveProto     = ll::Hmd_CrystalCoveProto,
-    HmdDK2                  = ll::Hmd_DK2,
-    HmdOther                = ll::Hmd_Other
+    HmdNone,
+    HmdDK1,
+    HmdDKHD,
+    HmdCrystalCoveProto,
+    HmdDK2,
+    HmdOther
 }
 
 impl HmdType {
     fn from_ll(c: c_int) -> HmdType {
         match c {
-            ll::Hmd_None => {HmdNone}
-            ll::Hmd_DK1 => {HmdDK1}
-            ll::Hmd_DKHD => {HmdDKHD}
-            ll::Hmd_CrystalCoveProto => {HmdCrystalCoveProto}
-            ll::Hmd_DK2 => {HmdDK2}
-            _ => {HmdOther}   
+            ll::Hmd_None             => HmdNone,
+            ll::Hmd_DK1              => HmdDK1,
+            ll::Hmd_DKHD             => HmdDKHD,
+            ll::Hmd_CrystalCoveProto => HmdCrystalCoveProto,
+            ll::Hmd_DK2              => HmdDK2,
+            _                        => HmdOther  
+        }
+    }
+
+    fn to_ll(&self) -> c_int {
+        match *self {
+            HmdNone             => ll::Hmd_None,
+            HmdDK1              => ll::Hmd_DK1,
+            HmdDKHD             => ll::Hmd_DKHD,
+            HmdCrystalCoveProto => ll::Hmd_CrystalCoveProto,
+            HmdDK2              => ll::Hmd_DK2,
+            HmdOther            => ll::Hmd_Other 
         }
     }
 }
@@ -339,7 +362,7 @@ impl Ovr {
 
     pub fn create_hmd_debug(&self, hmd_type: HmdType) -> Option<Hmd> {
         unsafe {
-            let ptr = ll::ovrHmd_CreateDebug(hmd_type as c_int);
+            let ptr = ll::ovrHmd_CreateDebug(hmd_type.to_ll());
             if !ptr.is_null() {
                 Some(Hmd{ptr:ptr})
             } else {
@@ -356,7 +379,7 @@ impl Drop for Ovr {
 }
 
 pub struct Hmd {
-    ptr: *ll::Hmd
+    ptr: *mut ll::Hmd
 }
 
 impl Drop for Hmd {
@@ -419,13 +442,13 @@ impl Hmd {
 
     pub fn get_sensor_description(&self) -> Option<SensorDescription> {
         unsafe {
-            let c_desc = ll::SensorDesc {
+            let mut c_desc = ll::SensorDesc {
                 vendor_id: 0,
                 product_id: 0,
                 serial_number: [0,.. 24]
             };
 
-            if !ll::ovrHmd_GetSensorDesc(self.ptr, &c_desc as *ll::SensorDesc) {
+            if !ll::ovrHmd_GetSensorDesc(self.ptr, &mut c_desc as *mut ll::SensorDesc) {
                 None
             } else {
                 Some(SensorDescription::from_ll(c_desc))
@@ -435,8 +458,8 @@ impl Hmd {
 
     pub fn get_description(&self) -> HmdDescription {
         unsafe {
-            let c_desc = Default::default();
-            ll::ovrHmd_GetDesc(self.ptr, &c_desc);
+            let mut c_desc = Default::default();
+            ll::ovrHmd_GetDesc(self.ptr, &mut c_desc);
             HmdDescription::from_ll(c_desc)
         }
     }
@@ -458,15 +481,14 @@ impl Hmd {
                                cap: DistortionCapabilities,
                                eye_fov: PerEye<FovPort>) -> Option<PerEye<EyeRenderDescriptor>> {
         unsafe {
-            let out: PerEye<ll::EyeRenderDesc> 
-                = PerEye::new(Default::default(),
-                              Default::default());
+            let mut out: PerEye<ll::EyeRenderDesc> = PerEye::new(Default::default(),
+                                                                 Default::default());
             let was_started = ll::ovrHmd_ConfigureRendering(
                 self.ptr,
                 &api_config.to_render_config(),
                 cap.flags,
                 eye_fov.map(|_, d| d.to_ll()).ptr(),
-                out.ptr()
+                out.mut_ptr()
             );
 
             if was_started {
@@ -885,8 +907,8 @@ impl<T> PerEye<T> {
         )
     }
 
-    pub unsafe fn ptr(&self) -> *T {
-        &self.left as *T
+    pub unsafe fn ptr(&self) -> *const T {
+        &self.left as *const T
     }
 
     pub unsafe fn mut_ptr(&mut self) -> *mut T {
@@ -978,8 +1000,8 @@ impl EyeRenderDescriptor {
 pub struct RenderGLConfig {
     pub size: ll::Sizei,
     pub multisample: int,
-    pub display: Option<*c_void>,
-    pub window: Option<*c_void>
+    pub display: Option<*const c_void>,
+    pub window: Option<*const c_void>
 }
 
 pub trait ToRenderConfig {
