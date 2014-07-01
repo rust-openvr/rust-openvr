@@ -1,0 +1,23 @@
+[package]
+
+name = "ovr-rs"
+version = "0.1.0"
+authors = [
+        "Colin Sherratt",
+        "Erick Tryzelaar"
+]
+
+build = "./scripts/compile-for-cargo"
+
+[[lib]]
+
+name = "ovr-rs"
+path = "src/oculus-vr/lib.rs"
+
+[[bin]]
+name = "oculus-info"
+path = "src/oculus-info/main.rs"
+
+[dependencies.cgmath-rs]
+
+git = "https://github.com/bjz/cgmath-rs.git"
