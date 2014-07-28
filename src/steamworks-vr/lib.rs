@@ -1,6 +1,6 @@
 #![allow(non_camel_case_types)]
 
-#![crate_id = "steamworks-vr#0.1"]
+#![crate_name = "steamworks-vr#0.1"]
 #![crate_type = "lib"]
 #![feature(link_args)]
 
