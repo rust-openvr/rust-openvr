@@ -2,6 +2,7 @@
 
 set -e
 
+git submodule update --init --recursive
 ./configure
 make lib/libovr.a
 cp lib/libovr.a target/

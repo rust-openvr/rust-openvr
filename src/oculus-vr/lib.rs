@@ -1,4 +1,4 @@
-#![crate_name = "oculus-vr"]
+#![crate_name = "ovr-vr"]
 #![crate_type = "lib"]
 #![feature(link_args)]
 
