@@ -1,3 +1,0 @@
-#/bin/sh
-
-python configure_ovr.py

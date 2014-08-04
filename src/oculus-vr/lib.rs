@@ -1,4 +1,4 @@
-#![crate_name = "ovr-vr"]
+#![crate_name = "ovr"]
 #![crate_type = "lib"]
 #![feature(link_args)]
 

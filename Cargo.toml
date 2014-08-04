@@ -1,6 +1,6 @@
 [package]
 
-name = "ovr-rs"
+name = "ovr"
 version = "0.1.0"
 authors = [
         "Colin Sherratt",
@@ -11,7 +11,7 @@ build = "./scripts/compile-for-cargo"
 
 [[lib]]
 
-name = "ovr-rs"
+name = "ovr"
 path = "src/oculus-vr/lib.rs"
 
 [[bin]]

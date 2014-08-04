@@ -2,7 +2,16 @@
 
 set -e
 
-git submodule update --init --recursive
-./configure
-make lib/libovr.a
-cp lib/libovr.a target/
+OS=`uname`
+
+env
+
+if [ "x$OS" == "xlinux" ] ; then 
+    make -C modules/oculus_sdk_linux/
+    cp modules/oculus_sdk_linux/LibOVR/Lib/Linux/Release/x86_64/libovr.a $OUT_DIR/
+elif [ "x$OS" == "xDarwin" ] ; then
+    xcodebuild -project modules/oculus_sdk_mac/LibOVR/Projects/Mac/Xcode/LibOVR.xcodeproj build
+    cp modules/oculus_sdk_mac/LibOVR/Lib/MacOS/Release/libovr.a $OUT_DIR/
+fi
+
+env
