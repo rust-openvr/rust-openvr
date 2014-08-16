@@ -8,14 +8,14 @@ VR-RS providers bindings for the Oculus's libovr. Currently it only provides bin
 Building
 --------
 
-Make sure all submodules were cloned first.
+vr-rs is fully cargoized. to Compile
 
-    git submodule update --init --recursive
+    cargo build
 
-Building is straight forward.
+To add as a dependency using cargo Cargo add the following to your `Cargo.toml`
 
-    ./configure
-    make
+    [dependencies.ovr]
+    git = "https://github.com/csherratt/vr-rs.git"
 
 
 Using VR-RS
