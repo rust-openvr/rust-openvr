@@ -6,13 +6,13 @@ extern crate cgmath;
 extern crate libc;
 
 use libc::{c_int, c_uint, c_void, c_float, c_double};
-use std::str::raw::from_c_str;
 use std::default::Default;
 use std::ptr;
+use std::string::raw::from_buf;
 
-use cgmath::quaternion::Quaternion;
-use cgmath::vector::{Vector2, Vector3};
-use cgmath::matrix::{Matrix4};
+use cgmath::Quaternion;
+use cgmath::{Vector2, Vector3};
+use cgmath::{Matrix4};
 
 #[cfg(target_os = "linux")]
 #[link(name="ovr")]
@@ -395,7 +395,7 @@ impl Hmd {
             if ptr.is_null() {
                 Ok(())
             } else {
-                Err(from_c_str(ptr))
+                Err(from_buf(ptr as *const u8))
             }
         }
     }
@@ -853,7 +853,7 @@ impl SensorDescription {
         SensorDescription {
             vendor_id: sd.vendor_id as i16,
             product_id: sd.product_id as i16,
-            serial_number: unsafe { from_c_str(&sd.serial_number[0]) }
+            serial_number: unsafe { from_buf((&sd.serial_number[0] as *const i8) as *const u8) }
         }
     }
 }
@@ -941,8 +941,8 @@ impl HmdDescription {
         unsafe {
             HmdDescription {
                 hmd_type: HmdType::from_ll(sd.hmd_type),
-                product_name: from_c_str(sd.product_name),
-                manufacture: from_c_str(sd.manufacture),
+                product_name: from_buf((sd.product_name as *const i8) as *const u8),
+                manufacture: from_buf((sd.manufacture as *const i8) as *const u8),
                 hmd_capabilities: HmdCapabilities{
                     flags: sd.hmd_capabilities
                 },
@@ -966,7 +966,7 @@ impl HmdDescription {
                 ),
                 eye_render_order: [EyeType::from_ll(sd.eye_render_order[0]),
                                    EyeType::from_ll(sd.eye_render_order[1])],
-                display_device_name: from_c_str(sd.display_device_name),
+                display_device_name: from_buf((sd.display_device_name as *const i8) as *const u8),
                 display_id: sd.display_id
             }
         }
