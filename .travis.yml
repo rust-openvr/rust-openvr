@@ -1,4 +1,5 @@
 install:
+  - sudo apt-get update
   - sudo apt-get install libudev-dev libxrandr-dev
   - curl -s http://www.rust-lang.org/rustup.sh | sudo sh
 script:
