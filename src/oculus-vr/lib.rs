@@ -1047,7 +1047,7 @@ impl FrameTiming {
     }
 }
 
-trait ToTexture {
+pub trait ToTexture {
     fn to_texture(&self) -> ll::Texture;
 }
 

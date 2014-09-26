@@ -3,13 +3,13 @@
 name = "ovr"
 version = "0.1.0"
 authors = [
-        "Colin Sherratt",
-        "Erick Tryzelaar"
+    "Colin Sherratt",
+    "Erick Tryzelaar"
 ]
 
 build = "./scripts/compile-for-cargo"
 
-[[lib]]
+[lib]
 
 name = "ovr"
 path = "src/oculus-vr/lib.rs"
