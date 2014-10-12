@@ -194,45 +194,45 @@ pub mod ll {
         pub padd: [*const c_void, ..7]
     }
 
-    pub static Hmd_None                      : c_int = 0;
-    pub static Hmd_DK1                       : c_int = 3;
-    pub static Hmd_DKHD                      : c_int = 4;
-    pub static Hmd_CrystalCoveProto          : c_int = 5;
-    pub static Hmd_DK2                       : c_int = 6;
-    pub static Hmd_Other                     : c_int = 7;
+    pub const Hmd_None                      : c_int = 0;
+    pub const Hmd_DK1                       : c_int = 3;
+    pub const Hmd_DKHD                      : c_int = 4;
+    pub const Hmd_CrystalCoveProto          : c_int = 5;
+    pub const Hmd_DK2                       : c_int = 6;
+    pub const Hmd_Other                     : c_int = 7;
 
-    pub static HmdCap_Present                : c_uint = 0x0001;
-    pub static HmdCap_Available              : c_uint = 0x0002;
-    pub static HmdCap_LowPersistence         : c_uint = 0x0080;
-    pub static HmdCap_LatencyTest            : c_uint = 0x0100;
-    pub static HmdCap_DynamicPrediction      : c_uint = 0x0200;
-    pub static HmdCap_NoVSync                : c_uint = 0x1000;
-    pub static HmdCap_NoRestore              : c_uint = 0x4000;
-    pub static HmdCap_Writable_Mask          : c_uint = 0x1380;
+    pub const HmdCap_Present                : c_uint = 0x0001;
+    pub const HmdCap_Available              : c_uint = 0x0002;
+    pub const HmdCap_LowPersistence         : c_uint = 0x0080;
+    pub const HmdCap_LatencyTest            : c_uint = 0x0100;
+    pub const HmdCap_DynamicPrediction      : c_uint = 0x0200;
+    pub const HmdCap_NoVSync                : c_uint = 0x1000;
+    pub const HmdCap_NoRestore              : c_uint = 0x4000;
+    pub const HmdCap_Writable_Mask          : c_uint = 0x1380;
 
-    pub static SensorCap_Orientation         : c_uint = 0x0010;
-    pub static SensorCap_YawCorrection       : c_uint = 0x0020;
-    pub static SensorCap_Position            : c_uint = 0x0040;
+    pub const SensorCap_Orientation         : c_uint = 0x0010;
+    pub const SensorCap_YawCorrection       : c_uint = 0x0020;
+    pub const SensorCap_Position            : c_uint = 0x0040;
 
-    pub static Status_OrientationTracked     : c_uint = 0x0001;
-    pub static Status_PositionTracked        : c_uint = 0x0002;
-    pub static Status_PositionConnected      : c_uint = 0x0020;
-    pub static Status_HmdConnected           : c_uint = 0x0080;
+    pub const Status_OrientationTracked     : c_uint = 0x0001;
+    pub const Status_PositionTracked        : c_uint = 0x0002;
+    pub const Status_PositionConnected      : c_uint = 0x0020;
+    pub const Status_HmdConnected           : c_uint = 0x0080;
 
-    pub static DistortionCap_Chromatic       : c_uint = 0x01;
-    pub static DistortionCap_TimeWarp        : c_uint = 0x02;
-    pub static DistortionCap_Vignette        : c_uint = 0x08;
+    pub const DistortionCap_Chromatic       : c_uint = 0x01;
+    pub const DistortionCap_TimeWarp        : c_uint = 0x02;
+    pub const DistortionCap_Vignette        : c_uint = 0x08;
 
-    pub static Eye_Left                      : c_uint = 0;
-    pub static Eye_Right                     : c_uint = 1;
+    pub const Eye_Left                      : c_uint = 0;
+    pub const Eye_Right                     : c_uint = 1;
 
-    pub static RenderAPI_None                : c_uint = 0;
-    pub static RenderAPI_OpenGL              : c_uint = 1;
-    pub static RenderAPI_Android_GLES        : c_uint = 2;
-    pub static RenderAPI_D3D9                : c_uint = 3;
-    pub static RenderAPI_D3D10               : c_uint = 4;
-    pub static RenderAPI_D3D11               : c_uint = 5;
-    pub static RenderAPI_Count               : c_uint = 6;
+    pub const RenderAPI_None                : c_uint = 0;
+    pub const RenderAPI_OpenGL              : c_uint = 1;
+    pub const RenderAPI_Android_GLES        : c_uint = 2;
+    pub const RenderAPI_D3D9                : c_uint = 3;
+    pub const RenderAPI_D3D10               : c_uint = 4;
+    pub const RenderAPI_D3D11               : c_uint = 5;
+    pub const RenderAPI_Count               : c_uint = 6;
 
     extern "C" {
         pub fn ovr_Initialize() -> bool;
