@@ -1,6 +1,7 @@
 #![crate_name = "ovr"]
 #![crate_type = "lib"]
 #![feature(link_args)]
+#![allow(non_uppercase_statics)]
 
 extern crate cgmath;
 extern crate libc;
@@ -39,18 +40,21 @@ pub mod ll {
     use std::default::Default;
 
     #[deriving(Clone, Default)]
+    #[repr(C)]
     pub struct Vector2i {
         pub x: c_int,
         pub y: c_int
     }
 
     #[deriving(Clone, Default)]
+    #[repr(C)]
     pub struct Sizei {
         pub x: c_int,
         pub y: c_int
     }
 
     #[deriving(Clone, Default)]
+    #[repr(C)]
     pub struct Recti {
         pub pos: Vector2i,
         pub size: Sizei
@@ -58,23 +62,28 @@ pub mod ll {
 
 
     #[deriving(Clone, Default)]
+    #[repr(C)]
     pub struct FovPort {
-        pub upTan: c_float,
-        pub downTan: c_float,
-        pub leftTan: c_float,
-        pub rightTan: c_float
+        pub up_tan: c_float,
+        pub down_tan: c_float,
+        pub left_tan: c_float,
+        pub right_tan: c_float
     }
 
     #[deriving(Clone, Default)]
+    #[repr(C)]
     pub struct Vector2f {pub x: c_float, pub y: c_float}
 
     #[deriving(Clone, Default)]
+    #[repr(C)]
     pub struct Vector3f {pub x: c_float, pub y: c_float, pub z: c_float}
 
     #[deriving(Clone, Default)]
+    #[repr(C)]
     pub struct Quaternionf {pub x: c_float, pub y: c_float, pub z: c_float, pub w: c_float}
 
     #[deriving(Clone, Default)]
+    #[repr(C)]
     pub struct Matrix4f {pub m11: c_float, pub m12: c_float, pub m13: c_float, pub m14: c_float,
                          pub m21: c_float, pub m22: c_float, pub m23: c_float, pub m24: c_float,
                          pub m31: c_float, pub m32: c_float, pub m33: c_float, pub m34: c_float,
@@ -82,12 +91,14 @@ pub mod ll {
 
 
     #[deriving(Clone, Default)]
+    #[repr(C)]
     pub struct Posef {
         pub orientation: Quaternionf,
         pub position: Vector3f
     }
 
     #[deriving(Clone, Default)]
+    #[repr(C)]
     pub struct PoseState {
         pub pose: Posef,
         pub angular_velocity: Vector3f,
@@ -98,6 +109,7 @@ pub mod ll {
     }
 
     #[deriving(Clone, Default)]
+    #[repr(C)]
     pub struct SensorState {
         pub predicted: PoseState,
         pub recorded: PoseState,
@@ -107,6 +119,7 @@ pub mod ll {
 
     pub enum Hmd {}
 
+    #[repr(C)]
     pub struct HmdDesc {
         pub handle: *const Hmd,
         pub hmd_type: c_int,
@@ -145,6 +158,7 @@ pub mod ll {
         }
     }
 
+    #[repr(C)]
     pub struct SensorDesc {
         pub vendor_id: c_short,
         pub product_id: c_short,
@@ -152,6 +166,7 @@ pub mod ll {
     }
 
     #[deriving(Clone, Default)]
+    #[repr(C)]
     pub struct EyeRenderDesc {
         pub eye: c_uint,
         pub fov: FovPort,
@@ -160,12 +175,14 @@ pub mod ll {
         pub view_adjust: Vector3f
     }
 
+    #[repr(C)]
     pub struct RenderApiConfigHeader {
         pub render_api_type: c_uint,
         pub rt_size: Sizei,
         pub multisample: c_int,
     }
 
+    #[repr(C)]
     pub struct RenderApiConfig {
         pub header: RenderApiConfigHeader,
         pub display: *const c_void,
@@ -173,6 +190,7 @@ pub mod ll {
         pub padd: [*const c_void, ..6]
     }
 
+    #[repr(C)]
     pub struct FrameTiming {
         pub delta_seconds: f32,
         pub this_frame_seconds: f64,
@@ -182,12 +200,14 @@ pub mod ll {
         pub eye_scanout_seconds: [f64, ..2]        
     }
 
+    #[repr(C)]
     pub struct TextureHeader {
         pub render_api_type: c_uint,
         pub size: Sizei,
         pub viewport: Recti    
     }
 
+    #[repr(C)]
     pub struct Texture {
         pub header: TextureHeader,
         pub texture_id: u32,
@@ -250,7 +270,7 @@ pub mod ll {
         pub fn ovrHmd_StopSensor(hmd: *mut Hmd);
         pub fn ovrHmd_ResetSensor(hmd: *mut Hmd);
         pub fn ovrHmd_GetSensorState(hmd: *mut Hmd,
-                                     absTime: c_double) -> SensorState;
+                                     abs_time: c_double) -> SensorState;
         pub fn ovrHmd_GetSensorDesc(hmd: *mut Hmd,
                                     sensor_desc: *mut SensorDesc) -> bool;
         pub fn ovrHmd_GetDesc(hmd: *mut Hmd,
@@ -275,7 +295,7 @@ pub mod ll {
                                       zfar: c_float,
                                       right_handed: bool) -> Matrix4f;
 
-        pub fn ovr_WaitTillTime(absTime: c_double) -> c_double;
+        pub fn ovr_WaitTillTime(abs_time: c_double) -> c_double;
         pub fn ovr_GetTimeInSeconds() -> c_double;
     }
 }
@@ -434,9 +454,9 @@ impl Hmd {
         }
     }
 
-    pub fn get_sensor_state(&self, absTime: f64) -> SensorState {
+    pub fn get_sensor_state(&self, abs_time: f64) -> SensorState {
         unsafe {
-            SensorState::from_ll(ll::ovrHmd_GetSensorState(self.ptr, absTime))
+            SensorState::from_ll(ll::ovrHmd_GetSensorState(self.ptr, abs_time))
         }
     }
 
@@ -1110,19 +1130,19 @@ pub struct FovPort {
 impl FovPort {
     fn from_ll(ll: ll::FovPort) -> FovPort {
         FovPort {
-            up: ll.upTan as f32,
-            down: ll.downTan as f32,
-            left: ll.leftTan as f32,
-            right: ll.rightTan as f32
+            up: ll.up_tan as f32,
+            down: ll.down_tan as f32,
+            left: ll.left_tan as f32,
+            right: ll.right_tan as f32
         }
     }
 
     fn to_ll(&self) -> ll::FovPort {
         ll::FovPort {
-            upTan: self.up as c_float,
-            downTan: self.down as c_float,
-            leftTan: self.left as c_float,
-            rightTan: self.right as c_float
+            up_tan: self.up as c_float,
+            down_tan: self.down as c_float,
+            left_tan: self.left as c_float,
+            right_tan: self.right as c_float
         }        
     }
 
