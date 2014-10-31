@@ -39,21 +39,21 @@ pub mod ll {
     use std::ptr;
     use std::default::Default;
 
-    #[deriving(Clone, Default)]
+    #[deriving(Clone, Default, Show)]
     #[repr(C)]
     pub struct Vector2i {
         pub x: c_int,
         pub y: c_int
     }
 
-    #[deriving(Clone, Default)]
+    #[deriving(Clone, Default, Show)]
     #[repr(C)]
     pub struct Sizei {
         pub x: c_int,
         pub y: c_int
     }
 
-    #[deriving(Clone, Default)]
+    #[deriving(Clone, Default, Show)]
     #[repr(C)]
     pub struct Recti {
         pub pos: Vector2i,
@@ -61,7 +61,7 @@ pub mod ll {
     }
 
 
-    #[deriving(Clone, Default)]
+    #[deriving(Clone, Default, Show)]
     #[repr(C)]
     pub struct FovPort {
         pub up_tan: c_float,
@@ -70,19 +70,19 @@ pub mod ll {
         pub right_tan: c_float
     }
 
-    #[deriving(Clone, Default)]
+    #[deriving(Clone, Default, Show)]
     #[repr(C)]
     pub struct Vector2f {pub x: c_float, pub y: c_float}
 
-    #[deriving(Clone, Default)]
+    #[deriving(Clone, Default, Show)]
     #[repr(C)]
     pub struct Vector3f {pub x: c_float, pub y: c_float, pub z: c_float}
 
-    #[deriving(Clone, Default)]
+    #[deriving(Clone, Default, Show)]
     #[repr(C)]
     pub struct Quaternionf {pub x: c_float, pub y: c_float, pub z: c_float, pub w: c_float}
 
-    #[deriving(Clone, Default)]
+    #[deriving(Clone, Default, Show)]
     #[repr(C)]
     pub struct Matrix4f {pub m11: c_float, pub m12: c_float, pub m13: c_float, pub m14: c_float,
                          pub m21: c_float, pub m22: c_float, pub m23: c_float, pub m24: c_float,
@@ -90,14 +90,14 @@ pub mod ll {
                          pub m41: c_float, pub m42: c_float, pub m43: c_float, pub m44: c_float}
 
 
-    #[deriving(Clone, Default)]
+    #[deriving(Clone, Default, Show)]
     #[repr(C)]
     pub struct Posef {
         pub orientation: Quaternionf,
         pub position: Vector3f
     }
 
-    #[deriving(Clone, Default)]
+    #[deriving(Clone, Default, Show)]
     #[repr(C)]
     pub struct PoseState {
         pub pose: Posef,
@@ -108,7 +108,7 @@ pub mod ll {
         pub time_in_seconds: c_double
     }
 
-    #[deriving(Clone, Default)]
+    #[deriving(Clone, Default, Show)]
     #[repr(C)]
     pub struct SensorState {
         pub predicted: PoseState,
@@ -165,7 +165,7 @@ pub mod ll {
         pub serial_number: [c_char, ..24]
     }
 
-    #[deriving(Clone, Default)]
+    #[deriving(Clone, Default, Show)]
     #[repr(C)]
     pub struct EyeRenderDesc {
         pub eye: c_uint,
@@ -309,7 +309,7 @@ pub fn wait_till_time(time: f64) -> f64 {
     unsafe{ ll::ovr_WaitTillTime(time as c_double) as f64 }
 }
 
-
+#[deriving(Show)]
 pub enum HmdType {
     HmdNone,
     HmdDK1,
@@ -552,6 +552,7 @@ impl Hmd {
     }
 }
 
+#[deriving(Show)]
 pub struct HmdCapabilities {
     flags: c_uint
 }
@@ -628,6 +629,7 @@ impl HmdCapabilities {
     }
 }
 
+#[deriving(Show)]
 pub struct SensorCapabilities {
     flags: c_uint
 }
@@ -685,6 +687,7 @@ impl SensorCapabilities {
     }
 }
 
+#[deriving(Show)]
 pub struct DistortionCapabilities {
     flags: c_uint
 }
@@ -878,6 +881,7 @@ impl SensorDescription {
     }
 }
 
+#[deriving(Show)]
 pub enum EyeType {
     EyeLeft,
     EyeRight
@@ -888,7 +892,7 @@ impl EyeType {
         match c {
             ll::Eye_Left => EyeLeft,
             ll::Eye_Right => EyeRight,
-            _ => fail!("Invalid eye type {}", c)
+            _ => panic!("Invalid eye type {}", c)
         }
     }
 
@@ -900,6 +904,7 @@ impl EyeType {
     }
 }
 
+#[deriving(Show)]
 pub struct PerEye<T> {
     pub left: T,
     pub right: T
@@ -936,6 +941,7 @@ impl<T> PerEye<T> {
     }
 }
 
+#[deriving(Show)]
 pub struct HmdDescriptionEye {
     pub default_eye_fov: FovPort,
     pub max_eye_fov: FovPort,
@@ -1120,6 +1126,7 @@ impl ToTexture for Texture {
     }
 }
 
+#[deriving(Show)]
 pub struct FovPort {
     pub up: f32,
     pub down: f32,
