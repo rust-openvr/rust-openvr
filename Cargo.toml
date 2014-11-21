@@ -7,7 +7,7 @@ authors = [
     "Erick Tryzelaar"
 ]
 
-build = "./scripts/compile-for-cargo"
+build = "scripts/build.rs"
 
 [lib]
 
