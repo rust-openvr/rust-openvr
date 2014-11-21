@@ -34,7 +34,7 @@ fn main() {
         Some(sd) => {
             println!("Vendor id: {:x}", sd.vendor_id);
             println!("Product id: {:x}", sd.product_id);
-            println!("Serial number: {:s}", sd.serial_number);
+            println!("Serial number: {}", sd.serial_number);
         }
         None => println!("Failed to get sensor description"),
     }
@@ -42,8 +42,8 @@ fn main() {
     let hmd_desc = hmd.get_description();
 
     println!("Hmd Type: {}", hmd_desc.hmd_type);
-    println!("Product Name: {:s}", hmd_desc.product_name);
-    println!("Manufacture: {:s}", hmd_desc.manufacture);
+    println!("Product Name: {}", hmd_desc.product_name);
+    println!("Manufacture: {}", hmd_desc.manufacture);
     println!("Hmd Capabilities: {}", hmd_desc.hmd_capabilities);
     println!("Sensor Capabilities: {}", hmd_desc.sensor_capabilities);
     println!("Distortion Capabilities: {}", hmd_desc.distortion_capabilities);
@@ -52,6 +52,6 @@ fn main() {
     println!("right: {}", hmd_desc.eye_fovs.right);
     println!("left {}", hmd_desc.eye_fovs.left);
     println!("Eyes render order: [{}, {}]", hmd_desc.eye_render_order[0], hmd_desc.eye_render_order[1]);
-    println!("Display device name: {:s}", hmd_desc.display_device_name);
+    println!("Display device name: {}", hmd_desc.display_device_name);
     println!("Display id: {}", hmd_desc.display_id);
 }

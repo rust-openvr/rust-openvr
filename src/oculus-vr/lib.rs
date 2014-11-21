@@ -1,7 +1,7 @@
 #![crate_name = "ovr"]
 #![crate_type = "lib"]
 #![feature(link_args)]
-#![allow(non_uppercase_statics)]
+#![allow(non_upper_case_globals)]
 
 extern crate cgmath;
 extern crate libc;
@@ -24,7 +24,7 @@ use cgmath::{Matrix4};
 #[link(name="X11")]
 #[link(name="GL")]
 extern {}
- 
+
 #[cfg(target_os = "macos")]
 #[link(name="ovr")]
 #[link(name="stdc++")]
@@ -311,34 +311,34 @@ pub fn wait_till_time(time: f64) -> f64 {
 
 #[deriving(Show)]
 pub enum HmdType {
-    HmdNone,
-    HmdDK1,
-    HmdDKHD,
-    HmdCrystalCoveProto,
-    HmdDK2,
-    HmdOther
+    None,
+    DK1,
+    DKHD,
+    CrystalCoveProto,
+    DK2,
+    Other
 }
 
 impl HmdType {
     fn from_ll(c: c_int) -> HmdType {
         match c {
-            ll::Hmd_None             => HmdNone,
-            ll::Hmd_DK1              => HmdDK1,
-            ll::Hmd_DKHD             => HmdDKHD,
-            ll::Hmd_CrystalCoveProto => HmdCrystalCoveProto,
-            ll::Hmd_DK2              => HmdDK2,
-            _                        => HmdOther  
+            ll::Hmd_None             => HmdType::None,
+            ll::Hmd_DK1              => HmdType::DK1,
+            ll::Hmd_DKHD             => HmdType::DKHD,
+            ll::Hmd_CrystalCoveProto => HmdType::CrystalCoveProto,
+            ll::Hmd_DK2              => HmdType::DK2,
+            _                        => HmdType::Other
         }
     }
 
     fn to_ll(&self) -> c_int {
         match *self {
-            HmdNone             => ll::Hmd_None,
-            HmdDK1              => ll::Hmd_DK1,
-            HmdDKHD             => ll::Hmd_DKHD,
-            HmdCrystalCoveProto => ll::Hmd_CrystalCoveProto,
-            HmdDK2              => ll::Hmd_DK2,
-            HmdOther            => ll::Hmd_Other 
+            HmdType::None             => ll::Hmd_None,
+            HmdType::DK1              => ll::Hmd_DK1,
+            HmdType::DKHD             => ll::Hmd_DKHD,
+            HmdType::CrystalCoveProto => ll::Hmd_CrystalCoveProto,
+            HmdType::DK2              => ll::Hmd_DK2,
+            HmdType::Other            => ll::Hmd_Other
         }
     }
 }
@@ -485,7 +485,7 @@ impl Hmd {
     }
 
     pub fn get_fov_texture_size(&self,
-                                eye: EyeType,
+                                eye: Eye,
                                 fov: FovPort,
                                 pixels_per_display_pixel: f32) -> ll::Sizei {
         unsafe {
@@ -533,14 +533,14 @@ impl Hmd {
         }
     }
 
-    pub fn begin_eye_render(&self, eye: EyeType) -> Pose {
+    pub fn begin_eye_render(&self, eye: Eye) -> Pose {
         unsafe {
             Pose::from_ll(ll::ovrHmd_BeginEyeRender(self.ptr, eye.to_ll()))
         }
     }
 
     pub fn end_eye_render<T: ToTexture>(&self,
-                                        eye: EyeType,
+                                        eye: Eye,
                                         pose: Pose,
                                         texture: &T) {
         unsafe {
@@ -882,24 +882,24 @@ impl SensorDescription {
 }
 
 #[deriving(Show)]
-pub enum EyeType {
-    EyeLeft,
-    EyeRight
+pub enum Eye {
+    Left,
+    Right
 }
 
-impl EyeType {
-    fn from_ll(c: c_uint) -> EyeType {
+impl Eye {
+    fn from_ll(c: c_uint) -> Eye {
         match c {
-            ll::Eye_Left => EyeLeft,
-            ll::Eye_Right => EyeRight,
+            ll::Eye_Left => Eye::Left,
+            ll::Eye_Right => Eye::Right,
             _ => panic!("Invalid eye type {}", c)
         }
     }
 
     fn to_ll(&self) -> c_uint {
         match *self {
-            EyeLeft => ll::Eye_Left,
-            EyeRight => ll::Eye_Right
+            Eye::Left => ll::Eye_Left,
+            Eye::Right => ll::Eye_Right
         }
     }
 }
@@ -918,17 +918,17 @@ impl<T> PerEye<T> {
         }
     }
 
-    pub fn eye<'a>(&'a self, eye: EyeType) -> &'a T {
+    pub fn eye<'a>(&'a self, eye: Eye) -> &'a T {
         match eye {
-            EyeLeft => &self.left,
-            EyeRight => &self.right
+            Eye::Left => &self.left,
+            Eye::Right => &self.right
         }
     }
 
-    pub fn map<U>(&self, f: |EyeType, &T| -> U) -> PerEye<U> {
+    pub fn map<U>(&self, f: |Eye, &T| -> U) -> PerEye<U> {
         PerEye::new(
-            f(EyeLeft, &self.left),
-            f(EyeRight, &self.right)
+            f(Eye::Left, &self.left),
+            f(Eye::Right, &self.right)
         )
     }
 
@@ -957,7 +957,7 @@ pub struct HmdDescription {
     pub resolution: ll::Sizei,
     pub window_position: ll::Vector2i,
     pub eye_fovs: PerEye<HmdDescriptionEye>,
-    pub eye_render_order: [EyeType, ..2],
+    pub eye_render_order: [Eye, ..2],
     pub display_device_name: String,
     pub display_id: c_int
 }
@@ -990,8 +990,8 @@ impl HmdDescription {
                         max_eye_fov: FovPort::from_ll(sd.max_eye_fov[ll::Eye_Right as uint])
                     }
                 ),
-                eye_render_order: [EyeType::from_ll(sd.eye_render_order[0]),
-                                   EyeType::from_ll(sd.eye_render_order[1])],
+                eye_render_order: [Eye::from_ll(sd.eye_render_order[0]),
+                                   Eye::from_ll(sd.eye_render_order[1])],
                 display_device_name: from_buf((sd.display_device_name as *const i8) as *const u8),
                 display_id: sd.display_id
             }
@@ -1000,7 +1000,7 @@ impl HmdDescription {
 }
 
 pub struct EyeRenderDescriptor {
-    pub eye: EyeType,
+    pub eye: Eye,
     pub fov: FovPort,
     pub distorted_viewport: ll::Recti,
     pub pixels_per_tan_angle_at_center: Vector2<f32>,
@@ -1010,7 +1010,7 @@ pub struct EyeRenderDescriptor {
 impl EyeRenderDescriptor {
     fn from_ll(d: &ll::EyeRenderDesc) -> EyeRenderDescriptor {
         EyeRenderDescriptor {
-            eye: EyeType::from_ll(d.eye),
+            eye: Eye::from_ll(d.eye),
             fov: FovPort::from_ll(d.fov),
             distorted_viewport: d.distorted_viewport,
             pixels_per_tan_angle_at_center: 
@@ -1150,7 +1150,7 @@ impl FovPort {
             down_tan: self.down as c_float,
             left_tan: self.left as c_float,
             right_tan: self.right as c_float
-        }        
+        }
     }
 
     pub fn projection(&self, znear: f32, zfar: f32, right_handed: bool) -> Matrix4<f32> {
