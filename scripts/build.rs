@@ -7,9 +7,9 @@ use std::io::fs;
 fn main() {
     Command::new("make")
             .arg("-C").arg("modules/oculus_sdk_linux/")
-            .status()
             .stdout(StdioContainer::InheritFd(1))
             .stderr(StdioContainer::InheritFd(2))
+            .status()
             .ok().expect("Failed to build");
     fs::copy(&Path::new("modules/oculus_sdk_linux/LibOVR/Lib/Linux/Release/x86_64/libovr.a"),
              &Path::new(env!("OUT_DIR")).join(Path::new("libovr.a")))
