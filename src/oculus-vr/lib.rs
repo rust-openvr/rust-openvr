@@ -39,21 +39,21 @@ pub mod ll {
     use std::ptr;
     use std::default::Default;
 
-    #[deriving(Clone, Default, Show)]
+    #[deriving(Clone, Default, Show, Copy)]
     #[repr(C)]
     pub struct Vector2i {
         pub x: c_int,
         pub y: c_int
     }
 
-    #[deriving(Clone, Default, Show)]
+    #[deriving(Clone, Default, Show, Copy)]
     #[repr(C)]
     pub struct Sizei {
         pub x: c_int,
         pub y: c_int
     }
 
-    #[deriving(Clone, Default, Show)]
+    #[deriving(Clone, Default, Show, Copy)]
     #[repr(C)]
     pub struct Recti {
         pub pos: Vector2i,
@@ -61,7 +61,7 @@ pub mod ll {
     }
 
 
-    #[deriving(Clone, Default, Show)]
+    #[deriving(Clone, Default, Show, Copy)]
     #[repr(C)]
     pub struct FovPort {
         pub up_tan: c_float,
@@ -70,19 +70,19 @@ pub mod ll {
         pub right_tan: c_float
     }
 
-    #[deriving(Clone, Default, Show)]
+    #[deriving(Clone, Default, Show, Copy)]
     #[repr(C)]
     pub struct Vector2f {pub x: c_float, pub y: c_float}
 
-    #[deriving(Clone, Default, Show)]
+    #[deriving(Clone, Default, Show, Copy)]
     #[repr(C)]
     pub struct Vector3f {pub x: c_float, pub y: c_float, pub z: c_float}
 
-    #[deriving(Clone, Default, Show)]
+    #[deriving(Clone, Default, Show, Copy)]
     #[repr(C)]
     pub struct Quaternionf {pub x: c_float, pub y: c_float, pub z: c_float, pub w: c_float}
 
-    #[deriving(Clone, Default, Show)]
+    #[deriving(Clone, Default, Show, Copy)]
     #[repr(C)]
     pub struct Matrix4f {pub m11: c_float, pub m12: c_float, pub m13: c_float, pub m14: c_float,
                          pub m21: c_float, pub m22: c_float, pub m23: c_float, pub m24: c_float,
@@ -90,14 +90,14 @@ pub mod ll {
                          pub m41: c_float, pub m42: c_float, pub m43: c_float, pub m44: c_float}
 
 
-    #[deriving(Clone, Default, Show)]
+    #[deriving(Clone, Default, Show, Copy)]
     #[repr(C)]
     pub struct Posef {
         pub orientation: Quaternionf,
         pub position: Vector3f
     }
 
-    #[deriving(Clone, Default, Show)]
+    #[deriving(Clone, Default, Show, Copy)]
     #[repr(C)]
     pub struct PoseState {
         pub pose: Posef,
@@ -108,7 +108,7 @@ pub mod ll {
         pub time_in_seconds: c_double
     }
 
-    #[deriving(Clone, Default, Show)]
+    #[deriving(Clone, Default, Show, Copy)]
     #[repr(C)]
     pub struct SensorState {
         pub predicted: PoseState,
@@ -165,7 +165,7 @@ pub mod ll {
         pub serial_number: [c_char, ..24]
     }
 
-    #[deriving(Clone, Default, Show)]
+    #[deriving(Clone, Default, Show, Copy)]
     #[repr(C)]
     pub struct EyeRenderDesc {
         pub eye: c_uint,
@@ -309,7 +309,7 @@ pub fn wait_till_time(time: f64) -> f64 {
     unsafe{ ll::ovr_WaitTillTime(time as c_double) as f64 }
 }
 
-#[deriving(Show)]
+#[deriving(Show, Copy, Clone)]
 pub enum HmdType {
     None,
     DK1,
@@ -388,7 +388,7 @@ impl Ovr {
             } else {
                 None
             }
-        }   
+        }
     }
 }
 
@@ -552,7 +552,7 @@ impl Hmd {
     }
 }
 
-#[deriving(Show)]
+#[deriving(Show, Copy, Clone)]
 pub struct HmdCapabilities {
     flags: c_uint
 }
@@ -629,7 +629,7 @@ impl HmdCapabilities {
     }
 }
 
-#[deriving(Show)]
+#[deriving(Show, Copy, Clone)]
 pub struct SensorCapabilities {
     flags: c_uint
 }
@@ -687,7 +687,7 @@ impl SensorCapabilities {
     }
 }
 
-#[deriving(Show)]
+#[deriving(Show, Copy, Clone)]
 pub struct DistortionCapabilities {
     flags: c_uint
 }
@@ -745,7 +745,7 @@ impl DistortionCapabilities {
     }
 }
 
-#[deriving(Clone)]
+#[deriving(Show, Copy, Clone)]
 pub struct Status {
     flags: u32
 }
@@ -801,7 +801,7 @@ fn from_vec3(v: Vector3<f32>) -> ll::Vector3f {
     }
 }
 
-#[deriving(Clone)]
+#[deriving(Show, Copy, Clone)]
 pub struct Pose {
     pub orientation: Quaternion<f32>,
     pub position: Vector3<f32>
@@ -823,7 +823,7 @@ impl Pose {
     }
 }
 
-#[deriving(Clone)]
+#[deriving(Show, Copy, Clone)]
 pub struct PoseState {
     pub pose: Pose,
     pub angular_velocity: Vector3<f32>,
@@ -864,7 +864,7 @@ impl SensorState {
         }
     }
 }
-#[deriving(Clone)]
+#[deriving(Show)]
 pub struct SensorDescription {
     pub vendor_id: i16,
     pub product_id: i16,
@@ -881,7 +881,7 @@ impl SensorDescription {
     }
 }
 
-#[deriving(Show)]
+#[deriving(Show, Copy, Clone)]
 pub enum Eye {
     Left,
     Right
@@ -904,7 +904,7 @@ impl Eye {
     }
 }
 
-#[deriving(Show)]
+#[deriving(Show, Copy, Clone)]
 pub struct PerEye<T> {
     pub left: T,
     pub right: T
@@ -941,12 +941,13 @@ impl<T> PerEye<T> {
     }
 }
 
-#[deriving(Show)]
+#[deriving(Show, Copy, Clone)]
 pub struct HmdDescriptionEye {
     pub default_eye_fov: FovPort,
     pub max_eye_fov: FovPort,
 }
 
+#[deriving(Show)]
 pub struct HmdDescription {
     pub hmd_type: HmdType,
     pub product_name: String,
@@ -999,6 +1000,7 @@ impl HmdDescription {
     }
 }
 
+#[deriving(Show, Copy, Clone)]
 pub struct EyeRenderDescriptor {
     pub eye: Eye,
     pub fov: FovPort,
@@ -1013,7 +1015,7 @@ impl EyeRenderDescriptor {
             eye: Eye::from_ll(d.eye),
             fov: FovPort::from_ll(d.fov),
             distorted_viewport: d.distorted_viewport,
-            pixels_per_tan_angle_at_center: 
+            pixels_per_tan_angle_at_center:
                 Vector2::new(d.pixels_per_tan_angle_at_center.x,
                              d.pixels_per_tan_angle_at_center.y),
             view_adjust: Vector3::new(d.view_adjust.x,
@@ -1023,6 +1025,7 @@ impl EyeRenderDescriptor {
     }
 }
 
+#[deriving(Show, Copy, Clone)]
 pub struct RenderGLConfig {
     pub size: ll::Sizei,
     pub multisample: int,
@@ -1050,6 +1053,7 @@ impl ToRenderConfig for RenderGLConfig {
     }
 }
 
+#[deriving(Show, Copy, Clone)]
 pub struct FrameTiming {
     pub delta_seconds: f32,
     pub this_frame_seconds: f64,
@@ -1077,6 +1081,7 @@ pub trait ToTexture {
     fn to_texture(&self) -> ll::Texture;
 }
 
+#[deriving(Show, Copy, Clone)]
 pub struct Texture {
     pub size: ll::Sizei,
     pub viewport: ll::Recti,
@@ -1126,7 +1131,7 @@ impl ToTexture for Texture {
     }
 }
 
-#[deriving(Show)]
+#[deriving(Show, Copy, Clone)]
 pub struct FovPort {
     pub up: f32,
     pub down: f32,
