@@ -402,6 +402,9 @@ pub struct Hmd {
     ptr: *mut ll::Hmd
 }
 
+unsafe impl Sync for Hmd {}
+unsafe impl Send for Hmd {}
+
 impl Drop for Hmd {
     fn drop(&mut self) {
         unsafe {ll::ovrHmd_Destroy(self.ptr)}

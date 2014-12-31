@@ -10,7 +10,6 @@ authors = [
 build = "scripts/build.rs"
 
 [lib]
-
 name = "ovr"
 path = "src/oculus-vr/lib.rs"
 
@@ -19,5 +18,4 @@ name = "oculus-info"
 path = "src/oculus-info/main.rs"
 
 [dependencies.cgmath]
-
 git = "https://github.com/bjz/cgmath-rs.git"
