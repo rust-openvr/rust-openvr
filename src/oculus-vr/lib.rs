@@ -9,7 +9,6 @@ extern crate libc;
 use libc::{c_int, c_uint, c_void, c_float, c_double};
 use std::default::Default;
 use std::ptr;
-use std::string::raw::from_buf;
 
 use cgmath::Quaternion;
 use cgmath::{Vector2, Vector3};
@@ -935,7 +934,7 @@ impl<T> PerEye<T> {
         }
     }
 
-    pub fn map<U>(&self, f: |Eye, &T| -> U) -> PerEye<U> {
+    pub fn map<U, F>(&self, mut f: F) -> PerEye<U> where F: FnMut(Eye, &T) -> U {
         PerEye::new(
             f(Eye::Left, &self.left),
             f(Eye::Right, &self.right)
@@ -971,6 +970,11 @@ pub struct HmdDescription {
     pub eye_render_order: [Eye; 2],
     pub display_device_name: String,
     pub display_id: c_int
+}
+
+fn from_buf(ptr: *const u8) -> String {
+    use std::ffi::{CString, c_str_to_bytes};
+    unsafe { CString::from_slice(c_str_to_bytes(&(ptr as *const i8))).to_string() }
 }
 
 impl HmdDescription {
