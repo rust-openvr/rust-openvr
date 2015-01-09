@@ -9,6 +9,7 @@ extern crate libc;
 use libc::{c_int, c_uint, c_void, c_float, c_double};
 use std::default::Default;
 use std::ptr;
+use std::path::BytesContainer;
 
 use cgmath::Quaternion;
 use cgmath::{Vector2, Vector3};
@@ -974,7 +975,10 @@ pub struct HmdDescription {
 
 fn from_buf(ptr: *const u8) -> String {
     use std::ffi::{CString, c_str_to_bytes};
-    unsafe { CString::from_slice(c_str_to_bytes(&(ptr as *const i8))).to_string() }
+    unsafe { CString::from_slice(c_str_to_bytes(&(ptr as *const i8)))
+            .container_as_str()
+            .unwrap()
+            .to_string() }
 }
 
 impl HmdDescription {
