@@ -1,7 +1,7 @@
-use std::io::Command;
-use std::io::process::StdioContainer;
+use std::old_io::Command;
+use std::old_io::process::StdioContainer;
 #[cfg(target_os = "linux")]
-use std::io::fs;
+use std::old_io::fs;
 
 #[cfg(target_os = "linux")]
 fn main() {
