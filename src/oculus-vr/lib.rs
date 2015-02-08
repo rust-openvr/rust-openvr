@@ -9,7 +9,7 @@ extern crate libc;
 use libc::{c_int, c_uint, c_void, c_float, c_double};
 use std::default::Default;
 use std::ptr;
-use std::path::BytesContainer;
+use std::old_path::BytesContainer;
 
 use cgmath::Quaternion;
 use cgmath::{Vector2, Vector3};
