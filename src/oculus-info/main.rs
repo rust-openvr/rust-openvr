@@ -1,4 +1,4 @@
-#![crate_name = "oculus-info"]
+#![crate_name = "oculus_info"]
 
 extern crate ovr;
 

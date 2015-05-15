@@ -1,6 +1,6 @@
 #![crate_name = "ovr"]
 #![crate_type = "lib"]
-#![feature(link_args, path, core, std_misc)]
+#![feature(link_args, libc)]
 #![allow(non_upper_case_globals)]
 
 extern crate cgmath;
@@ -9,7 +9,6 @@ extern crate libc;
 use libc::{c_int, c_uint, c_void, c_float, c_double};
 use std::default::Default;
 use std::ptr;
-use std::old_path::BytesContainer;
 
 use cgmath::Quaternion;
 use cgmath::{Vector2, Vector3};
@@ -364,11 +363,11 @@ impl Ovr {
     }
 
     // return a count of the number of Hmd devices
-    pub fn detect(&self) -> isize {
-        unsafe { ll::ovrHmd_Detect() as isize }
+    pub fn detect(&self) -> i32 {
+        unsafe { ll::ovrHmd_Detect() as i32 }
     }
 
-    pub fn create_hmd(&self, index: isize) -> Option<Hmd> {
+    pub fn create_hmd(&self, index: i32) -> Option<Hmd> {
         unsafe {
             let ptr = ll::ovrHmd_Create(index as i32);
             if !ptr.is_null() {
@@ -425,7 +424,7 @@ impl Hmd {
             if ptr.is_null() {
                 Ok(())
             } else {
-                Err(from_buf(ptr as *const u8))
+                Err(from_buf(ptr))
             }
         }
     }
@@ -874,6 +873,7 @@ impl SensorState {
         }
     }
 }
+
 #[derive(Debug)]
 pub struct SensorDescription {
     pub vendor_id: i16,
@@ -886,7 +886,7 @@ impl SensorDescription {
         SensorDescription {
             vendor_id: sd.vendor_id as i16,
             product_id: sd.product_id as i16,
-            serial_number: unsafe { from_buf((&sd.serial_number[0] as *const i8) as *const u8) }
+            serial_number: unsafe { from_buf((&sd.serial_number[0] as *const i8)) }
         }
     }
 }
@@ -973,12 +973,11 @@ pub struct HmdDescription {
     pub display_id: c_int
 }
 
-fn from_buf(ptr: *const u8) -> String {
-    use std::ffi::{CString, c_str_to_bytes};
-    unsafe { CString::from_slice(c_str_to_bytes(&(ptr as *const i8)))
-            .container_as_str()
-            .unwrap()
-            .to_string() }
+fn from_buf(ptr: *const i8) -> String {
+    use std::ffi::CStr;
+    unsafe {
+        String::from_utf8_lossy(CStr::from_ptr(ptr).to_bytes()).to_string()
+    }
 }
 
 impl HmdDescription {
@@ -986,8 +985,8 @@ impl HmdDescription {
         unsafe {
             HmdDescription {
                 hmd_type: HmdType::from_ll(sd.hmd_type),
-                product_name: from_buf((sd.product_name as *const i8) as *const u8),
-                manufacture: from_buf((sd.manufacture as *const i8) as *const u8),
+                product_name: from_buf((sd.product_name as *const i8)),
+                manufacture: from_buf((sd.manufacture as *const i8)),
                 hmd_capabilities: HmdCapabilities{
                     flags: sd.hmd_capabilities
                 },
@@ -1011,7 +1010,7 @@ impl HmdDescription {
                 ),
                 eye_render_order: [Eye::from_ll(sd.eye_render_order[0]),
                                    Eye::from_ll(sd.eye_render_order[1])],
-                display_device_name: from_buf((sd.display_device_name as *const i8) as *const u8),
+                display_device_name: from_buf((sd.display_device_name as *const i8)),
                 display_id: sd.display_id
             }
         }

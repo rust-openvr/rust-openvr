@@ -31,8 +31,8 @@ fn main() {
             .arg("-thin")
             .arg("x86_64")
             .arg("-output")
-            .arg(Path::new(env!("OUT_DIR")).join(Path::new("libovr.a")).as_str().unwrap())
+            .arg(Path::new(env!("OUT_DIR")).join(Path::new("libovr.a")).to_str().unwrap())
             .status()
             .ok().expect("Failed to lipo library");
-    println!("cargo:rustc-flags=-L {} -l ovr:static", env!("OUT_DIR"));
+    println!("cargo:rustc-flags=-L {} -l ovr", env!("OUT_DIR"));
 }
