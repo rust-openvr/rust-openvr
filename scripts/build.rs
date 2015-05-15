@@ -14,7 +14,7 @@ fn main() {
              &Path::new(env!("OUT_DIR")).join(Path::new("libovr.a")))
             .ok().expect("Failed to move file");
 
-    println!("cargo:rustc-flags=-L {} -l ovr:static", env!("OUT_DIR"));
+    println!("cargo:rustc-flags=-L {} -l ovr", env!("OUT_DIR"));
 }
 
 
