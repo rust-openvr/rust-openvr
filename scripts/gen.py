@@ -16,6 +16,9 @@ type_mapping = {
 	'double': 'f64',
 	'float': 'f32',
 	'_Bool': 'bool',
+	'unsigned short': 'u16',
+	'const char': 'u8',
+	'void': '()',
 
 	# I'm lazy
 	'unsigned char *': '*const u8',
@@ -40,12 +43,22 @@ def parse_type(s):
 	if s.startswith("struct"):
 		return parse_type(s.split()[1])
 	elif s.startswith("vr::"):
-		return s[4:]
+		return parse_type(s[4:])
 	elif s.startswith('enum'):
 		return parse_type(s.split()[1])
+	elif s.startswith("const "):
+		return parse_type(s[6:])
 	elif s in type_mapping:
 		return type_mapping[s]
+	elif s[-2:] == ' *':
+		return "*mut "  + parse_type(s[:-2])
 	return s
+
+def parse_class(s):
+	if s.startswith("vr::"):
+		return 'VR_' + s[4:]
+	return s
+
 
 def shorten_enum(parent, name):
 	split = name.split('_')
@@ -55,32 +68,57 @@ def shorten_enum(parent, name):
 		return '_'.join(split[1:])
 	return name
 
+
+
+print """
+#![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
+
+#[link(name = "openvr_api")]
+extern {}
+"""
+
 for d in data['typedefs']:
 	if parse_type(d['typedef']) == parse_type(d['type']):
 		continue
 
-	print "// %s" % d
-	print "type %s = %s;" % (parse_type(d['typedef']), parse_type(d['type']))
+	print "pub type %s = %s;" % (parse_type(d['typedef']), parse_type(d['type']))
 
 for d in data['enums']:
 	found = set()
-	print "pub enum %s {" % parse_type(d['enumname'])
+	print "#[repr(C)]\npub enum %s {" % parse_type(d['enumname'])
 	for v in d['values']:
 		if v['value'] in found:
 			continue
 		found.add(v['value'])
 		print "\t%s = %s," % (shorten_enum(d['enumname'], v['name']), v['value'])
-	print "}"
+	print "}\n"
 
 for s in data['structs']:
 	if s['struct'] == "vr::(anonymous)":
 		continue
-	print "// %s" % s
-	print "struct %s {" % parse_type(s['struct'])
+	print "#[repr(C)]\npub struct %s {" % parse_type(s['struct'])
 	for f in s['fields']:
-		print "// %s" % (f)
 		print "\t%s: %s," % (f['fieldname'], parse_type(f['fieldtype']))
 	print "}"
 
-print "fn main() {}"
+print "extern \"C\" {"
+
+for m in data['methods']:
+	print '\tpub fn ' + parse_class(m['classname']) + '_' + m['methodname'] + "(",
+	s = []
+	for p in m.get('params', []):
+		if p['paramname'] == 'type':
+			p['paramname'] = '_type'
+		s +=  ["%s: %s" % (p['paramname'], parse_type(p['paramtype']))]
+	print "%s)" % (', '.join(s)),
+	if 'returntype' in m and m['returntype'] == 'void':
+		print ";"
+	elif 'returntype' in m:
+		print "-> %s;" % parse_type(m['returntype'])
+	else:
+		print ";"
+
+print "}"
+
 
