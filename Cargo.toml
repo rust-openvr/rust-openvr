@@ -7,5 +7,8 @@ authors = [
 ]
 
 [lib]
-name = "openvr_sys"
-path = "src/sys/lib.rs"
+name = "vr"
+path = "src/lib.rs"
+
+[dependencies.openvr_sys]
+path = "src/sys/"

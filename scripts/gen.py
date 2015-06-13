@@ -105,7 +105,7 @@ for s in data['structs']:
 print "extern \"C\" {"
 
 for m in data['methods']:
-	print '\tpub fn ' + parse_class(m['classname']) + '_' + m['methodname'] + "(",
+	print '\tpub fn ' + parse_class(m['classname']) + '_' + m['methodname'] + "(usize,",
 	s = []
 	for p in m.get('params', []):
 		if p['paramname'] == 'type':
