@@ -1,4 +1,7 @@
 import json
+import re
+
+array = re.compile(r"(.+)\[([0-9]+)\]")
 
 data = {}
 with open("openvr/headers/openvr_api.json") as f:
@@ -29,7 +32,6 @@ type_mapping = {
 	'const struct vr::RenderModel_Vertex_t *': '*const RenderModel_Vertex_t',
 
 	'float [3][4]': '[[f32; 4]; 3]',
-	'float [4][4]': '[[f32; 4]; 4]',
 	'float [4]': '[f32; 4]',
 	'float [3]': '[f32; 3]',
 	'float [2]': '[f32; 2]',
@@ -41,7 +43,7 @@ type_mapping = {
 
 def parse_type(s):
 	if s.startswith("struct"):
-		return parse_type(s.split()[1])
+		return parse_type(s[7:])
 	elif s.startswith("vr::"):
 		return parse_type(s[4:])
 	elif s.startswith('enum'):
@@ -52,6 +54,11 @@ def parse_type(s):
 		return type_mapping[s]
 	elif s[-2:] == ' *':
 		return "*mut "  + parse_type(s[:-2])
+	elif s[-2:] == ' &':
+		return "*const "  + parse_type(s[:-2])
+	elif array.match(s):
+		m = array.match(s)
+		return "[%s; %s]" % (parse_type(m.group(1)), m.group(2))
 	return s
 
 def parse_class(s):
@@ -107,7 +114,8 @@ for s in data['structs']:
 		continue
 	print "#[repr(C)]\npub struct %s {" % parse_type(s['struct'])
 	for f in s['fields']:
-		print "\t%s: %s," % (f['fieldname'], parse_type(f['fieldtype']))
+		print "\t//%s" % f['fieldtype']
+		print "\tpub %s: %s," % (f['fieldname'], parse_type(f['fieldtype']))
 	print "}"
 
 print "extern \"C\" {"
