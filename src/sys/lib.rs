@@ -1,9 +1,17 @@
 
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
+#![allow(improper_ctypes)]
 
 #[link(name = "openvr_api")]
 extern {}
+
+extern "C" {
+	pub fn VR_Init(err: *mut HmdError) -> *const ();
+	pub fn VR_Shutdown();
+	pub fn VR_IsHmdPresent() -> bool;
+	pub fn VR_GetStringForHmdError(err: HmdError) -> *const u8;
+}
 
 pub type TrackedDeviceIndex_t = u32;
 pub type VREvent_Data_t = [u8; 16];
@@ -11,18 +19,21 @@ pub type VRControllerState_t = VRControllerState001_t;
 pub type VROverlayHandle_t = u64;
 pub type VRNotificationId = u32;
 #[repr(C)]
+#[derive(Debug)]
 pub enum Hmd_Eye {
 	Left = 0,
 	Right = 1,
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub enum GraphicsAPIConvention {
 	DirectX = 0,
 	OpenGL = 1,
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub enum HmdTrackingResult {
 	Uninitialized = 1,
 	Calibrating_InProgress = 100,
@@ -32,6 +43,7 @@ pub enum HmdTrackingResult {
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub enum TrackedDeviceClass {
 	Invalid = 0,
 	HMD = 1,
@@ -41,6 +53,7 @@ pub enum TrackedDeviceClass {
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub enum TrackingUniverseOrigin {
 	TrackingUniverseSeated = 0,
 	TrackingUniverseStanding = 1,
@@ -48,6 +61,7 @@ pub enum TrackingUniverseOrigin {
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub enum TrackedDeviceProperty {
 	TrackingSystemName_String = 1000,
 	ModelNumber_String = 1001,
@@ -83,6 +97,7 @@ pub enum TrackedDeviceProperty {
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub enum TrackedPropertyError {
 	Success = 0,
 	WrongDataType = 1,
@@ -96,6 +111,7 @@ pub enum TrackedPropertyError {
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub enum EVREventType {
 	None = 0,
 	TrackedDeviceActivated = 100,
@@ -125,6 +141,7 @@ pub enum EVREventType {
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub enum EVRButtonId {
 	EButton_System = 0,
 	EButton_ApplicationMenu = 1,
@@ -138,6 +155,7 @@ pub enum EVRButtonId {
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub enum EVRMouseButton {
 	Left = 1,
 	Right = 2,
@@ -145,6 +163,7 @@ pub enum EVRMouseButton {
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub enum EVRControllerAxisType {
 	eControllerAxis_None = 0,
 	eControllerAxis_TrackPad = 1,
@@ -153,12 +172,14 @@ pub enum EVRControllerAxisType {
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub enum EVRControllerEventOutputType {
 	OSEvents = 0,
 	VREvents = 1,
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub enum HmdError {
 	None = 0,
 	Unknown = 1,
@@ -192,6 +213,7 @@ pub enum HmdError {
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub enum CameraImageResult {
 	OK = 0,
 	Uninitalized = 1,
@@ -200,6 +222,7 @@ pub enum CameraImageResult {
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub enum ChaperoneCalibrationState {
 	OK = 1,
 	Warning = 100,
@@ -214,6 +237,7 @@ pub enum ChaperoneCalibrationState {
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub enum Compositor_DeviceType {
 	DeviceType_None = 0,
 	DeviceType_D3D9 = 1,
@@ -224,6 +248,7 @@ pub enum Compositor_DeviceType {
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub enum VRCompositorError {
 	None = 0,
 	IncompatibleVersion = 100,
@@ -231,6 +256,7 @@ pub enum VRCompositorError {
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub enum VROverlayError {
 	None = 0,
 	UnknownOverlay = 10,
@@ -246,18 +272,21 @@ pub enum VROverlayError {
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub enum VROverlayInputMethod {
 	None = 0,
 	Mouse = 1,
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub enum VROverlayVisibility {
 	Manual = 0,
 	SystemOverlay = 1,
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub enum VROverlayTransformType {
 	Absolute = 0,
 	TrackedDeviceRelative = 1,
@@ -265,6 +294,7 @@ pub enum VROverlayTransformType {
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub enum VROverlayFlags {
 	None = 0,
 	Curved = 1,
@@ -473,137 +503,137 @@ pub struct NotificationBitmap {
 	depth: i32,
 }
 extern "C" {
-	pub fn VR_IVRSystem_GetWindowBounds(usize, pnX: *mut i32, pnY: *mut i32, pnWidth: *mut u32, pnHeight: *mut u32) ;
-	pub fn VR_IVRSystem_GetRecommendedRenderTargetSize(usize, pnWidth: *mut u32, pnHeight: *mut u32) ;
-	pub fn VR_IVRSystem_GetEyeOutputViewport(usize, eEye: Hmd_Eye, pnX: *mut u32, pnY: *mut u32, pnWidth: *mut u32, pnHeight: *mut u32) ;
-	pub fn VR_IVRSystem_GetProjectionMatrix(usize, eEye: Hmd_Eye, fNearZ: f32, fFarZ: f32, eProjType: GraphicsAPIConvention) -> HmdMatrix44_t;
-	pub fn VR_IVRSystem_GetProjectionRaw(usize, eEye: Hmd_Eye, pfLeft: *mut f32, pfRight: *mut f32, pfTop: *mut f32, pfBottom: *mut f32) ;
-	pub fn VR_IVRSystem_ComputeDistortion(usize, eEye: Hmd_Eye, fU: f32, fV: f32) -> DistortionCoordinates_t;
-	pub fn VR_IVRSystem_GetEyeToHeadTransform(usize, eEye: Hmd_Eye) -> HmdMatrix34_t;
-	pub fn VR_IVRSystem_GetTimeSinceLastVsync(usize, pfSecondsSinceLastVsync: *mut f32, pulFrameCounter: *mut u64) -> bool;
-	pub fn VR_IVRSystem_GetD3D9AdapterIndex(usize, ) -> i32;
-	pub fn VR_IVRSystem_GetDXGIOutputInfo(usize, pnAdapterIndex: *mut i32, pnAdapterOutputIndex: *mut i32) ;
-	pub fn VR_IVRSystem_AttachToWindow(usize, hWnd: *mut ()) -> bool;
-	pub fn VR_IVRSystem_GetDeviceToAbsoluteTrackingPose(usize, eOrigin: TrackingUniverseOrigin, fPredictedSecondsToPhotonsFromNow: f32, pTrackedDevicePoseArray: TrackedDevicePose_t, unTrackedDevicePoseArrayCount: u32) ;
-	pub fn VR_IVRSystem_ResetSeatedZeroPose(usize, ) ;
-	pub fn VR_IVRSystem_GetSeatedZeroPoseToStandingAbsoluteTrackingPose(usize, ) -> HmdMatrix34_t;
-	pub fn VR_IVRSystem_GetTrackedDeviceClass(usize, unDeviceIndex: TrackedDeviceIndex_t) -> TrackedDeviceClass;
-	pub fn VR_IVRSystem_IsTrackedDeviceConnected(usize, unDeviceIndex: TrackedDeviceIndex_t) -> bool;
-	pub fn VR_IVRSystem_GetBoolTrackedDeviceProperty(usize, unDeviceIndex: TrackedDeviceIndex_t, prop: TrackedDeviceProperty, pError: *mut TrackedPropertyError) -> bool;
-	pub fn VR_IVRSystem_GetFloatTrackedDeviceProperty(usize, unDeviceIndex: TrackedDeviceIndex_t, prop: TrackedDeviceProperty, pError: *mut TrackedPropertyError) -> f32;
-	pub fn VR_IVRSystem_GetInt32TrackedDeviceProperty(usize, unDeviceIndex: TrackedDeviceIndex_t, prop: TrackedDeviceProperty, pError: *mut TrackedPropertyError) -> i32;
-	pub fn VR_IVRSystem_GetUint64TrackedDeviceProperty(usize, unDeviceIndex: TrackedDeviceIndex_t, prop: TrackedDeviceProperty, pError: *mut TrackedPropertyError) -> u64;
-	pub fn VR_IVRSystem_GetMatrix34TrackedDeviceProperty(usize, unDeviceIndex: TrackedDeviceIndex_t, prop: TrackedDeviceProperty, pError: *mut TrackedPropertyError) -> HmdMatrix34_t;
-	pub fn VR_IVRSystem_GetStringTrackedDeviceProperty(usize, unDeviceIndex: TrackedDeviceIndex_t, prop: TrackedDeviceProperty, pchValue: *const u8, unBufferSize: u32, pError: *mut TrackedPropertyError) -> u32;
-	pub fn VR_IVRSystem_GetPropErrorNameFromEnum(usize, error: TrackedPropertyError) -> *const u8;
-	pub fn VR_IVRSystem_PollNextEvent(usize, pEvent: VREvent_t) -> bool;
-	pub fn VR_IVRSystem_PollNextEventWithPose(usize, eOrigin: TrackingUniverseOrigin, pEvent: *mut VREvent_t, pTrackedDevicePose: *mut TrackedDevicePose_t) -> bool;
-	pub fn VR_IVRSystem_GetEventTypeNameFromEnum(usize, eType: EVREventType) -> *const u8;
-	pub fn VR_IVRSystem_GetHiddenAreaMesh(usize, eEye: Hmd_Eye) -> HiddenAreaMesh_t;
-	pub fn VR_IVRSystem_GetControllerState(usize, unControllerDeviceIndex: TrackedDeviceIndex_t, pControllerState: *mut VRControllerState_t) -> bool;
-	pub fn VR_IVRSystem_GetControllerStateWithPose(usize, eOrigin: TrackingUniverseOrigin, unControllerDeviceIndex: TrackedDeviceIndex_t, pControllerState: *mut VRControllerState_t, pTrackedDevicePose: TrackedDevicePose_t) -> bool;
-	pub fn VR_IVRSystem_TriggerHapticPulse(usize, unControllerDeviceIndex: TrackedDeviceIndex_t, unAxisId: u32, usDurationMicroSec: u16) ;
-	pub fn VR_IVRSystem_GetButtonIdNameFromEnum(usize, eButtonId: EVRButtonId) -> *const u8;
-	pub fn VR_IVRSystem_GetControllerAxisTypeNameFromEnum(usize, eAxisType: EVRControllerAxisType) -> *const u8;
-	pub fn VR_IVRSystem_CaptureInputFocus(usize, ) -> bool;
-	pub fn VR_IVRSystem_ReleaseInputFocus(usize, ) ;
-	pub fn VR_IVRSystem_IsInputFocusCapturedByAnotherProcess(usize, ) -> bool;
-	pub fn VR_IVRSystem_DriverDebugRequest(usize, unDeviceIndex: TrackedDeviceIndex_t, pchRequest: *const u8, pchResponseBuffer: *const u8, unResponseBufferSize: u32) -> u32;
-	pub fn VR_IVRCameraAccess_GetCameraCount(usize, ) -> u32;
-	pub fn VR_IVRCameraAccess_GetCameraId(usize, unCameraIndex: u32, pchBuffer: *const u8, unBufferLen: u32) -> u32;
-	pub fn VR_IVRCameraAccess_EnableCamera(usize, unCameraIndex: u32, bEnabled: bool) -> bool;
-	pub fn VR_IVRCameraAccess_GetCameraInfo(usize, unCameraIndex: u32, pCameraInfo: CameraInfo_t) -> bool;
-	pub fn VR_IVRCameraAccess_GetCameraImage(usize, unCameraIndex: u32, pCameraImage: CameraImage_t) -> bool;
-	pub fn VR_IVRChaperone_GetCalibrationState(usize, ) -> ChaperoneCalibrationState;
-	pub fn VR_IVRChaperone_GetSoftBoundsInfo(usize, pInfo: ChaperoneSoftBoundsInfo_t) -> bool;
-	pub fn VR_IVRChaperone_GetHardBoundsInfo(usize, pQuadsBuffer: HmdQuad_t, punQuadsCount: *mut u32) -> bool;
-	pub fn VR_IVRChaperone_GetSeatedBoundsInfo(usize, pInfo: ChaperoneSeatedBoundsInfo_t) -> bool;
-	pub fn VR_IVRChaperoneSetup_CommitWorkingCopy(usize, pchCalibrationName: *const u8) -> bool;
-	pub fn VR_IVRChaperoneSetup_RevertWorkingCopy(usize, ) ;
-	pub fn VR_IVRChaperoneSetup_GetWorkingSoftBoundsInfo(usize, pInfo: ChaperoneSoftBoundsInfo_t) -> bool;
-	pub fn VR_IVRChaperoneSetup_GetWorkingHardBoundsInfo(usize, pQuadsBuffer: HmdQuad_t, punQuadsCount: *mut u32) -> bool;
-	pub fn VR_IVRChaperoneSetup_GetWorkingSeatedZeroPoseToRawTrackingPose(usize, pmatSeatedZeroPoseToRawTrackingPose: HmdMatrix34_t) -> bool;
-	pub fn VR_IVRChaperoneSetup_GetWorkingStandingZeroPoseToRawTrackingPose(usize, pmatStandingZeroPoseToRawTrackingPose: HmdMatrix34_t) -> bool;
-	pub fn VR_IVRChaperoneSetup_SetWorkingSoftBoundsInfo(usize, pInfo: ChaperoneSoftBoundsInfo_t) ;
-	pub fn VR_IVRChaperoneSetup_SetWorkingHardBoundsInfo(usize, pQuadsBuffer: HmdQuad_t, unQuadsCount: u32) ;
-	pub fn VR_IVRChaperoneSetup_SetWorkingSeatedZeroPoseToRawTrackingPose(usize, matSeatedZeroPoseToRawTrackingPose: HmdMatrix34_t) ;
-	pub fn VR_IVRChaperoneSetup_SetWorkingStandingZeroPoseToRawTrackingPose(usize, matStandingZeroPoseToRawTrackingPose: HmdMatrix34_t) ;
-	pub fn VR_IVRChaperoneSetup_GetWorkingTagPoses(usize, pTagPosesBuffer: HmdMatrix34_t, punTagPosesCount: *mut u32) -> bool;
-	pub fn VR_IVRChaperoneSetup_GetWorkingTagPoseScales(usize, pflScaleBuffer: *mut f32, punTagPosesCount: *mut u32) -> bool;
-	pub fn VR_IVRChaperoneSetup_GetWorkingTagPoseNameByIndex(usize, nIndex: u32, pchBuffer: *const u8, unBufferSize: u32) -> u32;
-	pub fn VR_IVRChaperoneSetup_GetWorkingTagPoseByName(usize, pchTagName: *const u8, pmatTagPose: HmdMatrix34_t, pflScale: *mut f32) -> bool;
-	pub fn VR_IVRChaperoneSetup_SetWorkingTagPoseByName(usize, pchTagName: *const u8, matSeatedZeroPoseToRawTrackingPose: HmdMatrix34_t, flScale: f32) ;
-	pub fn VR_IVRChaperoneSetup_RemoveWorkingTagPoseByName(usize, pchTagName: *const u8) ;
-	pub fn VR_IVRChaperoneSetup_RemoveAllWorkingTagPoses(usize, ) ;
-	pub fn VR_IVRChaperoneSetup_ReloadFromDisk(usize, ) ;
-	pub fn VR_IVRCompositor_GetLastError(usize, pchBuffer: *const u8, unBufferSize: u32) -> u32;
-	pub fn VR_IVRCompositor_SetVSync(usize, bVSync: bool) ;
-	pub fn VR_IVRCompositor_GetVSync(usize, ) -> bool;
-	pub fn VR_IVRCompositor_SetGamma(usize, fGamma: f32) ;
-	pub fn VR_IVRCompositor_GetGamma(usize, ) -> f32;
-	pub fn VR_IVRCompositor_SetGraphicsDevice(usize, eType: Compositor_DeviceType, pDevice: *mut ()) ;
-	pub fn VR_IVRCompositor_WaitGetPoses(usize, pRenderPoseArray: TrackedDevicePose_t, unRenderPoseArrayCount: u32, pGamePoseArray: TrackedDevicePose_t, unGamePoseArrayCount: u32) -> VRCompositorError;
-	pub fn VR_IVRCompositor_Submit(usize, eEye: Hmd_Eye, pTexture: *mut (), pBounds: VRTextureBounds_t) -> VRCompositorError;
-	pub fn VR_IVRCompositor_ClearLastSubmittedFrame(usize, ) ;
-	pub fn VR_IVRCompositor_GetFrameTiming(usize, pTiming: Compositor_FrameTiming, unFramesAgo: u32) -> bool;
-	pub fn VR_IVRCompositor_FadeToColor(usize, fSeconds: f32, fRed: f32, fGreen: f32, fBlue: f32, fAlpha: f32, bBackground: bool) ;
-	pub fn VR_IVRCompositor_FadeGrid(usize, fSeconds: f32, bFadeIn: bool) ;
-	pub fn VR_IVRCompositor_CompositorBringToFront(usize, ) ;
-	pub fn VR_IVRCompositor_CompositorGoToBack(usize, ) ;
-	pub fn VR_IVRCompositor_CompositorQuit(usize, ) ;
-	pub fn VR_IVRCompositor_IsFullscreen(usize, ) -> bool;
-	pub fn VR_IVRCompositor_SetTrackingSpace(usize, eOrigin: TrackingUniverseOrigin) ;
-	pub fn VR_IVRCompositor_GetTrackingSpace(usize, ) -> TrackingUniverseOrigin;
-	pub fn VR_IVRCompositor_GetCurrentSceneFocusProcess(usize, ) -> u32;
-	pub fn VR_IVRCompositor_CanRenderScene(usize, ) -> bool;
-	pub fn VR_IVROverlay_FindOverlay(usize, pchOverlayKey: *const u8, pOverlayHandle: *mut VROverlayHandle_t) -> VROverlayError;
-	pub fn VR_IVROverlay_CreateOverlay(usize, pchOverlayKey: *const u8, pchOverlayFriendlyName: *const u8, pOverlayHandle: *mut VROverlayHandle_t) -> VROverlayError;
-	pub fn VR_IVROverlay_DestroyOverlay(usize, ulOverlayHandle: VROverlayHandle_t) -> VROverlayError;
-	pub fn VR_IVROverlay_SetHighQualityOverlay(usize, ulOverlayHandle: VROverlayHandle_t) -> VROverlayError;
-	pub fn VR_IVROverlay_GetHighQualityOverlay(usize, ) -> VROverlayHandle_t;
-	pub fn VR_IVROverlay_GetOverlayErrorNameFromEnum(usize, error: VROverlayError) -> *const u8;
-	pub fn VR_IVROverlay_SetOverlayFlag(usize, ulOverlayHandle: VROverlayHandle_t, eOverlayFlag: VROverlayFlags, bEnabled: bool) -> VROverlayError;
-	pub fn VR_IVROverlay_GetOverlayFlag(usize, ulOverlayHandle: VROverlayHandle_t, eOverlayFlag: VROverlayFlags, pbEnabled: *mut bool) -> VROverlayError;
-	pub fn VR_IVROverlay_SetOverlayAlpha(usize, ulOverlayHandle: VROverlayHandle_t, fAlpha: f32) -> VROverlayError;
-	pub fn VR_IVROverlay_GetOverlayAlpha(usize, ulOverlayHandle: VROverlayHandle_t, pfAlpha: *mut f32) -> VROverlayError;
-	pub fn VR_IVROverlay_SetOverlayGamma(usize, ulOverlayHandle: VROverlayHandle_t, fGamma: f32) -> VROverlayError;
-	pub fn VR_IVROverlay_GetOverlayGamma(usize, ulOverlayHandle: VROverlayHandle_t, pfGamma: *mut f32) -> VROverlayError;
-	pub fn VR_IVROverlay_SetOverlayWidthInMeters(usize, ulOverlayHandle: VROverlayHandle_t, fWidthInMeters: f32) -> VROverlayError;
-	pub fn VR_IVROverlay_GetOverlayWidthInMeters(usize, ulOverlayHandle: VROverlayHandle_t, pfWidthInMeters: *mut f32) -> VROverlayError;
-	pub fn VR_IVROverlay_SetOverlayTextureBounds(usize, ulOverlayHandle: VROverlayHandle_t, pOverlayTextureBounds: VRTextureBounds_t) -> VROverlayError;
-	pub fn VR_IVROverlay_GetOverlayTextureBounds(usize, ulOverlayHandle: VROverlayHandle_t, pOverlayTextureBounds: VRTextureBounds_t) -> VROverlayError;
-	pub fn VR_IVROverlay_GetOverlayTransformType(usize, ulOverlayHandle: VROverlayHandle_t, peTransformType: *mut VROverlayTransformType) -> VROverlayError;
-	pub fn VR_IVROverlay_SetOverlayTransformAbsolute(usize, ulOverlayHandle: VROverlayHandle_t, eTrackingOrigin: TrackingUniverseOrigin, pmatTrackingOriginToOverlayTransform: HmdMatrix34_t) -> VROverlayError;
-	pub fn VR_IVROverlay_GetOverlayTransformAbsolute(usize, ulOverlayHandle: VROverlayHandle_t, peTrackingOrigin: *mut TrackingUniverseOrigin, pmatTrackingOriginToOverlayTransform: HmdMatrix34_t) -> VROverlayError;
-	pub fn VR_IVROverlay_SetOverlayTransformTrackedDeviceRelative(usize, ulOverlayHandle: VROverlayHandle_t, unTrackedDevice: TrackedDeviceIndex_t, pmatTrackedDeviceToOverlayTransform: HmdMatrix34_t) -> VROverlayError;
-	pub fn VR_IVROverlay_GetOverlayTransformTrackedDeviceRelative(usize, ulOverlayHandle: VROverlayHandle_t, punTrackedDevice: *mut TrackedDeviceIndex_t, pmatTrackedDeviceToOverlayTransform: HmdMatrix34_t) -> VROverlayError;
-	pub fn VR_IVROverlay_GetOverlayVisibility(usize, ulOverlayHandle: VROverlayHandle_t, peOverlayVisibility: *mut VROverlayVisibility) -> VROverlayError;
-	pub fn VR_IVROverlay_SetOverlayVisibility(usize, ulOverlayHandle: VROverlayHandle_t, eOverlayVisibility: VROverlayVisibility) -> VROverlayError;
-	pub fn VR_IVROverlay_ShowOverlay(usize, ulOverlayHandle: VROverlayHandle_t) -> VROverlayError;
-	pub fn VR_IVROverlay_HideOverlay(usize, ulOverlayHandle: VROverlayHandle_t) -> VROverlayError;
-	pub fn VR_IVROverlay_IsOverlayVisible(usize, ulOverlayHandle: VROverlayHandle_t) -> bool;
-	pub fn VR_IVROverlay_PollNextOverlayEvent(usize, ulOverlayHandle: VROverlayHandle_t, pEvent: VREvent_t) -> bool;
-	pub fn VR_IVROverlay_GetOverlayInputMethod(usize, ulOverlayHandle: VROverlayHandle_t, peInputMethod: *mut VROverlayInputMethod) -> VROverlayError;
-	pub fn VR_IVROverlay_SetOverlayInputMethod(usize, ulOverlayHandle: VROverlayHandle_t, eInputMethod: VROverlayInputMethod) -> VROverlayError;
-	pub fn VR_IVROverlay_GetOverlayMouseScale(usize, ulOverlayHandle: VROverlayHandle_t, pvecMouseScale: HmdVector2_t) -> VROverlayError;
-	pub fn VR_IVROverlay_SetOverlayMouseScale(usize, ulOverlayHandle: VROverlayHandle_t, pvecMouseScale: HmdVector2_t) -> VROverlayError;
-	pub fn VR_IVROverlay_ComputeOverlayIntersection(usize, ulOverlayHandle: VROverlayHandle_t, pParams: VROverlayIntersectionParams_t, pResults: VROverlayIntersectionResults_t) -> bool;
-	pub fn VR_IVROverlay_HandleControllerOverlayInteractionAsMouse(usize, ulOverlayHandle: VROverlayHandle_t, unControllerDeviceIndex: TrackedDeviceIndex_t) -> bool;
-	pub fn VR_IVROverlay_SetOverlayTexture(usize, ulOverlayHandle: VROverlayHandle_t, pTexture: *mut ()) -> VROverlayError;
-	pub fn VR_IVROverlay_SetOverlayRaw(usize, ulOverlayHandle: VROverlayHandle_t, pvBuffer: *mut (), unWidth: u32, unHeight: u32, unDepth: u32) -> VROverlayError;
-	pub fn VR_IVROverlay_SetOverlayFromFile(usize, ulOverlayHandle: VROverlayHandle_t, pchFilePath: *const u8) -> VROverlayError;
-	pub fn VR_IVROverlay_IsSystemOverlayVisible(usize, ) -> bool;
-	pub fn VR_IVROverlay_IsActiveSystemOverlay(usize, ulOverlayHandle: VROverlayHandle_t) -> bool;
-	pub fn VR_IVROverlay_SetSystemOverlaySceneProcess(usize, ulOverlayHandle: VROverlayHandle_t, unProcessId: u32) -> VROverlayError;
-	pub fn VR_IVROverlay_GetSystemOverlaySceneProcess(usize, ulOverlayHandle: VROverlayHandle_t, punProcessId: *mut u32) -> VROverlayError;
-	pub fn VR_IVRRenderModels_LoadRenderModel(usize, pchRenderModelName: *const u8, pRenderModel: RenderModel_t) -> bool;
-	pub fn VR_IVRRenderModels_FreeRenderModel(usize, pRenderModel: RenderModel_t) ;
-	pub fn VR_IVRRenderModels_GetRenderModelName(usize, unRenderModelIndex: u32, pchRenderModelName: *const u8, unRenderModelNameLen: u32) -> u32;
-	pub fn VR_IVRRenderModels_GetRenderModelCount(usize, ) -> u32;
-	pub fn VR_IVRNotifications_GetLastError(usize, pchBuffer: *const u8, unBufferSize: u32) -> u32;
-	pub fn VR_IVRNotifications_NotificationStart(usize, _type: *const u8, texture: NotificationBitmap, notificationId: *mut VRNotificationId) -> bool;
-	pub fn VR_IVRNotifications_UpdateTexture(usize, notificationId: VRNotificationId, texture: NotificationBitmap) -> bool;
-	pub fn VR_IVRNotifications_UpdateBitmap(usize, notificationId: VRNotificationId, texture: NotificationBitmap) -> bool;
-	pub fn VR_IVRNotifications_GetPointerLocation(usize, notificationId: VRNotificationId, pointerActive: *mut bool, pointerX: *mut i32, pointerY: *mut i32) -> bool;
-	pub fn VR_IVRNotifications_DismissNotification(usize, notificationId: VRNotificationId) -> bool;
+	pub fn VR_IVRSystem_GetWindowBounds(ptr: *const (), pnX: *mut i32, pnY: *mut i32, pnWidth: *mut u32, pnHeight: *mut u32) ;
+	pub fn VR_IVRSystem_GetRecommendedRenderTargetSize(ptr: *const (), pnWidth: *mut u32, pnHeight: *mut u32) ;
+	pub fn VR_IVRSystem_GetEyeOutputViewport(ptr: *const (), eEye: Hmd_Eye, pnX: *mut u32, pnY: *mut u32, pnWidth: *mut u32, pnHeight: *mut u32) ;
+	pub fn VR_IVRSystem_GetProjectionMatrix(ptr: *const (), eEye: Hmd_Eye, fNearZ: f32, fFarZ: f32, eProjType: GraphicsAPIConvention) -> HmdMatrix44_t;
+	pub fn VR_IVRSystem_GetProjectionRaw(ptr: *const (), eEye: Hmd_Eye, pfLeft: *mut f32, pfRight: *mut f32, pfTop: *mut f32, pfBottom: *mut f32) ;
+	pub fn VR_IVRSystem_ComputeDistortion(ptr: *const (), eEye: Hmd_Eye, fU: f32, fV: f32) -> DistortionCoordinates_t;
+	pub fn VR_IVRSystem_GetEyeToHeadTransform(ptr: *const (), eEye: Hmd_Eye) -> HmdMatrix34_t;
+	pub fn VR_IVRSystem_GetTimeSinceLastVsync(ptr: *const (), pfSecondsSinceLastVsync: *mut f32, pulFrameCounter: *mut u64) -> bool;
+	pub fn VR_IVRSystem_GetD3D9AdapterIndex(ptr: *const (), ) -> i32;
+	pub fn VR_IVRSystem_GetDXGIOutputInfo(ptr: *const (), pnAdapterIndex: *mut i32, pnAdapterOutputIndex: *mut i32) ;
+	pub fn VR_IVRSystem_AttachToWindow(ptr: *const (), hWnd: *mut ()) -> bool;
+	pub fn VR_IVRSystem_GetDeviceToAbsoluteTrackingPose(ptr: *const (), eOrigin: TrackingUniverseOrigin, fPredictedSecondsToPhotonsFromNow: f32, pTrackedDevicePoseArray: TrackedDevicePose_t, unTrackedDevicePoseArrayCount: u32) ;
+	pub fn VR_IVRSystem_ResetSeatedZeroPose(ptr: *const (), ) ;
+	pub fn VR_IVRSystem_GetSeatedZeroPoseToStandingAbsoluteTrackingPose(ptr: *const (), ) -> HmdMatrix34_t;
+	pub fn VR_IVRSystem_GetTrackedDeviceClass(ptr: *const (), unDeviceIndex: TrackedDeviceIndex_t) -> TrackedDeviceClass;
+	pub fn VR_IVRSystem_IsTrackedDeviceConnected(ptr: *const (), unDeviceIndex: TrackedDeviceIndex_t) -> bool;
+	pub fn VR_IVRSystem_GetBoolTrackedDeviceProperty(ptr: *const (), unDeviceIndex: TrackedDeviceIndex_t, prop: TrackedDeviceProperty, pError: *mut TrackedPropertyError) -> bool;
+	pub fn VR_IVRSystem_GetFloatTrackedDeviceProperty(ptr: *const (), unDeviceIndex: TrackedDeviceIndex_t, prop: TrackedDeviceProperty, pError: *mut TrackedPropertyError) -> f32;
+	pub fn VR_IVRSystem_GetInt32TrackedDeviceProperty(ptr: *const (), unDeviceIndex: TrackedDeviceIndex_t, prop: TrackedDeviceProperty, pError: *mut TrackedPropertyError) -> i32;
+	pub fn VR_IVRSystem_GetUint64TrackedDeviceProperty(ptr: *const (), unDeviceIndex: TrackedDeviceIndex_t, prop: TrackedDeviceProperty, pError: *mut TrackedPropertyError) -> u64;
+	pub fn VR_IVRSystem_GetMatrix34TrackedDeviceProperty(ptr: *const (), unDeviceIndex: TrackedDeviceIndex_t, prop: TrackedDeviceProperty, pError: *mut TrackedPropertyError) -> HmdMatrix34_t;
+	pub fn VR_IVRSystem_GetStringTrackedDeviceProperty(ptr: *const (), unDeviceIndex: TrackedDeviceIndex_t, prop: TrackedDeviceProperty, pchValue: *const u8, unBufferSize: u32, pError: *mut TrackedPropertyError) -> u32;
+	pub fn VR_IVRSystem_GetPropErrorNameFromEnum(ptr: *const (), error: TrackedPropertyError) -> *const u8;
+	pub fn VR_IVRSystem_PollNextEvent(ptr: *const (), pEvent: VREvent_t) -> bool;
+	pub fn VR_IVRSystem_PollNextEventWithPose(ptr: *const (), eOrigin: TrackingUniverseOrigin, pEvent: *mut VREvent_t, pTrackedDevicePose: *mut TrackedDevicePose_t) -> bool;
+	pub fn VR_IVRSystem_GetEventTypeNameFromEnum(ptr: *const (), eType: EVREventType) -> *const u8;
+	pub fn VR_IVRSystem_GetHiddenAreaMesh(ptr: *const (), eEye: Hmd_Eye) -> HiddenAreaMesh_t;
+	pub fn VR_IVRSystem_GetControllerState(ptr: *const (), unControllerDeviceIndex: TrackedDeviceIndex_t, pControllerState: *mut VRControllerState_t) -> bool;
+	pub fn VR_IVRSystem_GetControllerStateWithPose(ptr: *const (), eOrigin: TrackingUniverseOrigin, unControllerDeviceIndex: TrackedDeviceIndex_t, pControllerState: *mut VRControllerState_t, pTrackedDevicePose: TrackedDevicePose_t) -> bool;
+	pub fn VR_IVRSystem_TriggerHapticPulse(ptr: *const (), unControllerDeviceIndex: TrackedDeviceIndex_t, unAxisId: u32, usDurationMicroSec: u16) ;
+	pub fn VR_IVRSystem_GetButtonIdNameFromEnum(ptr: *const (), eButtonId: EVRButtonId) -> *const u8;
+	pub fn VR_IVRSystem_GetControllerAxisTypeNameFromEnum(ptr: *const (), eAxisType: EVRControllerAxisType) -> *const u8;
+	pub fn VR_IVRSystem_CaptureInputFocus(ptr: *const (), ) -> bool;
+	pub fn VR_IVRSystem_ReleaseInputFocus(ptr: *const (), ) ;
+	pub fn VR_IVRSystem_IsInputFocusCapturedByAnotherProcess(ptr: *const (), ) -> bool;
+	pub fn VR_IVRSystem_DriverDebugRequest(ptr: *const (), unDeviceIndex: TrackedDeviceIndex_t, pchRequest: *const u8, pchResponseBuffer: *const u8, unResponseBufferSize: u32) -> u32;
+	pub fn VR_IVRCameraAccess_GetCameraCount(ptr: *const (), ) -> u32;
+	pub fn VR_IVRCameraAccess_GetCameraId(ptr: *const (), unCameraIndex: u32, pchBuffer: *const u8, unBufferLen: u32) -> u32;
+	pub fn VR_IVRCameraAccess_EnableCamera(ptr: *const (), unCameraIndex: u32, bEnabled: bool) -> bool;
+	pub fn VR_IVRCameraAccess_GetCameraInfo(ptr: *const (), unCameraIndex: u32, pCameraInfo: CameraInfo_t) -> bool;
+	pub fn VR_IVRCameraAccess_GetCameraImage(ptr: *const (), unCameraIndex: u32, pCameraImage: CameraImage_t) -> bool;
+	pub fn VR_IVRChaperone_GetCalibrationState(ptr: *const (), ) -> ChaperoneCalibrationState;
+	pub fn VR_IVRChaperone_GetSoftBoundsInfo(ptr: *const (), pInfo: ChaperoneSoftBoundsInfo_t) -> bool;
+	pub fn VR_IVRChaperone_GetHardBoundsInfo(ptr: *const (), pQuadsBuffer: HmdQuad_t, punQuadsCount: *mut u32) -> bool;
+	pub fn VR_IVRChaperone_GetSeatedBoundsInfo(ptr: *const (), pInfo: ChaperoneSeatedBoundsInfo_t) -> bool;
+	pub fn VR_IVRChaperoneSetup_CommitWorkingCopy(ptr: *const (), pchCalibrationName: *const u8) -> bool;
+	pub fn VR_IVRChaperoneSetup_RevertWorkingCopy(ptr: *const (), ) ;
+	pub fn VR_IVRChaperoneSetup_GetWorkingSoftBoundsInfo(ptr: *const (), pInfo: ChaperoneSoftBoundsInfo_t) -> bool;
+	pub fn VR_IVRChaperoneSetup_GetWorkingHardBoundsInfo(ptr: *const (), pQuadsBuffer: HmdQuad_t, punQuadsCount: *mut u32) -> bool;
+	pub fn VR_IVRChaperoneSetup_GetWorkingSeatedZeroPoseToRawTrackingPose(ptr: *const (), pmatSeatedZeroPoseToRawTrackingPose: HmdMatrix34_t) -> bool;
+	pub fn VR_IVRChaperoneSetup_GetWorkingStandingZeroPoseToRawTrackingPose(ptr: *const (), pmatStandingZeroPoseToRawTrackingPose: HmdMatrix34_t) -> bool;
+	pub fn VR_IVRChaperoneSetup_SetWorkingSoftBoundsInfo(ptr: *const (), pInfo: ChaperoneSoftBoundsInfo_t) ;
+	pub fn VR_IVRChaperoneSetup_SetWorkingHardBoundsInfo(ptr: *const (), pQuadsBuffer: HmdQuad_t, unQuadsCount: u32) ;
+	pub fn VR_IVRChaperoneSetup_SetWorkingSeatedZeroPoseToRawTrackingPose(ptr: *const (), matSeatedZeroPoseToRawTrackingPose: HmdMatrix34_t) ;
+	pub fn VR_IVRChaperoneSetup_SetWorkingStandingZeroPoseToRawTrackingPose(ptr: *const (), matStandingZeroPoseToRawTrackingPose: HmdMatrix34_t) ;
+	pub fn VR_IVRChaperoneSetup_GetWorkingTagPoses(ptr: *const (), pTagPosesBuffer: HmdMatrix34_t, punTagPosesCount: *mut u32) -> bool;
+	pub fn VR_IVRChaperoneSetup_GetWorkingTagPoseScales(ptr: *const (), pflScaleBuffer: *mut f32, punTagPosesCount: *mut u32) -> bool;
+	pub fn VR_IVRChaperoneSetup_GetWorkingTagPoseNameByIndex(ptr: *const (), nIndex: u32, pchBuffer: *const u8, unBufferSize: u32) -> u32;
+	pub fn VR_IVRChaperoneSetup_GetWorkingTagPoseByName(ptr: *const (), pchTagName: *const u8, pmatTagPose: HmdMatrix34_t, pflScale: *mut f32) -> bool;
+	pub fn VR_IVRChaperoneSetup_SetWorkingTagPoseByName(ptr: *const (), pchTagName: *const u8, matSeatedZeroPoseToRawTrackingPose: HmdMatrix34_t, flScale: f32) ;
+	pub fn VR_IVRChaperoneSetup_RemoveWorkingTagPoseByName(ptr: *const (), pchTagName: *const u8) ;
+	pub fn VR_IVRChaperoneSetup_RemoveAllWorkingTagPoses(ptr: *const (), ) ;
+	pub fn VR_IVRChaperoneSetup_ReloadFromDisk(ptr: *const (), ) ;
+	pub fn VR_IVRCompositor_GetLastError(ptr: *const (), pchBuffer: *const u8, unBufferSize: u32) -> u32;
+	pub fn VR_IVRCompositor_SetVSync(ptr: *const (), bVSync: bool) ;
+	pub fn VR_IVRCompositor_GetVSync(ptr: *const (), ) -> bool;
+	pub fn VR_IVRCompositor_SetGamma(ptr: *const (), fGamma: f32) ;
+	pub fn VR_IVRCompositor_GetGamma(ptr: *const (), ) -> f32;
+	pub fn VR_IVRCompositor_SetGraphicsDevice(ptr: *const (), eType: Compositor_DeviceType, pDevice: *mut ()) ;
+	pub fn VR_IVRCompositor_WaitGetPoses(ptr: *const (), pRenderPoseArray: TrackedDevicePose_t, unRenderPoseArrayCount: u32, pGamePoseArray: TrackedDevicePose_t, unGamePoseArrayCount: u32) -> VRCompositorError;
+	pub fn VR_IVRCompositor_Submit(ptr: *const (), eEye: Hmd_Eye, pTexture: *mut (), pBounds: VRTextureBounds_t) -> VRCompositorError;
+	pub fn VR_IVRCompositor_ClearLastSubmittedFrame(ptr: *const (), ) ;
+	pub fn VR_IVRCompositor_GetFrameTiming(ptr: *const (), pTiming: Compositor_FrameTiming, unFramesAgo: u32) -> bool;
+	pub fn VR_IVRCompositor_FadeToColor(ptr: *const (), fSeconds: f32, fRed: f32, fGreen: f32, fBlue: f32, fAlpha: f32, bBackground: bool) ;
+	pub fn VR_IVRCompositor_FadeGrid(ptr: *const (), fSeconds: f32, bFadeIn: bool) ;
+	pub fn VR_IVRCompositor_CompositorBringToFront(ptr: *const (), ) ;
+	pub fn VR_IVRCompositor_CompositorGoToBack(ptr: *const (), ) ;
+	pub fn VR_IVRCompositor_CompositorQuit(ptr: *const (), ) ;
+	pub fn VR_IVRCompositor_IsFullscreen(ptr: *const (), ) -> bool;
+	pub fn VR_IVRCompositor_SetTrackingSpace(ptr: *const (), eOrigin: TrackingUniverseOrigin) ;
+	pub fn VR_IVRCompositor_GetTrackingSpace(ptr: *const (), ) -> TrackingUniverseOrigin;
+	pub fn VR_IVRCompositor_GetCurrentSceneFocusProcess(ptr: *const (), ) -> u32;
+	pub fn VR_IVRCompositor_CanRenderScene(ptr: *const (), ) -> bool;
+	pub fn VR_IVROverlay_FindOverlay(ptr: *const (), pchOverlayKey: *const u8, pOverlayHandle: *mut VROverlayHandle_t) -> VROverlayError;
+	pub fn VR_IVROverlay_CreateOverlay(ptr: *const (), pchOverlayKey: *const u8, pchOverlayFriendlyName: *const u8, pOverlayHandle: *mut VROverlayHandle_t) -> VROverlayError;
+	pub fn VR_IVROverlay_DestroyOverlay(ptr: *const (), ulOverlayHandle: VROverlayHandle_t) -> VROverlayError;
+	pub fn VR_IVROverlay_SetHighQualityOverlay(ptr: *const (), ulOverlayHandle: VROverlayHandle_t) -> VROverlayError;
+	pub fn VR_IVROverlay_GetHighQualityOverlay(ptr: *const (), ) -> VROverlayHandle_t;
+	pub fn VR_IVROverlay_GetOverlayErrorNameFromEnum(ptr: *const (), error: VROverlayError) -> *const u8;
+	pub fn VR_IVROverlay_SetOverlayFlag(ptr: *const (), ulOverlayHandle: VROverlayHandle_t, eOverlayFlag: VROverlayFlags, bEnabled: bool) -> VROverlayError;
+	pub fn VR_IVROverlay_GetOverlayFlag(ptr: *const (), ulOverlayHandle: VROverlayHandle_t, eOverlayFlag: VROverlayFlags, pbEnabled: *mut bool) -> VROverlayError;
+	pub fn VR_IVROverlay_SetOverlayAlpha(ptr: *const (), ulOverlayHandle: VROverlayHandle_t, fAlpha: f32) -> VROverlayError;
+	pub fn VR_IVROverlay_GetOverlayAlpha(ptr: *const (), ulOverlayHandle: VROverlayHandle_t, pfAlpha: *mut f32) -> VROverlayError;
+	pub fn VR_IVROverlay_SetOverlayGamma(ptr: *const (), ulOverlayHandle: VROverlayHandle_t, fGamma: f32) -> VROverlayError;
+	pub fn VR_IVROverlay_GetOverlayGamma(ptr: *const (), ulOverlayHandle: VROverlayHandle_t, pfGamma: *mut f32) -> VROverlayError;
+	pub fn VR_IVROverlay_SetOverlayWidthInMeters(ptr: *const (), ulOverlayHandle: VROverlayHandle_t, fWidthInMeters: f32) -> VROverlayError;
+	pub fn VR_IVROverlay_GetOverlayWidthInMeters(ptr: *const (), ulOverlayHandle: VROverlayHandle_t, pfWidthInMeters: *mut f32) -> VROverlayError;
+	pub fn VR_IVROverlay_SetOverlayTextureBounds(ptr: *const (), ulOverlayHandle: VROverlayHandle_t, pOverlayTextureBounds: VRTextureBounds_t) -> VROverlayError;
+	pub fn VR_IVROverlay_GetOverlayTextureBounds(ptr: *const (), ulOverlayHandle: VROverlayHandle_t, pOverlayTextureBounds: VRTextureBounds_t) -> VROverlayError;
+	pub fn VR_IVROverlay_GetOverlayTransformType(ptr: *const (), ulOverlayHandle: VROverlayHandle_t, peTransformType: *mut VROverlayTransformType) -> VROverlayError;
+	pub fn VR_IVROverlay_SetOverlayTransformAbsolute(ptr: *const (), ulOverlayHandle: VROverlayHandle_t, eTrackingOrigin: TrackingUniverseOrigin, pmatTrackingOriginToOverlayTransform: HmdMatrix34_t) -> VROverlayError;
+	pub fn VR_IVROverlay_GetOverlayTransformAbsolute(ptr: *const (), ulOverlayHandle: VROverlayHandle_t, peTrackingOrigin: *mut TrackingUniverseOrigin, pmatTrackingOriginToOverlayTransform: HmdMatrix34_t) -> VROverlayError;
+	pub fn VR_IVROverlay_SetOverlayTransformTrackedDeviceRelative(ptr: *const (), ulOverlayHandle: VROverlayHandle_t, unTrackedDevice: TrackedDeviceIndex_t, pmatTrackedDeviceToOverlayTransform: HmdMatrix34_t) -> VROverlayError;
+	pub fn VR_IVROverlay_GetOverlayTransformTrackedDeviceRelative(ptr: *const (), ulOverlayHandle: VROverlayHandle_t, punTrackedDevice: *mut TrackedDeviceIndex_t, pmatTrackedDeviceToOverlayTransform: HmdMatrix34_t) -> VROverlayError;
+	pub fn VR_IVROverlay_GetOverlayVisibility(ptr: *const (), ulOverlayHandle: VROverlayHandle_t, peOverlayVisibility: *mut VROverlayVisibility) -> VROverlayError;
+	pub fn VR_IVROverlay_SetOverlayVisibility(ptr: *const (), ulOverlayHandle: VROverlayHandle_t, eOverlayVisibility: VROverlayVisibility) -> VROverlayError;
+	pub fn VR_IVROverlay_ShowOverlay(ptr: *const (), ulOverlayHandle: VROverlayHandle_t) -> VROverlayError;
+	pub fn VR_IVROverlay_HideOverlay(ptr: *const (), ulOverlayHandle: VROverlayHandle_t) -> VROverlayError;
+	pub fn VR_IVROverlay_IsOverlayVisible(ptr: *const (), ulOverlayHandle: VROverlayHandle_t) -> bool;
+	pub fn VR_IVROverlay_PollNextOverlayEvent(ptr: *const (), ulOverlayHandle: VROverlayHandle_t, pEvent: VREvent_t) -> bool;
+	pub fn VR_IVROverlay_GetOverlayInputMethod(ptr: *const (), ulOverlayHandle: VROverlayHandle_t, peInputMethod: *mut VROverlayInputMethod) -> VROverlayError;
+	pub fn VR_IVROverlay_SetOverlayInputMethod(ptr: *const (), ulOverlayHandle: VROverlayHandle_t, eInputMethod: VROverlayInputMethod) -> VROverlayError;
+	pub fn VR_IVROverlay_GetOverlayMouseScale(ptr: *const (), ulOverlayHandle: VROverlayHandle_t, pvecMouseScale: HmdVector2_t) -> VROverlayError;
+	pub fn VR_IVROverlay_SetOverlayMouseScale(ptr: *const (), ulOverlayHandle: VROverlayHandle_t, pvecMouseScale: HmdVector2_t) -> VROverlayError;
+	pub fn VR_IVROverlay_ComputeOverlayIntersection(ptr: *const (), ulOverlayHandle: VROverlayHandle_t, pParams: VROverlayIntersectionParams_t, pResults: VROverlayIntersectionResults_t) -> bool;
+	pub fn VR_IVROverlay_HandleControllerOverlayInteractionAsMouse(ptr: *const (), ulOverlayHandle: VROverlayHandle_t, unControllerDeviceIndex: TrackedDeviceIndex_t) -> bool;
+	pub fn VR_IVROverlay_SetOverlayTexture(ptr: *const (), ulOverlayHandle: VROverlayHandle_t, pTexture: *mut ()) -> VROverlayError;
+	pub fn VR_IVROverlay_SetOverlayRaw(ptr: *const (), ulOverlayHandle: VROverlayHandle_t, pvBuffer: *mut (), unWidth: u32, unHeight: u32, unDepth: u32) -> VROverlayError;
+	pub fn VR_IVROverlay_SetOverlayFromFile(ptr: *const (), ulOverlayHandle: VROverlayHandle_t, pchFilePath: *const u8) -> VROverlayError;
+	pub fn VR_IVROverlay_IsSystemOverlayVisible(ptr: *const (), ) -> bool;
+	pub fn VR_IVROverlay_IsActiveSystemOverlay(ptr: *const (), ulOverlayHandle: VROverlayHandle_t) -> bool;
+	pub fn VR_IVROverlay_SetSystemOverlaySceneProcess(ptr: *const (), ulOverlayHandle: VROverlayHandle_t, unProcessId: u32) -> VROverlayError;
+	pub fn VR_IVROverlay_GetSystemOverlaySceneProcess(ptr: *const (), ulOverlayHandle: VROverlayHandle_t, punProcessId: *mut u32) -> VROverlayError;
+	pub fn VR_IVRRenderModels_LoadRenderModel(ptr: *const (), pchRenderModelName: *const u8, pRenderModel: RenderModel_t) -> bool;
+	pub fn VR_IVRRenderModels_FreeRenderModel(ptr: *const (), pRenderModel: RenderModel_t) ;
+	pub fn VR_IVRRenderModels_GetRenderModelName(ptr: *const (), unRenderModelIndex: u32, pchRenderModelName: *const u8, unRenderModelNameLen: u32) -> u32;
+	pub fn VR_IVRRenderModels_GetRenderModelCount(ptr: *const (), ) -> u32;
+	pub fn VR_IVRNotifications_GetLastError(ptr: *const (), pchBuffer: *const u8, unBufferSize: u32) -> u32;
+	pub fn VR_IVRNotifications_NotificationStart(ptr: *const (), _type: *const u8, texture: NotificationBitmap, notificationId: *mut VRNotificationId) -> bool;
+	pub fn VR_IVRNotifications_UpdateTexture(ptr: *const (), notificationId: VRNotificationId, texture: NotificationBitmap) -> bool;
+	pub fn VR_IVRNotifications_UpdateBitmap(ptr: *const (), notificationId: VRNotificationId, texture: NotificationBitmap) -> bool;
+	pub fn VR_IVRNotifications_GetPointerLocation(ptr: *const (), notificationId: VRNotificationId, pointerActive: *mut bool, pointerX: *mut i32, pointerY: *mut i32) -> bool;
+	pub fn VR_IVRNotifications_DismissNotification(ptr: *const (), notificationId: VRNotificationId) -> bool;
 }

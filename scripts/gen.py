@@ -73,9 +73,17 @@ def shorten_enum(parent, name):
 print """
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
+#![allow(improper_ctypes)]
 
 #[link(name = "openvr_api")]
 extern {}
+
+extern "C" {
+	pub fn VR_Init(err: *mut HmdError) -> *const ();
+	pub fn VR_Shutdown();
+	pub fn VR_IsHmdPresent() -> bool;
+	pub fn VR_GetStringForHmdError(err: HmdError) -> *const u8;
+}
 """
 
 for d in data['typedefs']:
@@ -86,7 +94,7 @@ for d in data['typedefs']:
 
 for d in data['enums']:
 	found = set()
-	print "#[repr(C)]\npub enum %s {" % parse_type(d['enumname'])
+	print "#[repr(C)]\n#[derive(Debug)]\npub enum %s {" % parse_type(d['enumname'])
 	for v in d['values']:
 		if v['value'] in found:
 			continue
@@ -105,7 +113,7 @@ for s in data['structs']:
 print "extern \"C\" {"
 
 for m in data['methods']:
-	print '\tpub fn ' + parse_class(m['classname']) + '_' + m['methodname'] + "(usize,",
+	print '\tpub fn ' + parse_class(m['classname']) + '_' + m['methodname'] + "(ptr: *const (),",
 	s = []
 	for p in m.get('params', []):
 		if p['paramname'] == 'type':
