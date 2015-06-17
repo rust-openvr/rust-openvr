@@ -34,6 +34,28 @@ pub enum Eye {
     Left, Right
 }
 
+#[derive(Debug, Copy, Clone)]
+pub struct TrackedDevicePose {
+    pub to_device: [[f32; 4]; 3],
+    pub velocity: [f32; 3],
+    pub angular_velocity: [f32; 3],
+    pub is_valid: bool,
+    pub is_connected: bool,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct TrackedDevicePoses {
+    pub count: usize,
+    pub poses: [TrackedDevicePose; 16],
+}
+
+impl TrackedDevicePoses {
+    pub fn as_slice(&self) -> &[TrackedDevicePose] {
+        &self.poses[0..self.count]
+    }
+}
+
+
 impl Eye {
     fn to_raw(&self) -> openvr_sys::Hmd_Eye {
         match self {
@@ -171,6 +193,33 @@ impl IVRSystem {
                 None
             }
         }  
+    }
+
+    pub fn tracked_devices(&self, time: f32) -> TrackedDevicePoses {
+        unsafe {
+            let mut data: [openvr_sys::TrackedDevicePose_t; 16] = std::mem::zeroed();
+            openvr_sys::VR_IVRSystem_GetDeviceToAbsoluteTrackingPose(
+                self.0,
+                openvr_sys::TrackingUniverseOrigin::TrackingUniverseSeated,
+                time,
+                &mut data[0],
+                16
+            );
+
+            let mut out: TrackedDevicePoses = std::mem::zeroed();
+            for (i, d) in data.iter().enumerate() {
+                if d.bDeviceIsConnected {
+                    out.count = i + 1;
+                }
+                out.poses[i].is_connected = d.bDeviceIsConnected;
+                out.poses[i].is_valid = d.bPoseIsValid;
+                out.poses[i].to_device = d.mDeviceToAbsoluteTracking.m;
+                out.poses[i].velocity = d.vVelocity.v;
+                out.poses[i].angular_velocity = d.vAngularVelocity.v;
+            }
+
+            out
+        }
     }
 }
 

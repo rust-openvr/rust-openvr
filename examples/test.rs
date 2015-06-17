@@ -22,7 +22,6 @@ fn main() {
 
     println!("eye_to_head: {:?}", ivr.eye_to_head_transform(vr::Eye::Left));
     println!("vsync: {:?}", ivr.time_since_last_vsync());
-
-
+    println!("poses {:?}", ivr.tracked_devices(0.).as_slice());
     println!("Done! \\o/");
 }
