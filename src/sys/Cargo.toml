@@ -1,0 +1,13 @@
+[package]
+name = "openvr_sys"
+version = "0.1.0"
+authors = [
+    "Colin Sherratt",
+    "Erick Tryzelaar"
+]
+
+build = "build.rs"
+
+[lib]
+name = "openvr_sys"
+path = "lib.rs"

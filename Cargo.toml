@@ -1,22 +1,14 @@
 [package]
-
-name = "ovr"
+name = "vr"
 version = "0.1.0"
 authors = [
     "Colin Sherratt",
     "Erick Tryzelaar"
 ]
 
-build = "scripts/build.rs"
-
 [lib]
-name = "ovr"
-path = "src/oculus-vr/lib.rs"
+name = "vr"
+path = "src/lib.rs"
 
-[[bin]]
-name = "oculus-info"
-path = "src/oculus-info/main.rs"
-
-[dependencies]
-cgmath="*"
-libc="*"
+[dependencies.openvr_sys]
+path = "src/sys/"
