@@ -41,7 +41,6 @@ fn main() {
     print!("\tposes ");
     print_matrix_4x3(8+6, ivr.tracked_devices(0.).as_slice()[0].to_device);
 
-
     println!("Distortion example");
     for u in 0..2 {
         for v in 0..2 {
@@ -60,9 +59,10 @@ fn main() {
         Err(err) => println!("Could not create compositor {:?}", err),
         Ok(comp) => {
             println!("\tCreated one!");
-            println!("\tis fullscreen    ={}", comp.is_fullscreen());
-            println!("\tis vsync         ={}", comp.get_vsync());
-            println!("\tcan render scene ={}", comp.can_render_scene());
+            println!("\tis fullscreen    = {}", comp.is_fullscreen());
+            println!("\tis vsync         = {}", comp.get_vsync());
+            println!("\tcan render scene = {}", comp.can_render_scene());
+            println!("\tgamma value      = {}", comp.get_gamma());
         }
     }
 

@@ -34,6 +34,38 @@ pub enum Eye {
     Left, Right
 }
 
+
+impl Eye {
+    /// Convert a eye to a HmdEye
+    fn to_raw(&self) -> openvr_sys::Hmd_Eye {
+        match self {
+            &Eye::Left => openvr_sys::Hmd_Eye::Left,
+            &Eye::Right => openvr_sys::Hmd_Eye::Right,
+        }
+    }
+}
+
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct TextureBounds {
+    u_min: f32,
+    u_max: f32,
+    v_min: f32,
+    v_max: f32
+}
+
+impl TextureBounds {
+    /// Convert a bounds to a openvr_bounds
+    fn to_raw(self) -> openvr_sys::VRTextureBounds_t {
+        openvr_sys::VRTextureBounds_t{
+            uMin: self.u_min,
+            uMax: self.u_max,
+            vMin: self.v_min,
+            vMax: self.v_max
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone)]
 pub struct TrackedDevicePose {
     pub to_device: [[f32; 4]; 3],
@@ -54,17 +86,6 @@ impl TrackedDevicePoses {
         &self.poses[0..self.count]
     }
 }
-
-
-impl Eye {
-    fn to_raw(&self) -> openvr_sys::Hmd_Eye {
-        match self {
-            &Eye::Left => openvr_sys::Hmd_Eye::Left,
-            &Eye::Right => openvr_sys::Hmd_Eye::Right,
-        }
-    }
-}
-
 
 impl IVRSystem {
     /// Initialize the IVR System
@@ -253,22 +274,87 @@ pub struct Compositor(*const ());
 impl Compositor {
     /// Check to see if the compositor is fullscreen
     pub fn is_fullscreen(&self) -> bool {
-        unsafe {
-            openvr_sys::VR_IVRCompositor_IsFullscreen(self.0)
-        }
+        unsafe { openvr_sys::VR_IVRCompositor_IsFullscreen(self.0) }
     }
 
     /// Check if vsync in enabled
     pub fn get_vsync(&self) -> bool {
-        unsafe {
-            openvr_sys::VR_IVRCompositor_GetVSync(self.0)
-        }
+        unsafe { openvr_sys::VR_IVRCompositor_GetVSync(self.0) }
+    }
+
+    /// Set the vsync value
+    pub fn set_vsync(&self, v: bool) {
+        unsafe { openvr_sys::VR_IVRCompositor_SetVSync(self.0, v) }
     }
 
     /// Check if vsync in enabled
     pub fn can_render_scene(&self) -> bool {
+        unsafe { openvr_sys::VR_IVRCompositor_CanRenderScene(self.0) }
+    }
+
+    /// Get the gamma value
+    pub fn get_gamma(&self) -> f32 {
+        unsafe { openvr_sys::VR_IVRCompositor_GetGamma(self.0) }
+    }
+
+    /// Get the gamma value
+    pub fn set_gamma(&self, v: f32) {
+        unsafe { openvr_sys::VR_IVRCompositor_SetGamma(self.0, v) }
+    }
+
+    /// Set the compositor to gl mode
+    pub fn set_graphics_device_gl(&self) {
         unsafe {
-            openvr_sys::VR_IVRCompositor_CanRenderScene(self.0)
+            openvr_sys::VR_IVRCompositor_SetGraphicsDevice(
+                self.0,
+                openvr_sys::Compositor_DeviceType::DeviceType_OpenGL,
+                std::ptr::null_mut()
+            )
+        }
+    }
+
+    /// Submit an eye to the render
+    pub fn submit(&self, eye: Eye, texture: usize, bounds: TextureBounds) {
+        let mut b = bounds.to_raw();
+        let e = eye.to_raw();
+        unsafe {
+            use std::mem;
+            let t = mem::transmute(texture);
+
+            openvr_sys::VR_IVRCompositor_Submit(
+                self.0,
+                e,
+                t,
+                &mut b as *mut openvr_sys::VRTextureBounds_t
+            );
+        }
+    }
+
+    /// Get the poses
+    pub fn wait_get_poses(&self) -> TrackedDevicePoses {
+        unsafe {
+            let mut data: [openvr_sys::TrackedDevicePose_t; 16] = std::mem::zeroed();
+            openvr_sys::VR_IVRCompositor_WaitGetPoses(
+                self.0,
+                &mut data[0],
+                16,
+                std::ptr::null_mut(),
+                0
+            );
+
+            let mut out: TrackedDevicePoses = std::mem::zeroed();
+            for (i, d) in data.iter().enumerate() {
+                if d.bDeviceIsConnected {
+                    out.count = i + 1;
+                }
+                out.poses[i].is_connected = d.bDeviceIsConnected;
+                out.poses[i].is_valid = d.bPoseIsValid;
+                out.poses[i].to_device = d.mDeviceToAbsoluteTracking.m;
+                out.poses[i].velocity = d.vVelocity.v;
+                out.poses[i].angular_velocity = d.vAngularVelocity.v;
+            }
+
+            out
         }
     }
 }
