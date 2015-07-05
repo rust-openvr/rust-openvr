@@ -90,6 +90,7 @@ extern "C" {
 	pub fn VR_Shutdown();
 	pub fn VR_IsHmdPresent() -> bool;
 	pub fn VR_GetStringForHmdError(err: HmdError) -> *const u8;
+	pub fn VR_GetGenericInterface(name: *const u8, err: *mut HmdError) -> *const ();
 }
 """
 

@@ -195,6 +195,7 @@ impl IVRSystem {
         }  
     }
 
+    /// Fetch the tracked results from the HMD
     pub fn tracked_devices(&self, time: f32) -> TrackedDevicePoses {
         unsafe {
             let mut data: [openvr_sys::TrackedDevicePose_t; 16] = std::mem::zeroed();
@@ -221,6 +222,19 @@ impl IVRSystem {
             out
         }
     }
+
+    /// If the device supports a compositor return a instance
+    pub fn compositor(&self) -> Result<Compositor, openvr_sys::HmdError> {
+        unsafe {
+            let mut err = openvr_sys::HmdError::None;
+            let name = std::ffi::CString::new("IVRCompositor_006").unwrap();
+            let ptr = openvr_sys::VR_GetGenericInterface(name.as_ptr(), &mut err as *mut openvr_sys::HmdError);
+            match err {
+                openvr_sys::HmdError::None => Ok(Compositor(ptr)),
+                err => Err(err)
+            }
+        }
+    }
 }
 
 impl Drop for IVRSystem {
@@ -229,6 +243,32 @@ impl Drop for IVRSystem {
             println!("Trying to shutdown openvr");
             openvr_sys::VR_Shutdown();
             println!("Should be done now.");
+        }
+    }
+}
+
+/// A VR compositor
+pub struct Compositor(*const ());
+
+impl Compositor {
+    /// Check to see if the compositor is fullscreen
+    pub fn is_fullscreen(&self) -> bool {
+        unsafe {
+            openvr_sys::VR_IVRCompositor_IsFullscreen(self.0)
+        }
+    }
+
+    /// Check if vsync in enabled
+    pub fn get_vsync(&self) -> bool {
+        unsafe {
+            openvr_sys::VR_IVRCompositor_GetVSync(self.0)
+        }
+    }
+
+    /// Check if vsync in enabled
+    pub fn can_render_scene(&self) -> bool {
+        unsafe {
+            openvr_sys::VR_IVRCompositor_CanRenderScene(self.0)
         }
     }
 }

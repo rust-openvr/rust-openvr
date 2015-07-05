@@ -23,5 +23,19 @@ fn main() {
     println!("eye_to_head: {:?}", ivr.eye_to_head_transform(vr::Eye::Left));
     println!("vsync: {:?}", ivr.time_since_last_vsync());
     println!("poses {:?}", ivr.tracked_devices(0.).as_slice());
+
+    println!("Trying to create a compositor");
+    match ivr.compositor() {
+        Err(err) => println!("Could not create compositor {:?}", err),
+        Ok(comp) => {
+            println!("\tCreated one!");
+            println!("\tis fullscreen    ={}", comp.is_fullscreen());
+            println!("\tis vsync         ={}", comp.get_vsync());
+            println!("\tcan render scene ={}", comp.can_render_scene());
+        }
+    }
+
     println!("Done! \\o/");
+
+
 }
