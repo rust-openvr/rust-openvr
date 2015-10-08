@@ -86,6 +86,21 @@ impl TrackedDevicePoses {
     }
 }
 
+unsafe fn to_tracked(data: [openvr_sys::TrackedDevicePose_t; 16]) -> TrackedDevicePoses {
+    let mut out: TrackedDevicePoses = std::mem::zeroed();
+    for (i, d) in data.iter().enumerate() {
+        if d.bDeviceIsConnected {
+            out.count = i + 1;
+        }
+        out.poses[i].is_connected = d.bDeviceIsConnected;
+        out.poses[i].is_valid = d.bPoseIsValid;
+        out.poses[i].to_device = d.mDeviceToAbsoluteTracking.m;
+        out.poses[i].velocity = d.vVelocity.v;
+        out.poses[i].angular_velocity = d.vAngularVelocity.v;
+    }
+    out
+}
+
 impl IVRSystem {
     /// Initialize the IVR System
     pub fn init() -> Result<IVRSystem, openvr_sys::HmdError> {
@@ -226,20 +241,7 @@ impl IVRSystem {
                 &mut data[0],
                 16
             );
-
-            let mut out: TrackedDevicePoses = std::mem::zeroed();
-            for (i, d) in data.iter().enumerate() {
-                if d.bDeviceIsConnected {
-                    out.count = i + 1;
-                }
-                out.poses[i].is_connected = d.bDeviceIsConnected;
-                out.poses[i].is_valid = d.bPoseIsValid;
-                out.poses[i].to_device = d.mDeviceToAbsoluteTracking.m;
-                out.poses[i].velocity = d.vVelocity.v;
-                out.poses[i].angular_velocity = d.vAngularVelocity.v;
-            }
-
-            out
+            to_tracked(data)
         }
     }
 
@@ -253,6 +255,30 @@ impl IVRSystem {
                 openvr_sys::HmdError::None => Ok(Compositor(ptr)),
                 err => Err(err)
             }
+        }
+    }
+
+    /// get frequency of hmd in hz
+    pub fn display_frequency(&self) -> f32 {
+        unsafe {
+            openvr_sys::VR_IVRSystem_GetFloatTrackedDeviceProperty(
+                self.0,
+                0,
+                openvr_sys::TrackedDeviceProperty::DisplayFrequency_Float,
+                std::ptr::null_mut()
+            )
+        }
+    }
+
+    /// get the time vsync to phonts
+    pub fn vsync_to_photons(&self) -> f32 {
+        unsafe {
+            openvr_sys::VR_IVRSystem_GetFloatTrackedDeviceProperty(
+                self.0,
+                0,
+                openvr_sys::TrackedDeviceProperty::SecondsFromVsyncToPhotons_Float,
+                std::ptr::null_mut()
+            )
         }
     }
 }
@@ -340,20 +366,7 @@ impl Compositor {
                 std::ptr::null_mut(),
                 0
             );
-
-            let mut out: TrackedDevicePoses = std::mem::zeroed();
-            for (i, d) in data.iter().enumerate() {
-                if d.bDeviceIsConnected {
-                    out.count = i + 1;
-                }
-                out.poses[i].is_connected = d.bDeviceIsConnected;
-                out.poses[i].is_valid = d.bPoseIsValid;
-                out.poses[i].to_device = d.mDeviceToAbsoluteTracking.m;
-                out.poses[i].velocity = d.vVelocity.v;
-                out.poses[i].angular_velocity = d.vAngularVelocity.v;
-            }
-
-            out
+            to_tracked(data)
         }
     }
 }
