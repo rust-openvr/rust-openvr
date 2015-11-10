@@ -250,7 +250,7 @@ impl IVRSystem {
         unsafe {
             let mut err = openvr_sys::HmdError::None;
             let name = std::ffi::CString::new("IVRCompositor_006").unwrap();
-            let ptr = openvr_sys::VR_GetGenericInterface(name.as_ptr(), &mut err as *mut openvr_sys::HmdError);
+            let ptr = openvr_sys::VR_GetGenericInterface(name.as_ptr() as *const u8, &mut err as *mut openvr_sys::HmdError);
             match err {
                 openvr_sys::HmdError::None => Ok(Compositor(ptr)),
                 err => Err(err)
@@ -327,17 +327,6 @@ impl Compositor {
         unsafe { openvr_sys::VR_IVRCompositor_SetGamma(self.0, v) }
     }
 
-    /// Set the compositor to gl mode
-    pub fn set_graphics_device_gl(&self) {
-        unsafe {
-            openvr_sys::VR_IVRCompositor_SetGraphicsDevice(
-                self.0,
-                openvr_sys::Compositor_DeviceType::DeviceType_OpenGL,
-                std::ptr::null_mut()
-            )
-        }
-    }
-
     /// Submit an eye to the render
     pub fn submit(&self, eye: Eye, texture: usize, bounds: TextureBounds) {
         let mut b = bounds.to_raw();
@@ -349,8 +338,10 @@ impl Compositor {
             openvr_sys::VR_IVRCompositor_Submit(
                 self.0,
                 e,
+                openvr_sys::GraphicsAPIConvention::OpenGL,
                 t,
-                &mut b as *mut openvr_sys::VRTextureBounds_t
+                &mut b as *mut openvr_sys::VRTextureBounds_t,
+                openvr_sys::VRSubmitFlags_t::Default
             );
         }
     }
