@@ -8,6 +8,7 @@ with open("openvr/headers/openvr_api.json") as f:
 	data = json.loads(f.read())
 
 type_mapping = {
+    'int': 'i32',
 	'uint64_t': 'u64',
 	'uint32_t': 'u32',
 	'uint16_t': 'u16',
@@ -26,12 +27,14 @@ type_mapping = {
 	# I'm lazy
 	'unsigned char *': '*const u8',
 	'char *': '*const u8',
+	'char **': '*const *const u8',
 	'const uint16_t *': '*const u16',
 	'const uint8_t *': '*const u8',
 	'const struct vr::HmdVector2_t *': '*const HmdVector2_t',
 	'const struct vr::RenderModel_Vertex_t *': '*const RenderModel_Vertex_t',
 
 	'float [3][4]': '[[f32; 4]; 3]',
+	'float [16]': '[f32; 16]',
 	'float [4]': '[f32; 4]',
 	'float [3]': '[f32; 3]',
 	'float [2]': '[f32; 2]',
