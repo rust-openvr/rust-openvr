@@ -1,5 +1,3 @@
-
-
 extern crate openvr_sys;
 
 pub struct IVRSystem(*const ());
@@ -184,7 +182,7 @@ impl IVRSystem {
         }
     }
 
-    /// Computes the distortion caused by the optics 
+    /// Computes the distortion caused by the optics
     pub fn compute_distortion(&self, eye: Eye, u: f32, v: f32) -> DistortionCoordinates {
         unsafe {
             let coord = openvr_sys::VR_IVRSystem_ComputeDistortion(
@@ -197,10 +195,10 @@ impl IVRSystem {
                 blue: coord.rfBlue,
                 green: coord.rfGreen
             }
-        }    
+        }
     }
 
-    /// Computes the distortion caused by the optics 
+    /// Computes the distortion caused by the optics
     pub fn eye_to_head_transform(&self, eye: Eye) -> [[f32; 4]; 3] {
         unsafe {
             let mat = openvr_sys::VR_IVRSystem_GetEyeToHeadTransform(
@@ -208,10 +206,10 @@ impl IVRSystem {
                 eye.to_raw(),
             );
             mat.m
-        }    
+        }
     }
 
-    /// Computes the distortion caused by the optics 
+    /// Computes the distortion caused by the optics
     pub fn time_since_last_vsync(&self) -> Option<(f32, u64)> {
         unsafe {
             let mut frame = 0;
@@ -227,7 +225,7 @@ impl IVRSystem {
             } else {
                 None
             }
-        }  
+        }
     }
 
     /// Fetch the tracked results from the HMD

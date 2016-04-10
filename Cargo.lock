@@ -1,0 +1,11 @@
+[root]
+name = "openvr"
+version = "0.2.0"
+dependencies = [
+ "openvr_sys 0.1.0",
+]
+
+[[package]]
+name = "openvr_sys"
+version = "0.1.0"
+

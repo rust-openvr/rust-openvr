@@ -29,14 +29,14 @@ Using rust-openvr
 
 extern crate openvr;
 
-use ovr::{SensorCapabilities, Ovr};
+use openvr::{SensorCapabilities, Ovr};
 
 fn main() {
     // Initalize the Oculus VR library
     let ovr = match Ovr::init() {
         Some(ovr) => ovr,
         None => {
-             println!("Could not initialize Oculus SDK");
+             println!("Could not initialize OpenVR SDK");
             return;           
         }
     };
