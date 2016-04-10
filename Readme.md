@@ -1,7 +1,7 @@
 rust-openvr
 =====
 
-[![Build Status](https://travis-ci.org/Auruss/rust-openvr.svg?branch=master)](https://travis-ci.org/csherratt/vr-rs)
+[![Build Status](https://travis-ci.org/Auruss/rust-openvr.svg?branch=master)](https://travis-ci.org/Auruss/rust-openvr)
 
 rust-openvr is a binding for openvr. It's still in progress. Tests are automatically ran by travis and successful builds will be pushed to the stable branch, (for nightly builds use nightly branch, for beta buils use beta branch)
 
