@@ -3,7 +3,8 @@ rust-openvr
 
 [![Build Status](https://travis-ci.org/Auruss/rust-openvr.svg?branch=master)](https://travis-ci.org/Auruss/rust-openvr)
 
-rust-openvr is a binding for openvr. It's still in progress. Tests are automatically ran by travis and successful builds will be pushed to the stable branch, (for nightly builds use nightly branch, for beta buils use beta branch)
+rust-openvr is a binding for openvr. It's still in progress. Tests are automatically ran by travis.
+Also my private jenkins is running these test on Ubuntu 14.04 as well, every successful build will be pushed to its branch (stable, nightly, beta). For good practice always use either stable, beta or nightly instead of master!
 
 Building
 --------
