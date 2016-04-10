@@ -1,31 +1,31 @@
-VR-RS
+rust-openvr
 =====
 
-[![Build Status](https://travis-ci.org/csherratt/vr-rs.svg?branch=master)](https://travis-ci.org/csherratt/vr-rs)
+[![Build Status](https://travis-ci.org/Auruss/rust-openvr.svg?branch=master)](https://travis-ci.org/csherratt/vr-rs)
 
-VR-RS providers bindings for the Oculus's libovr. Currently it only provides bindings for 0.3.2c.
+rust-openvr is a binding for openvr. It's still in progress. Tests are automatically ran by travis and successful builds will be pushed to the stable branch, (for nightly builds use nightly branch, for beta buils use beta branch)
 
 Building
 --------
 
-vr-rs is fully cargoized. to Compile
+rust-openvr is fully cargoized. to Compile
 
     cargo build
 
-To add as a dependency using cargo Cargo add the following to your `Cargo.toml`
+To add as a dependency using cargo Cargo add the following to your `Cargo.toml`. Will be added to crates.io once we've a stable version.
 
-    [dependencies.ovr]
-    git = "https://github.com/csherratt/vr-rs.git"
+    [dependencies.openvr]
+    git = "https://github.com/auruss/rust-openvr.git"
 
 
-Using VR-RS
+Using rust-openvr
 -----------
 
 # Initializing
 
 ```rust
 
-extern crate ovr = "oculus-vr";
+extern crate openvr;
 
 use ovr::{SensorCapabilities, Ovr};
 
@@ -61,7 +61,7 @@ fn main() {
 
 # Render loop
 
-The Oculus SDK will handle most of the heavy lifting of the barrel distortion.
+The OpenVR SDK will handle most of the heavy lifting of the barrel distortion.
 
 ```rust
 fn render(frame_index: uint, hmd: &ovr::Hmd, base_view: &Matrix4<f32>) {
