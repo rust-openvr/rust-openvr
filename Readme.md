@@ -13,10 +13,11 @@ rust-openvr is fully cargoized. to Compile
 
     cargo build
 
-To add as a dependency using cargo Cargo add the following to your `Cargo.toml`. Will be added to crates.io once we've a stable version.
+To add as a dependency using cargo Cargo add the following to your `Cargo.toml`. Will be added to crates.io once we've a stable version. For nightly/beta use nightly/beta branch instead.
 
     [dependencies.openvr]
     git = "https://github.com/auruss/rust-openvr.git"
+    branch = "stable"
 
 
 Using rust-openvr
