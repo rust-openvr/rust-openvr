@@ -7,6 +7,7 @@ rust-openvr is a binding for openvr. It's still in progress. Tests are automatic
 Also my private jenkins is running these test on Ubuntu 14.04 as well, every successful build will be pushed to its branch (stable, nightly, beta). For good practice always use either stable, beta or nightly instead of master!
 
 ## [Link to the documentation](http://auruss.github.io/rust-openvr/openvr/index.html)
+## Current version: OpenVR SDK 0.9.11 (will be updated soon to newest!)
 
 Building
 --------
