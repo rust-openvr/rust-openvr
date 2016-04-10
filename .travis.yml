@@ -1,7 +1,5 @@
 language: rust
-install:
-  - sudo apt-get update
-  - sudo apt-get install libudev-dev libxrandr-dev
-script:
-  - cargo build
-
+rust:
+  - stable
+  - beta
+  - nightly
