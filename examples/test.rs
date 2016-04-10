@@ -1,4 +1,4 @@
-extern crate vr;
+extern crate openvr;
 
 fn print_matrix_4x4(offset: u32, mat: [[f32; 4]; 4]) {
     let off: String = (0..offset).map(|_| ' ').collect();
