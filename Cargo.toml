@@ -6,6 +6,7 @@ authors = [
     "Erick Tryzelaar",
     "Rene Eichhorn"
 ]
+build = "src/sys/build.rs"
 
 [lib]
 name = "openvr"
