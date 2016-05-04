@@ -63,19 +63,31 @@ fn main() {
     println!("\nIVRExtendedDisplay was created");
     println!("\tbounds: {:?}", ext.window_bounds());
     println!("\teye output: {:?} {:?}", ext.eye_viewport(openvr::Eye::Left), ext.eye_viewport(openvr::Eye::Right));
-/*
-    println!("Trying to create a compositor");
-    match ivr.compositor() {
-        Err(err) => println!("Could not create compositor {:?}", err),
-        Ok(comp) => {
-            println!("\tCreated one!");
-            println!("\tis fullscreen    = {}", comp.is_fullscreen());
-            println!("\tis vsync         = {}", comp.get_vsync());
-            println!("\tcan render scene = {}", comp.can_render_scene());
-            println!("\tgamma value      = {}", comp.get_gamma());
+
+    let comp = match openvr::compositor() {
+        Ok(ext) => ext,
+        Err(err) => {
+            println!("Failed to create IVRCompositor subsystem {:?}", err);
+            return;
         }
+    };
+
+    println!("\nIVRCompositor was created");
+    println!("\tis fullscreen    = {}", comp.is_fullscreen());
+    println!("\tcan render scene = {}", comp.can_render_scene());
+
+    let model = match openvr::render_models() {
+        Ok(ext) => ext,
+        Err(err) => {
+            println!("Failed to create IVRRenderModels subsystem {:?}", err);
+            return;
+        }
+    };
+
+    println!("\nIVRRenderModels was created\n Count: {}", model.get_count());
+    for i in 0..model.get_count() {
+        println!("\t{}", model.get_name(i));
     }
-    */
 
     openvr::shutdown();
     println!("Done! \\o/");

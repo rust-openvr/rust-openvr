@@ -5,9 +5,16 @@ use openvr_sys::Enum_EVRApplicationType::*;
 pub mod common;
 pub mod system;
 pub mod extended_display;
+pub mod compositor;
+pub mod render_models;
+pub mod subsystems;
 
 pub use system::IVRSystem;
 pub use extended_display::IVRExtendedDisplay;
+pub use compositor::IVRCompositor;
+pub use render_models::IVRRenderModels;
+
+pub use subsystems::*;
 
 pub use common::Eye;
 
@@ -45,45 +52,5 @@ pub fn init() ->  Result<system::IVRSystem, openvr_sys::HmdError> {
 pub fn shutdown() {
     unsafe {
         openvr_sys::VR_ShutdownInternal();
-    }
-}
-
-/// gets the current vr system interface (initialization is required beforehand)
-pub fn system() -> Result<system::IVRSystem, openvr_sys::HmdError> {
-    let mut err = EVRInitError_VRInitError_None;
-    let name = std::ffi::CString::new("FnTable:IVRSystem_012").unwrap();
-    let ptr = unsafe {
-        openvr_sys::VR_GetGenericInterface(name.as_ptr(), &mut err)
-    };
-
-    match err {
-        EVRInitError_VRInitError_None => {
-            unsafe {
-                return Ok(IVRSystem::from_raw(ptr as *const ()));
-            }
-        },
-        _ => {
-            return Err(err);
-        }
-    }
-}
-
-/// gets the current vr extended display interface (initialization is required beforehand)
-pub fn extended_display() -> Result<IVRExtendedDisplay, openvr_sys::HmdError> {
-    let mut err = EVRInitError_VRInitError_None;
-    let name = std::ffi::CString::new("FnTable:IVRExtendedDisplay_001").unwrap();
-    let ptr = unsafe {
-        openvr_sys::VR_GetGenericInterface(name.as_ptr(), &mut err)
-    };
-
-    match err {
-        EVRInitError_VRInitError_None => {
-            unsafe {
-                return Ok(IVRExtendedDisplay::from_raw(ptr as *const ()));
-            }
-        },
-        _ => {
-            return Err(err);
-        }
     }
 }
