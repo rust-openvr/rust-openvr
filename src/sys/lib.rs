@@ -635,7 +635,7 @@ pub enum Enum_EOverlayDirection {
     EOverlayDirection_OverlayDirection_Count = 4,
 }
 pub type EOverlayDirection = Enum_EOverlayDirection;
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 #[repr(u32)]
 pub enum Enum_EVRRenderModelError {
     EVRRenderModelError_VRRenderModelError_None = 0,
