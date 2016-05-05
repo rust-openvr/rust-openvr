@@ -23,6 +23,20 @@ pub fn main() {
             }
         };
 
+        // init render model subsystem
+        let models = match openvr::render_models() {
+            Ok(ext) => ext,
+            Err(err) => {
+                println!("Failed to create IVRRenderModels subsystem {:?}", err);
+                return;
+            }
+        };
+
+        for device in system.tracked_devices(0.0).connected_iter() {
+            println!("device found :) -> {}",
+                device.get_property_string(openvr::ETrackedDeviceProperty_Prop_RenderModelName_String).unwrap_or_else(|_| { panic!("No render model")} ));
+        }
+
         // init compositor subsystem
         /*let comp = match openvr::compositor() {
             Ok(ext) => ext,
@@ -32,14 +46,6 @@ pub fn main() {
             }
         };*/
 
-        // init render model subsystem
-        let models = match openvr::render_models() {
-            Ok(ext) => ext,
-            Err(err) => {
-                println!("Failed to create IVRRenderModels subsystem {:?}", err);
-                return;
-            }
-        };
 
         // create glium window and context
         use glium::{DisplayBuild, Surface};
@@ -86,7 +92,7 @@ pub fn main() {
         let program = glium::Program::from_source(&display, vertex_shader_src, fragment_shader_src, None).unwrap();
 
         // load controller models
-        let controller = models.load(String::from("vr_controller_vive_1_5")).unwrap_or_else(|err| {
+        let controller = models.load(String::from("generic_hmd")).unwrap_or_else(|err| {
             openvr::shutdown(); panic!("controller render model not found: {:?}", err) });
 
         let mut controller_vertices: Vec<Vertex> = Vec::new();

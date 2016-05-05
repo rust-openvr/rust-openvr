@@ -3,6 +3,7 @@ use openvr_sys::Enum_EGraphicsAPIConvention::*;
 use openvr_sys::Enum_EVRSubmitFlags::*;
 use openvr_sys::Enum_EColorSpace::*;
 use common::*;
+use tracking::*;
 
 /// A VR compositor
 pub struct IVRCompositor(*const ());

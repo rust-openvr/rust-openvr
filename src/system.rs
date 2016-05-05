@@ -3,8 +3,9 @@ use openvr_sys::Enum_EGraphicsAPIConvention::*;
 use openvr_sys::Enum_ETrackingUniverseOrigin::*;
 
 use common::*;
+use tracking::*;
 
-pub struct IVRSystem(*const ());
+pub struct IVRSystem(pub *const ());
 
 impl IVRSystem {
     pub unsafe fn from_raw(ptr: *const ()) -> Self {
@@ -90,6 +91,9 @@ impl IVRSystem {
     }
 
     /// Fetch the tracked results from the HMD
+    /// when time is bigger than 0, it will give you the predicted poses for that time
+    /// Time is counted in photons, see https://github.com/ValveSoftware/openvr/wiki/IVRSystem::GetDeviceToAbsoluteTrackingPose
+    ///  for time to photons conversion
     pub fn tracked_devices(&self, time: f32) -> TrackedDevicePoses {
         use std;
 
