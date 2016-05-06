@@ -1,7 +1,16 @@
 language: rust
-install:
-  - sudo apt-get update
-  - sudo apt-get install libudev-dev libxrandr-dev
-script:
-  - cargo build
-
+rust:
+- stable
+- beta
+- nightly
+after_success: |
+  [ $TRAVIS_BRANCH = master ] &&
+  [ $TRAVIS_PULL_REQUEST = false ] &&
+  cargo doc &&
+  echo "<meta http-equiv=refresh content=0;url=`echo $TRAVIS_REPO_SLUG | cut -d '/' -f 2`/index.html>" > target/doc/index.html &&
+  sudo pip install ghp-import &&
+  ghp-import -n target/doc &&
+  git push -fq https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages
+env:
+  global:
+    secure: EWhZMkAWuLzClX2ccFavodnxIlthv/Xc/n2oP9lmddvhqVlHC9MeVKZj/9rLYYhDA6AWNPv9m79aRZJ3PNf/iuIuf1jC1VNDIuD4teCbFMrX3C1QcUN37llEIu4n8YlPRFa2gLYRVqyh5rWS+zde/RM/3b8cw0i8/k/yux/ehqbFUSYcRVuZWNtBwUJw0Nmzii/nzzz6zTdPWqsOkoIjDbexQnceZ7TzrZbJBfJeU8xyiGLaZDTUSOsvQWw157uwX1nq9XOLutth0dbbCixFALa6ALU7n+x5XMDZGdo+F61ul3qHX8ZnPZ4Wl2DEzC9zVyB/ECG9TdUUiGHshEhLXa/FBKqTG6D9NSAsrEhcqlQ/ZIIuCS9PQEQCILJqaZbykx0AUi1W237AGUb2sKOCXHqPn7SiiYTtIMNPk8RumeNtxOGp+AAC/50epGocDOXglCEM6EcdwYtp6nSi9dqmRoBkNMJwWYjddx/OA/cU8tBMEVXpgRUe/vLj+gUqNcCGFvQ1Yd+wsBAklvwzn3fuVDgyWo/hIhJy8wpAEoiv+wJbzjnaseGoMRUDEwLHChzMUNbFmVdfve/oZlHyvpHlkwmuwy5B8BsppcJr6CoQ85DD1k4tM3dDGeZ3XSFAd33n5adsrLtx6nQlGfbzTaXZp9u0n7Hv6vBNz9DEreBifa0=

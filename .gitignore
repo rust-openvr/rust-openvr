@@ -5,3 +5,5 @@
 /modules/oculus_sdk_mac/LibOVR/Lib/Mac/Xcode/Release/
 /target
 *.py[co]
+/src/sys/target/
+*.lock

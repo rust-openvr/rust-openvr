@@ -1,14 +1,21 @@
 [package]
-name = "vr"
-version = "0.1.0"
+name = "openvr"
+version = "0.2.0"
 authors = [
     "Colin Sherratt",
-    "Erick Tryzelaar"
+    "Erick Tryzelaar",
+    "Rene Eichhorn"
 ]
+build = "src/sys/build.rs"
 
 [lib]
-name = "vr"
+name = "openvr"
 path = "src/lib.rs"
 
 [dependencies.openvr_sys]
 path = "src/sys/"
+
+[dev_dependencies]
+glium = "0.14.0"
+num = "0.1.31"
+nalgebra = "0.8.2"
