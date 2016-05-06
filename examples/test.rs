@@ -16,7 +16,7 @@ fn print_matrix_4x3(offset: u32, mat: [[f32; 4]; 3]) {
 }
 
 fn main() {
-    let ivr = match openvr::IVRSystem::init() {
+    let system = match openvr::init() {
         Ok(ivr) => ivr,
         Err(err) => {
             println!("Failed to create IVR subsystem {:?}", err);
@@ -24,27 +24,26 @@ fn main() {
         }
     };
 
-    println!("IVR was created");
-    println!("\tbounds: {:?}", ivr.bounds());
-    println!("\trecommended size: {:?}", ivr.recommended_render_target_size());
-    println!("\teye output: {:?} {:?}", ivr.eye_viewport(openvr::Eye::Left), ivr.eye_viewport(openvr::Eye::Right));
-    println!("\tvsync: {:?}", ivr.time_since_last_vsync());
+    println!("IVRSystem was created");
+
+    println!("\trecommended size: {:?}", system.recommended_render_target_size());
+    println!("\tvsync: {:?}", system.time_since_last_vsync());
 
     print!("\tprojection matrix left  ");
-    print_matrix_4x4(31, ivr.projection_matrix(openvr::Eye::Left, 0.1, 100.));
+    print_matrix_4x4(31, system.projection_matrix(openvr::Eye::Left, 0.1, 100.));
     print!("\tprojection matrix right ");
-    print_matrix_4x4(31, ivr.projection_matrix(openvr::Eye::Right, 0.1, 100.));
+    print_matrix_4x4(31, system.projection_matrix(openvr::Eye::Right, 0.1, 100.));
 
     print!("\teye_to_head ");
-    print_matrix_4x3(8+12, ivr.eye_to_head_transform(openvr::Eye::Left));
+    print_matrix_4x3(8+12, system.eye_to_head_transform(openvr::Eye::Left));
 
     print!("\tposes ");
-    print_matrix_4x3(8+6, ivr.tracked_devices(0.).as_slice()[0].to_device);
+    print_matrix_4x3(8+6, system.tracked_devices(0.).as_slice()[0].to_device);
 
     println!("Distortion example");
     for u in 0..2 {
         for v in 0..2 {
-            let pos = ivr.compute_distortion(
+            let pos = system.compute_distortion(
                 openvr::Eye::Left,
                 u as f32 / 4.,
                 v as f32 / 4.,
@@ -54,18 +53,43 @@ fn main() {
         println!("");
     }
 
-    println!("Trying to create a compositor");
-    match ivr.compositor() {
-        Err(err) => println!("Could not create compositor {:?}", err),
-        Ok(comp) => {
-            println!("\tCreated one!");
-            println!("\tis fullscreen    = {}", comp.is_fullscreen());
-            println!("\tis vsync         = {}", comp.get_vsync());
-            println!("\tcan render scene = {}", comp.can_render_scene());
-            println!("\tgamma value      = {}", comp.get_gamma());
+    let ext = match openvr::extended_display() {
+        Ok(ext) => ext,
+        Err(err) => {
+            println!("Failed to create IVRExtendedDisplay subsystem {:?}", err);
+            return;
         }
+    };
+    println!("\nIVRExtendedDisplay was created");
+    println!("\tbounds: {:?}", ext.window_bounds());
+    println!("\teye output: {:?} {:?}", ext.eye_viewport(openvr::Eye::Left), ext.eye_viewport(openvr::Eye::Right));
+
+    let comp = match openvr::compositor() {
+        Ok(ext) => ext,
+        Err(err) => {
+            println!("Failed to create IVRCompositor subsystem {:?}", err);
+            return;
+        }
+    };
+
+    println!("\nIVRCompositor was created");
+    println!("\tis fullscreen    = {}", comp.is_fullscreen());
+    println!("\tcan render scene = {}", comp.can_render_scene());
+
+    let model = match openvr::render_models() {
+        Ok(ext) => ext,
+        Err(err) => {
+            println!("Failed to create IVRRenderModels subsystem {:?}", err);
+            return;
+        }
+    };
+
+    println!("\nIVRRenderModels was created\n Count: {}", model.get_count());
+    for i in 0..model.get_count() {
+        println!("\t{}", model.get_name(i));
     }
 
+    openvr::shutdown();
     println!("Done! \\o/");
 
 
