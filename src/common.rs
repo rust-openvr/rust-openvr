@@ -50,6 +50,15 @@ pub struct TextureBounds {
 }
 
 impl TextureBounds {
+    pub fn new(u: (f32, f32), v: (f32, f32)) -> Self {
+        TextureBounds {
+            u_min: u.0,
+            u_max: u.1,
+            v_min: v.0,
+            v_max: v.1
+        }
+    }
+
     /// Convert a bounds to a openvr_bounds
     pub fn to_raw(self) -> openvr_sys::VRTextureBounds_t {
         openvr_sys::VRTextureBounds_t{

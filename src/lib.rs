@@ -2,6 +2,7 @@ extern crate openvr_sys;
 pub use openvr_sys::Enum_EVRInitError::*;
 pub use openvr_sys::Enum_EVRApplicationType::*;
 pub use openvr_sys::Enum_ETrackedDeviceProperty::*;
+pub use openvr_sys::Enum_ETrackedDeviceClass::*;
 
 pub mod common;
 pub mod tracking;

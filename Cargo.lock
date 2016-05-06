@@ -3,7 +3,7 @@ name = "openvr"
 version = "0.2.0"
 dependencies = [
  "glium 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "nalgebra 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "nalgebra 0.8.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "num 0.1.32 (registry+https://github.com/rust-lang/crates.io-index)",
  "openvr_sys 0.1.0",
 ]
@@ -301,7 +301,7 @@ dependencies = [
 
 [[package]]
 name = "nalgebra"
-version = "0.6.0"
+version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "num 0.1.32 (registry+https://github.com/rust-lang/crates.io-index)",

@@ -60,7 +60,7 @@ pub enum Enum_ETrackingResult {
     ETrackingResult_TrackingResult_Running_OutOfRange = 201,
 }
 pub type ETrackingResult = Enum_ETrackingResult;
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 #[repr(u32)]
 pub enum Enum_ETrackedDeviceClass {
     ETrackedDeviceClass_TrackedDeviceClass_Invalid = 0,

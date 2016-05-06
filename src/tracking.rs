@@ -13,6 +13,14 @@ pub struct TrackedDevicePose {
 }
 
 impl TrackedDevicePose {
+    // returns the device class of the tracked object
+    pub fn device_class(&self) -> openvr_sys::Enum_ETrackedDeviceClass {
+        unsafe {
+            let system = * { system().unwrap().0 as *mut openvr_sys::Struct_VR_IVRSystem_FnTable};
+            system.GetTrackedDeviceClass.unwrap()(self.index as u32)
+        }
+    }
+
     /// gets a propery as a string
     pub fn get_property_string(&self, property: openvr_sys::Enum_ETrackedDeviceProperty) -> Result<String, openvr_sys::Enum_ETrackedPropertyError> {
         unsafe {
