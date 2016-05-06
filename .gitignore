@@ -7,3 +7,4 @@
 *.py[co]
 /src/sys/target/
 *.lock
+Cargo.lock
