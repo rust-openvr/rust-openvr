@@ -1,6 +1,8 @@
 use openvr_sys;
 use openvr_sys::Enum_ETrackedPropertyError::*;
+
 use subsystems::*;
+use error::*;
 
 #[derive(Debug, Copy, Clone)]
 pub struct TrackedDevicePose {
@@ -22,7 +24,7 @@ impl TrackedDevicePose {
     }
 
     /// gets a propery as a string
-    pub fn get_property_string(&self, property: openvr_sys::Enum_ETrackedDeviceProperty) -> Result<String, openvr_sys::Enum_ETrackedPropertyError> {
+    pub fn get_property_string(&self, property: openvr_sys::Enum_ETrackedDeviceProperty) -> Result<String, Error<openvr_sys::Enum_ETrackedPropertyError>> {
         unsafe {
             let system = * { system().unwrap().0 as *mut openvr_sys::Struct_VR_IVRSystem_FnTable};
 
@@ -40,7 +42,7 @@ impl TrackedDevicePose {
             if size > 0 {
                 return Ok(String::from_raw_parts(val_out.as_ptr() as *mut _, (size - 1) as usize, (size - 1) as usize));
             } else {
-                return Err(err);
+                return Err(Error::from_raw(err));
             }
         }
     }

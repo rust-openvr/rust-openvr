@@ -5,6 +5,7 @@ pub use openvr_sys::Enum_ETrackedDeviceProperty::*;
 pub use openvr_sys::Enum_ETrackedDeviceClass::*;
 
 pub mod common;
+pub mod error;
 pub mod tracking;
 pub mod system;
 pub mod extended_display;
@@ -18,11 +19,12 @@ pub use compositor::IVRCompositor;
 pub use render_models::IVRRenderModels;
 
 pub use subsystems::*;
+pub use error::*;
 
 pub use common::Eye;
 
 /// Inits the open vr interface and returns the system
-pub fn init() ->  Result<system::IVRSystem, openvr_sys::HmdError> {
+pub fn init() ->  Result<system::IVRSystem, Error<openvr_sys::Enum_EVRInitError>> {
     let mut err = EVRInitError_VRInitError_None;
     let app_type = EVRApplicationType_VRApplication_Scene;
 
@@ -46,7 +48,7 @@ pub fn init() ->  Result<system::IVRSystem, openvr_sys::HmdError> {
             }
         },
         _ => {
-            return Err(err);
+            return Err(Error::from_raw(err));
         }
     };
 }

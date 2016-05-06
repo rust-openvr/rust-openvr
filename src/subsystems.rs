@@ -1,6 +1,7 @@
 extern crate openvr_sys;
 use openvr_sys::Enum_EVRInitError::*;
 
+use error::*;
 use system::IVRSystem;
 use extended_display::IVRExtendedDisplay;
 use compositor::IVRCompositor;
@@ -9,7 +10,7 @@ use render_models::IVRRenderModels;
 use std;
 
 /// gets the current vr system interface (initialization is required beforehand)
-pub fn system() -> Result<IVRSystem, openvr_sys::HmdError> {
+pub fn system() -> Result<IVRSystem, Error<openvr_sys::Enum_EVRInitError>> {
     let mut err = EVRInitError_VRInitError_None;
     let name = std::ffi::CString::new("FnTable:IVRSystem_012").unwrap();
     let ptr = unsafe {
@@ -23,13 +24,13 @@ pub fn system() -> Result<IVRSystem, openvr_sys::HmdError> {
             }
         },
         _ => {
-            return Err(err);
+            return Err(Error::from_raw(err));
         }
     }
 }
 
 /// gets the current vr extended display interface (initialization is required beforehand)
-pub fn extended_display() -> Result<IVRExtendedDisplay, openvr_sys::HmdError> {
+pub fn extended_display() -> Result<IVRExtendedDisplay, Error<openvr_sys::Enum_EVRInitError>> {
     let mut err = EVRInitError_VRInitError_None;
     let name = std::ffi::CString::new("FnTable:IVRExtendedDisplay_001").unwrap();
     let ptr = unsafe {
@@ -43,13 +44,13 @@ pub fn extended_display() -> Result<IVRExtendedDisplay, openvr_sys::HmdError> {
             }
         },
         _ => {
-            return Err(err);
+            return Err(Error::from_raw(err));
         }
     }
 }
 
 /// gets the current vr extended display interface (initialization is required beforehand)
-pub fn compositor() -> Result<IVRCompositor, openvr_sys::HmdError> {
+pub fn compositor() -> Result<IVRCompositor, Error<openvr_sys::Enum_EVRInitError>> {
     let mut err = EVRInitError_VRInitError_None;
     let name = std::ffi::CString::new("FnTable:IVRCompositor_013").unwrap();
     let ptr = unsafe {
@@ -63,13 +64,13 @@ pub fn compositor() -> Result<IVRCompositor, openvr_sys::HmdError> {
             }
         },
         _ => {
-            return Err(err);
+            return Err(Error::from_raw(err));
         }
     }
 }
 
 /// gets the current vr extended display interface (initialization is required beforehand)
-pub fn render_models() -> Result<IVRRenderModels, openvr_sys::HmdError> {
+pub fn render_models() -> Result<IVRRenderModels, Error<openvr_sys::Enum_EVRInitError>> {
     let mut err = EVRInitError_VRInitError_None;
     let name = std::ffi::CString::new("FnTable:IVRRenderModels_005").unwrap();
     let ptr = unsafe {
@@ -83,7 +84,7 @@ pub fn render_models() -> Result<IVRRenderModels, openvr_sys::HmdError> {
             }
         },
         _ => {
-            return Err(err);
+            return Err(Error::from_raw(err));
         }
     }
 }

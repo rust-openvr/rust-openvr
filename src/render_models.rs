@@ -5,11 +5,30 @@ use std::string::String;
 use std::ptr::null_mut;
 use std::slice;
 use subsystems::render_models;
+use error::*;
 
 pub struct IVRRenderModels(*const ());
 
 pub struct RenderModel(*mut openvr_sys::RenderModel_t);
 pub struct RenderModelTexture(*mut openvr_sys::RenderModel_TextureMap_t);
+
+trait AsyncError {
+    /// checks if result is currently loading
+    fn is_loading(&self) -> bool;
+}
+
+impl AsyncError for Error<openvr_sys::Enum_EVRRenderModelError> {
+    fn is_loading(&self) -> bool {
+        match self.to_raw() {
+            EVRRenderModelError_VRRenderModelError_Loading => {
+                true
+            },
+            _ => {
+                false
+            }
+        }
+    }
+}
 
 impl Drop for RenderModel {
     /// will inform openvr that the memory for the render model is no longer required
@@ -54,7 +73,7 @@ impl RenderModel {
 
     /// asynchronosly loads the texture for the current render model
     /// see IVRRenderModels::load_async for info how openvr async work
-    pub fn load_texture_async(&self) -> Result<RenderModelTexture, openvr_sys::Enum_EVRRenderModelError> {
+    pub fn load_texture_async(&self) -> Result<RenderModelTexture, Error<openvr_sys::Enum_EVRRenderModelError>> {
         unsafe {
             let models = * { render_models().unwrap().0 as *mut openvr_sys::Struct_VR_IVRRenderModels_FnTable};
             let mut resp: *mut openvr_sys::RenderModel_TextureMap_t = null_mut();
@@ -69,7 +88,7 @@ impl RenderModel {
                     Ok(RenderModelTexture (resp))
                 },
                 _ => {
-                    Err(err)
+                    Err(Error::from_raw(err))
                 }
             }
 
@@ -77,7 +96,7 @@ impl RenderModel {
     }
 
     /// loads the texture for current model
-    pub fn load_texture(&self) -> Result<RenderModelTexture, openvr_sys::Enum_EVRRenderModelError> {
+    pub fn load_texture(&self) -> Result<RenderModelTexture, Error<openvr_sys::Enum_EVRRenderModelError>> {
         use std;
 
         loop {
@@ -87,13 +106,8 @@ impl RenderModel {
                     return Ok(texture);
                 },
                 Err(err) => {
-                    match err {
-                        EVRRenderModelError_VRRenderModelError_Loading => {
-                            // ask again later
-                        },
-                        _ => {
-                            return Err(err);
-                        }
+                    if !err.is_loading() {
+                        return Err(err);
                     }
                 }
             }
@@ -158,7 +172,7 @@ impl IVRRenderModels {
 
     /// Loads an render model into local memory
     ///  blocks the thread and waits until driver responds with model
-    pub fn load(&self, name: String) -> Result<RenderModel, openvr_sys::EVRRenderModelError> {
+    pub fn load(&self, name: String) -> Result<RenderModel, Error<openvr_sys::EVRRenderModelError>> {
         use std;
 
         loop {
@@ -168,13 +182,8 @@ impl IVRRenderModels {
                     return Ok(model);
                 },
                 Err(err) => {
-                    match err {
-                        EVRRenderModelError_VRRenderModelError_Loading => {
-                            // ask again later
-                        },
-                        _ => {
-                            return Err(err);
-                        }
+                    if !err.is_loading() {
+                        return Err(err);
                     }
                 }
             }
@@ -186,7 +195,7 @@ impl IVRRenderModels {
     ///  When called for the first time openvr will start to load the model into memory
     ///  In the mean time this call will respond with EVRRenderModelError_VRRenderModelError_Loading
     ///  It is designed to be used wihtin the render loop as it won't block the user, for sync usage use load()
-    pub fn load_async(&self, name: String) -> Result<RenderModel, openvr_sys::EVRRenderModelError> {
+    pub fn load_async(&self, name: String) -> Result<RenderModel, Error<openvr_sys::EVRRenderModelError>> {
         use std;
 
         unsafe {
@@ -207,7 +216,7 @@ impl IVRRenderModels {
                     Ok(RenderModel ( resp ))
                 },
                 _ => {
-                    Err(err)
+                    Err(Error::from_raw(err))
                 }
             }
 

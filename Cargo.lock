@@ -1,6 +1,6 @@
 [root]
 name = "openvr"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "glium 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "nalgebra 0.8.2 (registry+https://github.com/rust-lang/crates.io-index)",
