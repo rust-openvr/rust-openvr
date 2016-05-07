@@ -59,6 +59,15 @@ impl TextureBounds {
         }
     }
 
+    pub fn full() -> Self {
+        TextureBounds {
+            u_min: 0.0,
+            u_max: 1.0,
+            v_min: 0.0,
+            v_max: 1.0
+        }
+    }
+
     /// Convert a bounds to a openvr_bounds
     pub fn to_raw(self) -> openvr_sys::VRTextureBounds_t {
         openvr_sys::VRTextureBounds_t{

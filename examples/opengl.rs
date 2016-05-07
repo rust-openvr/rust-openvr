@@ -40,7 +40,7 @@ pub fn main() {
 
         for device in system.tracked_devices(0.0).connected_iter() {
             println!("device found :) -> {}",
-                device.get_property_string(openvr::ETrackedDeviceProperty_Prop_RenderModelName_String).unwrap_or_else(|_| { panic!("No render model")} ));
+                device.get_property_string(openvr::tracking::TrackedDeviceStringProperty::RenderModelName).unwrap_or_else(|_| { panic!("No render model")} ));
 
             println!("\t{:?}", device);
             println!("\t{:?}", device.device_class());
@@ -210,7 +210,7 @@ pub fn main() {
 
             for device in tracked_devices.connected_iter() {
                 match device.device_class() {
-                    openvr::ETrackedDeviceClass_TrackedDeviceClass_HMD => {
+                    openvr::tracking::TrackedDeviceClass::HMD => {
                         let matrix = {
                             let raw = device.to_device;
                             let mat = nalgebra::Matrix4::new(
@@ -223,7 +223,7 @@ pub fn main() {
                         left_matrix *= matrix;
                         right_matrix *= matrix;
                     },
-                    openvr::ETrackedDeviceClass_TrackedDeviceClass_TrackingReference => {
+                    openvr::tracking::TrackedDeviceClass::TrackingReference => {
                         if once { continue; }
                         once = true;
 
