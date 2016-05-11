@@ -19,7 +19,7 @@ name = "openvr"
 path = "src/lib.rs"
 
 [dependencies]
-openvr_sys = "0.1.1"
+openvr_sys = "0.1.2"
 
 [dev_dependencies]
 glium = "0.14.0"
