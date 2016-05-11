@@ -6,14 +6,20 @@ authors = [
     "Erick Tryzelaar",
     "Rene Eichhorn"
 ]
-build = "src/sys/build.rs"
+license-file = "LICENSE.md"
+
+documentation = "http://rust-openvr.github.io/rust-openvr/openvr/index.html"
+homepage = "https://github.com/rust-openvr/rust-openvr"
+repository = "https://github.com/rust-openvr/rust-openvr"
+
+description = "A safe binding for openvr."
 
 [lib]
 name = "openvr"
 path = "src/lib.rs"
 
-[dependencies.openvr_sys]
-path = "src/sys/"
+[dependencies]
+openvr_sys = "0.1.1"
 
 [dev_dependencies]
 glium = "0.14.0"
