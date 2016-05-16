@@ -3,6 +3,8 @@ use openvr_sys::Enum_ETrackedPropertyError::*;
 
 use subsystems::*;
 use error::*;
+use std::slice;
+use std::str;
 
 /// Describes a string property of a tracked device
 #[derive(Debug, Copy, Clone)]
@@ -127,7 +129,10 @@ impl TrackedDevicePose {
             );
 
             if size > 0 {
-                return Ok(String::from_raw_parts(val_out.as_ptr() as *mut _, (size - 1) as usize, (size - 1) as usize));
+                let ptr = val_out.as_ptr() as *mut u8;
+                let mem = slice::from_raw_parts(ptr, size as usize);
+                let str = str::from_utf8(mem).unwrap();
+                return Ok(String::from(str));
             } else {
                 return Err(Error::from_raw(err));
             }
