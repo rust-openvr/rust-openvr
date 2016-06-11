@@ -104,6 +104,17 @@ pub struct TrackedDevicePose {
 }
 
 impl TrackedDevicePose {
+    pub fn from_raw(i: usize, d: openvr_sys::TrackedDevicePose_t) -> Self {
+        TrackedDevicePose {
+            index: i,
+            is_connected: d.bDeviceIsConnected > 0,
+            is_valid: d.bPoseIsValid > 0,
+            to_device: d.mDeviceToAbsoluteTracking.m,
+            velocity: d.vVelocity.v,
+            angular_velocity: d.vAngularVelocity.v,
+        }
+    }
+
     // returns the device class of the tracked object
     pub fn device_class(&self) -> TrackedDeviceClass {
         unsafe {
@@ -173,6 +184,10 @@ impl<'a> Iterator for TrackedDevicePosesIterator<'a> {
         }
 
         let res = &self.target.poses[self.index];
+        if !res.is_valid || !res.is_connected {
+            return None;
+        }
+
         self.index += 1;
 
         Some(res)

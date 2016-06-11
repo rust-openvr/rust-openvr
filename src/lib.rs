@@ -17,6 +17,7 @@ pub use system::IVRSystem;
 pub use extended_display::IVRExtendedDisplay;
 pub use compositor::IVRCompositor;
 pub use render_models::IVRRenderModels;
+pub use tracked_camera::IVRTrackedCamera;
 
 pub use subsystems::*;
 pub use error::*;
