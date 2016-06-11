@@ -7,7 +7,7 @@ rust-openvr
 rust-openvr is a binding for openvr.
 
 ## [Link to the documentation](http://rust-openvr.github.io/rust-openvr/openvr/index.html)
-## Current sdk version: OpenVR SDK 0.9.19
+## Current sdk version: OpenVR SDK 1.0.1
 
 
 Using rust-openvr
