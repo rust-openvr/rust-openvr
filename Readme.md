@@ -2,11 +2,12 @@ rust-openvr
 =====
 
 [![Build Status](https://travis-ci.org/rust-openvr/rust-openvr.svg?branch=master)](https://travis-ci.org/rust-openvr/rust-openvr)
+[![Join the chat at https://gitter.im/rust-openvr/rust-openvr](https://badges.gitter.im/rust-openvr/rust-openvr.svg)](https://gitter.im/rust-openvr/rust-openvr?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 rust-openvr is a binding for openvr.
 
 ## [Link to the documentation](http://rust-openvr.github.io/rust-openvr/openvr/index.html)
-## Current sdk version: OpenVR SDK 0.9.19
+## Current sdk version: OpenVR SDK 1.0.1
 
 
 Using rust-openvr
