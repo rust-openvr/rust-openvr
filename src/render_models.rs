@@ -1,5 +1,5 @@
 use openvr_sys;
-use openvr_sys::Enum_EVRRenderModelError::*;
+use openvr_sys::EVRRenderModelError::*;
 
 use std::string::String;
 use std::ptr::null_mut;
@@ -7,7 +7,7 @@ use std::slice;
 use subsystems::render_models;
 use error::*;
 
-pub struct IVRRenderModels(*const ());
+pub struct IVRRenderModels(pub *const ());
 
 pub struct RenderModel(*mut openvr_sys::RenderModel_t);
 pub struct RenderModelTexture(*mut openvr_sys::RenderModel_TextureMap_t);
@@ -17,7 +17,7 @@ trait AsyncError {
     fn is_loading(&self) -> bool;
 }
 
-impl AsyncError for Error<openvr_sys::Enum_EVRRenderModelError> {
+impl AsyncError for Error<openvr_sys::EVRRenderModelError> {
     fn is_loading(&self) -> bool {
         match self.to_raw() {
             EVRRenderModelError_VRRenderModelError_Loading => {
@@ -34,7 +34,7 @@ impl Drop for RenderModel {
     /// will inform openvr that the memory for the render model is no longer required
     fn drop (&mut self) {
         unsafe {
-            let models = * { render_models().unwrap().0 as *mut openvr_sys::Struct_VR_IVRRenderModels_FnTable};
+            let models = * { render_models().unwrap().0 as *mut openvr_sys::VR_IVRRenderModels_FnTable};
             models.FreeRenderModel.unwrap()(
                 self.0
             );
@@ -46,7 +46,7 @@ impl Drop for RenderModelTexture {
     /// will inform openvr that the memory for the render model is no longer required
     fn drop (&mut self) {
         unsafe {
-            let models = * { render_models().unwrap().0 as *mut openvr_sys::Struct_VR_IVRRenderModels_FnTable};
+            let models = * { render_models().unwrap().0 as *mut openvr_sys::VR_IVRRenderModels_FnTable};
             models.FreeTexture.unwrap()(
                 self.0
             );
@@ -73,9 +73,9 @@ impl RenderModel {
 
     /// asynchronosly loads the texture for the current render model
     /// see IVRRenderModels::load_async for info how openvr async work
-    pub fn load_texture_async(&self) -> Result<RenderModelTexture, Error<openvr_sys::Enum_EVRRenderModelError>> {
+    pub fn load_texture_async(&self) -> Result<RenderModelTexture, Error<openvr_sys::EVRRenderModelError>> {
         unsafe {
-            let models = * { render_models().unwrap().0 as *mut openvr_sys::Struct_VR_IVRRenderModels_FnTable};
+            let models = * { render_models().unwrap().0 as *mut openvr_sys::VR_IVRRenderModels_FnTable};
             let mut resp: *mut openvr_sys::RenderModel_TextureMap_t = null_mut();
 
             let err = models.LoadTexture_Async.unwrap()(
@@ -96,7 +96,7 @@ impl RenderModel {
     }
 
     /// loads the texture for current model
-    pub fn load_texture(&self) -> Result<RenderModelTexture, Error<openvr_sys::Enum_EVRRenderModelError>> {
+    pub fn load_texture(&self) -> Result<RenderModelTexture, Error<openvr_sys::EVRRenderModelError>> {
         use std;
 
         loop {
@@ -144,7 +144,7 @@ impl IVRRenderModels {
     /// Returns the amount of render models available
     pub fn get_count(&self) -> u32 {
         unsafe {
-            let models = * { self.0 as *mut openvr_sys::Struct_VR_IVRRenderModels_FnTable};
+            let models = * { self.0 as *mut openvr_sys::VR_IVRRenderModels_FnTable};
 
             models.GetRenderModelCount.unwrap()()
         }
@@ -153,7 +153,7 @@ impl IVRRenderModels {
     /// Returns the name of an available render model
     pub fn get_name(&self, index: u32) -> String {
         unsafe {
-            let models = * { self.0 as *mut openvr_sys::Struct_VR_IVRRenderModels_FnTable};
+            let models = * { self.0 as *mut openvr_sys::VR_IVRRenderModels_FnTable};
             let name_out = String::with_capacity(256);
 
             let size = models.GetRenderModelName.unwrap()(
@@ -199,7 +199,7 @@ impl IVRRenderModels {
         use std;
 
         unsafe {
-            let models = * { self.0 as *mut openvr_sys::Struct_VR_IVRRenderModels_FnTable};
+            let models = * { self.0 as *mut openvr_sys::VR_IVRRenderModels_FnTable};
             let mut resp: *mut openvr_sys::RenderModel_t = null_mut();
             let cname = std::ffi::CString::new(name.as_str()).unwrap();
             let rawname = cname.into_raw();

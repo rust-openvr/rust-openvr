@@ -1,6 +1,7 @@
 extern crate openvr_sys;
-use openvr_sys::Enum_EVRInitError::*;
-use openvr_sys::Enum_EVRApplicationType::*;
+
+use openvr_sys::EVRInitError::*;
+use openvr_sys::EVRApplicationType::*;
 
 pub mod common;
 pub mod error;
@@ -9,6 +10,7 @@ pub mod system;
 pub mod extended_display;
 pub mod compositor;
 pub mod render_models;
+pub mod tracked_camera;
 pub mod subsystems;
 
 pub use system::IVRSystem;
@@ -22,7 +24,7 @@ pub use error::*;
 pub use common::Eye;
 
 /// Inits the open vr interface and returns the system
-pub fn init() ->  Result<system::IVRSystem, Error<openvr_sys::Enum_EVRInitError>> {
+pub fn init() ->  Result<system::IVRSystem, Error<openvr_sys::EVRInitError>> {
     let mut err = EVRInitError_VRInitError_None;
     let app_type = EVRApplicationType_VRApplication_Scene;
 

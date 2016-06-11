@@ -8,3 +8,4 @@
 /src/sys/target/
 *.lock
 Cargo.lock
+/idea/

@@ -1,7 +1,7 @@
 use openvr_sys;
-use openvr_sys::Enum_EGraphicsAPIConvention::*;
-use openvr_sys::Enum_EVRSubmitFlags::*;
-use openvr_sys::Enum_EColorSpace::*;
+use openvr_sys::EGraphicsAPIConvention::*;
+use openvr_sys::EVRSubmitFlags::*;
+use openvr_sys::EColorSpace::*;
 use common::*;
 use tracking::*;
 
@@ -16,7 +16,7 @@ impl IVRCompositor {
     /// Check to see if the compositor is fullscreen
     pub fn is_fullscreen(&self) -> bool {
         unsafe {
-            let comp = * { self.0 as *mut openvr_sys::Struct_VR_IVRCompositor_FnTable };
+            let comp = * { self.0 as *mut openvr_sys::VR_IVRCompositor_FnTable };
             comp.IsFullscreen.unwrap()() > 0
         }
     }
@@ -24,7 +24,7 @@ impl IVRCompositor {
     /// Check if compositor can render a scene
     pub fn can_render_scene(&self) -> bool {
         unsafe {
-            let comp = * { self.0 as *mut openvr_sys::Struct_VR_IVRCompositor_FnTable };
+            let comp = * { self.0 as *mut openvr_sys::VR_IVRCompositor_FnTable };
             comp.CanRenderScene.unwrap()() > 0
         }
     }
@@ -37,7 +37,7 @@ impl IVRCompositor {
         unsafe {
             use std;
 
-            let comp = * { self.0 as *mut openvr_sys::Struct_VR_IVRCompositor_FnTable };
+            let comp = * { self.0 as *mut openvr_sys::VR_IVRCompositor_FnTable };
             let mut t = openvr_sys::Texture_t {
                 eType: EGraphicsAPIConvention_API_OpenGL,
                 eColorSpace: EColorSpace_ColorSpace_Auto,
@@ -58,7 +58,7 @@ impl IVRCompositor {
         use std;
 
         unsafe {
-            let comp = * { self.0 as *mut openvr_sys::Struct_VR_IVRCompositor_FnTable };
+            let comp = * { self.0 as *mut openvr_sys::VR_IVRCompositor_FnTable };
             let mut data: [openvr_sys::TrackedDevicePose_t; 16] = std::mem::zeroed();
 
             comp.WaitGetPoses.unwrap()(

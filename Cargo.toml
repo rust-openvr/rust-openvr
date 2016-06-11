@@ -1,6 +1,6 @@
 [package]
 name = "openvr"
-version = "0.3.0"
+version = "0.4.0"
 authors = [
     "Colin Sherratt",
     "Erick Tryzelaar",
@@ -19,7 +19,7 @@ name = "openvr"
 path = "src/lib.rs"
 
 [dependencies]
-openvr_sys = "0.1.2"
+openvr_sys = "1.0.2"
 
 [dev_dependencies]
 glium = "0.14.0"

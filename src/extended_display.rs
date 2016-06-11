@@ -12,7 +12,7 @@ impl IVRExtendedDisplay {
     /// Get the window bounds
     pub fn window_bounds(&self) -> Rectangle {
         unsafe {
-            let ext = * { self.0 as *mut openvr_sys::Struct_VR_IVRExtendedDisplay_FnTable };
+            let ext = * { self.0 as *mut openvr_sys::VR_IVRExtendedDisplay_FnTable };
 
             let mut size = Size{width: 0, height: 0};
             let mut pos = Position{x: 0, y: 0};
@@ -35,7 +35,7 @@ impl IVRExtendedDisplay {
         use std::mem;
         
         unsafe {
-            let ext = * { self.0 as *mut openvr_sys::Struct_VR_IVRExtendedDisplay_FnTable };
+            let ext = * { self.0 as *mut openvr_sys::VR_IVRExtendedDisplay_FnTable };
 
             let mut size = Size{width: 0, height: 0};
             let mut pos = Position{x: 0, y: 0};

@@ -48,10 +48,10 @@ macro_rules! impl_raw_error {
             fn is_err(&self) -> bool {
                 match *self {
                     $none_name => {
-                        true
+                       false
                     },
                     _ => {
-                        false
+                       true
                     }
                 }
             }
@@ -70,20 +70,34 @@ macro_rules! impl_raw_error {
 
 use std::ffi::CStr;
 use openvr_sys::*;
-use openvr_sys::Enum_ETrackedPropertyError::*;
-use openvr_sys::Enum_EVRInitError::*;
-use openvr_sys::Enum_EVRRenderModelError::*;
+use openvr_sys::ETrackedPropertyError::*;
+use openvr_sys::EVRInitError::*;
+use openvr_sys::EVRRenderModelError::*;
+use openvr_sys::EVRTrackedCameraError::*;
 
 impl_raw_error!(
     system,
-    Struct_VR_IVRSystem_FnTable,
+    VR_IVRSystem_FnTable,
     GetPropErrorNameFromEnum,
     ETrackedPropertyError,
     ETrackedPropertyError_TrackedProp_Success);
 
+impl_raw_error!(
+    render_models,
+    VR_IVRRenderModels_FnTable,
+    GetRenderModelErrorNameFromEnum,
+    EVRRenderModelError,
+    EVRRenderModelError_VRRenderModelError_None);
+
+impl_raw_error!(
+    tracked_camera,
+    VR_IVRTrackedCamera_FnTable,
+    GetCameraErrorNameFromEnum,
+    EVRTrackedCameraError,
+    EVRTrackedCameraError_VRTrackedCameraError_None);
 
 // The init error has some special function to retrieve string
-impl RawError for Enum_EVRInitError {
+impl RawError for EVRInitError {
     fn is_err(&self) -> bool {
         match *self {
             EVRInitError_VRInitError_None => {
@@ -101,23 +115,5 @@ impl RawError for Enum_EVRInitError {
         };
 
         String::from(sstr)
-    }
-}
-
-// RenderModelError has no implementation in 0.1.19 unfortunately
-impl RawError for Enum_EVRRenderModelError {
-    fn is_err(&self) -> bool {
-        match *self {
-            EVRRenderModelError_VRRenderModelError_None => {
-                true
-            },
-            _ => {
-                false
-            }
-        }
-    }
-
-    fn message(&self) -> String {
-        String::from(format!("{:?}", *self))
     }
 }

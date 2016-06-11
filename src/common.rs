@@ -1,5 +1,5 @@
 use openvr_sys;
-use openvr_sys::Enum_EVREye::*;
+use openvr_sys::EVREye::*;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Size {
@@ -70,7 +70,7 @@ impl TextureBounds {
 
     /// Convert a bounds to a openvr_bounds
     pub fn to_raw(self) -> openvr_sys::VRTextureBounds_t {
-        openvr_sys::VRTextureBounds_t{
+        openvr_sys::VRTextureBounds_t {
             uMin: self.u_min,
             uMax: self.u_max,
             vMin: self.v_min,

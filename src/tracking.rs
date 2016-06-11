@@ -1,5 +1,5 @@
 use openvr_sys;
-use openvr_sys::Enum_ETrackedPropertyError::*;
+use openvr_sys::ETrackedPropertyError::*;
 
 use subsystems::*;
 use error::*;
@@ -27,8 +27,8 @@ pub enum TrackedDeviceStringProperty {
 }
 
 impl TrackedDeviceStringProperty {
-    pub fn to_raw(&self) -> openvr_sys::Enum_ETrackedDeviceProperty {
-        use openvr_sys::Enum_ETrackedDeviceProperty::*;
+    pub fn to_raw(&self) -> openvr_sys::ETrackedDeviceProperty {
+        use openvr_sys::ETrackedDeviceProperty::*;
         use self::TrackedDeviceStringProperty::*;
 
         match *self {
@@ -64,9 +64,9 @@ pub enum TrackedDeviceClass {
 }
 
 impl TrackedDeviceClass {
-    pub fn to_raw(&self) -> openvr_sys::Enum_ETrackedDeviceClass {
+    pub fn to_raw(&self) -> openvr_sys::ETrackedDeviceClass {
         use self::TrackedDeviceClass::*;
-        use openvr_sys::Enum_ETrackedDeviceClass::*;
+        use openvr_sys::ETrackedDeviceClass::*;
 
         match *self {
             Invalid => ETrackedDeviceClass_TrackedDeviceClass_Invalid,
@@ -77,9 +77,9 @@ impl TrackedDeviceClass {
         }
     }
 
-    pub fn from_raw(raw: openvr_sys::Enum_ETrackedDeviceClass) -> Self {
+    pub fn from_raw(raw: openvr_sys::ETrackedDeviceClass) -> Self {
         use self::TrackedDeviceClass::*;
-        use openvr_sys::Enum_ETrackedDeviceClass::*;
+        use openvr_sys::ETrackedDeviceClass::*;
 
         match raw {
             ETrackedDeviceClass_TrackedDeviceClass_Invalid => Invalid,
@@ -105,15 +105,15 @@ impl TrackedDevicePose {
     // returns the device class of the tracked object
     pub fn device_class(&self) -> TrackedDeviceClass {
         unsafe {
-            let system = * { system().unwrap().0 as *mut openvr_sys::Struct_VR_IVRSystem_FnTable};
+            let system = * { system().unwrap().0 as *mut openvr_sys::VR_IVRSystem_FnTable};
             TrackedDeviceClass::from_raw(system.GetTrackedDeviceClass.unwrap()(self.index as u32))
         }
     }
 
     /// gets a propery as a string
-    pub fn get_property_string(&self, property: TrackedDeviceStringProperty) -> Result<String, Error<openvr_sys::Enum_ETrackedPropertyError>> {
+    pub fn get_property_string(&self, property: TrackedDeviceStringProperty) -> Result<String, Error<openvr_sys::ETrackedPropertyError>> {
         unsafe {
-            let system = * { system().unwrap().0 as *mut openvr_sys::Struct_VR_IVRSystem_FnTable};
+            let system = * { system().unwrap().0 as *mut openvr_sys::VR_IVRSystem_FnTable};
 
             let val_out = String::with_capacity(256);
             let mut err = ETrackedPropertyError_TrackedProp_Success;
