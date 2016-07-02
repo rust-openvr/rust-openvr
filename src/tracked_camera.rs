@@ -75,7 +75,7 @@ impl CameraStream {
 
             // create raw buffer where openvr can store it's data into
             let mut buffer = Vec::<u8>::with_capacity(size.buffer as usize);
-            let mut raw_buffer = buffer.as_mut_ptr();
+            let raw_buffer = buffer.as_mut_ptr();
             mem::forget(buffer);
 
             // create header
