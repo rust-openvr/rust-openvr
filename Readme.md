@@ -19,7 +19,7 @@ When trying to start a program that uses rust-openvr you will probably get an er
 You can download the latest version here (https://github.com/ValveSoftware/openvr/tree/master/bin). After downloading please add it into your project folder (also for production releases!).
 
 # Building on Windows
-Rust provides 2 pre-compiled version for windows. MSVC ABI and GNU ABI. OpenVR doesn't have an offical build yet for the GNU Bindung and therefore MSVC is required!
+Rust provides 2 pre-compiled version for windows. MSVC ABI and GNU ABI. OpenVR doesn't have an offical build yet for the GNU Bindung and therefore MSVC is required! For more informations about the ABI in Rust see https://www.rust-lang.org/en-US/downloads.html#win-foot
 
 # Initializing
 
