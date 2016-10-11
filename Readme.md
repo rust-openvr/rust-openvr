@@ -18,6 +18,9 @@ Using rust-openvr
 When trying to start a program that uses rust-openvr you will probably get an error message because it can't find openvr.dll (or openvr.so)
 You can download the latest version here (https://github.com/ValveSoftware/openvr/tree/master/bin). After downloading please add it into your project folder (also for production releases!).
 
+# Building on Windows
+Rust provides 2 pre-compiled version for windows. MSVC ABI and GNU ABI. OpenVR doesn't have an offical build yet for the GNU Bindung and therefore MSVC is required!
+
 # Initializing
 
 ```rust
