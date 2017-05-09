@@ -1,212 +1,58 @@
-use openvr_sys;
-use openvr_sys::ETrackedPropertyError::*;
+use openvr_sys as sys;
 
-use subsystems::*;
-use error::*;
-use std::slice;
-use std::str;
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum TrackingUniverseOrigin {
+    Seated = sys::ETrackingUniverseOrigin_ETrackingUniverseOrigin_TrackingUniverseSeated as isize,
+    Standing = sys::ETrackingUniverseOrigin_ETrackingUniverseOrigin_TrackingUniverseStanding as isize,
+    RawAndUncalibrated = sys::ETrackingUniverseOrigin_ETrackingUniverseOrigin_TrackingUniverseRawAndUncalibrated as isize,
+}
 
-/// Describes a string property of a tracked device
+#[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub enum TrackedDeviceStringProperty {
-    TrackingSystemName,
-    ModelNumber,
-    SerialNumber,
-    RenderModelName,
-    ManufacturerName,
-    TrackingFirmwareVersion,
-    HardwareRevision,
-    AllWirelessDongleDescriptions,
-    ConnectedWirelessDongle,
-    FirmwareManualUpdateURL,
-    FirmwareProgrammingTarget,
-    DisplayMCImageLeft,
-    DisplayMCImageRight,
-    DisplayGCImage,
-    CameraFirmwareDescription,
-    AttachedDeviceId,
-    ModeLabel
-}
-
-impl TrackedDeviceStringProperty {
-    pub fn to_raw(&self) -> openvr_sys::ETrackedDeviceProperty {
-        use openvr_sys::ETrackedDeviceProperty::*;
-        use self::TrackedDeviceStringProperty::*;
-
-        match *self {
-            TrackingSystemName => ETrackedDeviceProperty_Prop_TrackingSystemName_String,
-            ModelNumber => ETrackedDeviceProperty_Prop_ModelNumber_String,
-            SerialNumber => ETrackedDeviceProperty_Prop_SerialNumber_String,
-            RenderModelName => ETrackedDeviceProperty_Prop_RenderModelName_String,
-            ManufacturerName => ETrackedDeviceProperty_Prop_ManufacturerName_String,
-            TrackingFirmwareVersion => ETrackedDeviceProperty_Prop_TrackingFirmwareVersion_String,
-            HardwareRevision => ETrackedDeviceProperty_Prop_HardwareRevision_String,
-            AllWirelessDongleDescriptions => ETrackedDeviceProperty_Prop_AllWirelessDongleDescriptions_String,
-            ConnectedWirelessDongle => ETrackedDeviceProperty_Prop_ConnectedWirelessDongle_String,
-            FirmwareManualUpdateURL => ETrackedDeviceProperty_Prop_Firmware_ManualUpdateURL_String,
-            FirmwareProgrammingTarget => ETrackedDeviceProperty_Prop_Firmware_ProgrammingTarget_String,
-            DisplayMCImageLeft => ETrackedDeviceProperty_Prop_DisplayMCImageLeft_String,
-            DisplayMCImageRight => ETrackedDeviceProperty_Prop_DisplayMCImageRight_String,
-            DisplayGCImage => ETrackedDeviceProperty_Prop_DisplayGCImage_String,
-            CameraFirmwareDescription => ETrackedDeviceProperty_Prop_CameraFirmwareDescription_String,
-            AttachedDeviceId => ETrackedDeviceProperty_Prop_AttachedDeviceId_String,
-            ModeLabel => ETrackedDeviceProperty_Prop_ModeLabel_String
-        }
-    }
-}
-
-/// Describes the class of a tracked device
-#[derive(Debug, Copy, Clone)]
-pub enum TrackedDeviceClass {
-    Invalid,
-    HMD,
-    Controller,
-    TrackingReference,
-    Other,
-}
-
-impl TrackedDeviceClass {
-    pub fn to_raw(&self) -> openvr_sys::ETrackedDeviceClass {
-        use self::TrackedDeviceClass::*;
-        use openvr_sys::ETrackedDeviceClass::*;
-
-        match *self {
-            Invalid => ETrackedDeviceClass_TrackedDeviceClass_Invalid,
-            HMD => ETrackedDeviceClass_TrackedDeviceClass_HMD,
-            Controller => ETrackedDeviceClass_TrackedDeviceClass_Controller,
-            TrackingReference => ETrackedDeviceClass_TrackedDeviceClass_TrackingReference,
-            Other => ETrackedDeviceClass_TrackedDeviceClass_Other,
-        }
-    }
-
-    pub fn from_raw(raw: openvr_sys::ETrackedDeviceClass) -> Self {
-        use self::TrackedDeviceClass::*;
-        use openvr_sys::ETrackedDeviceClass::*;
-
-        match raw {
-            ETrackedDeviceClass_TrackedDeviceClass_Invalid => Invalid,
-            ETrackedDeviceClass_TrackedDeviceClass_HMD => HMD,
-            ETrackedDeviceClass_TrackedDeviceClass_Controller => Controller,
-            ETrackedDeviceClass_TrackedDeviceClass_TrackingReference => TrackingReference,
-            ETrackedDeviceClass_TrackedDeviceClass_Other => Other,
-        }
-    }
-}
-
-#[derive(Debug, Copy, Clone)]
-pub struct TrackedDevicePose {
-    pub index: usize,
-    pub to_device: [[f32; 4]; 3],
-    pub velocity: [f32; 3],
-    pub angular_velocity: [f32; 3],
-    pub is_valid: bool,
-    pub is_connected: bool,
-}
+pub struct TrackedDevicePose(sys::TrackedDevicePose_t);
 
 impl TrackedDevicePose {
-    pub fn from_raw(i: usize, d: openvr_sys::TrackedDevicePose_t) -> Self {
-        TrackedDevicePose {
-            index: i,
-            is_connected: d.bDeviceIsConnected > 0,
-            is_valid: d.bPoseIsValid > 0,
-            to_device: d.mDeviceToAbsoluteTracking.m,
-            velocity: d.vVelocity.v,
-            angular_velocity: d.vAngularVelocity.v,
+    pub fn device_to_absolute_tracking(&self) -> &[[f32; 4]; 3] { &self.0.mDeviceToAbsoluteTracking.m }
+    pub fn velocity(&self) -> &[f32; 3] { &self.0.vVelocity.v }
+    pub fn angular_velocity(&self) -> &[f32; 3] { &self.0.vAngularVelocity.v }
+    pub fn tracking_result(&self) -> TrackingResult {
+        use self::TrackingResult::*;
+        match self.0.eTrackingResult {
+            sys::ETrackingResult_ETrackingResult_TrackingResult_Uninitialized => Uninitialized,
+            sys::ETrackingResult_ETrackingResult_TrackingResult_Calibrating_InProgress => CalibratingInProgress,
+            sys::ETrackingResult_ETrackingResult_TrackingResult_Calibrating_OutOfRange => CalibratingOutOfRange,
+            sys::ETrackingResult_ETrackingResult_TrackingResult_Running_OK => OK,
+            sys::ETrackingResult_ETrackingResult_TrackingResult_Running_OutOfRange => RunningOutOfRange,
+            _ => panic!("unrecognized tracking result")
         }
     }
-
-    // returns the device class of the tracked object
-    pub fn device_class(&self) -> TrackedDeviceClass {
-        unsafe {
-            let system = * { system().unwrap().0 as *mut openvr_sys::VR_IVRSystem_FnTable};
-            TrackedDeviceClass::from_raw(system.GetTrackedDeviceClass.unwrap()(self.index as u32))
-        }
-    }
-
-    /// gets a propery as a string
-    pub fn get_property_string(&self, property: TrackedDeviceStringProperty) -> Result<String, Error<openvr_sys::ETrackedPropertyError>> {
-        unsafe {
-            let system = * { system().unwrap().0 as *mut openvr_sys::VR_IVRSystem_FnTable};
-
-            let val_out = String::with_capacity(256);
-            let mut err = ETrackedPropertyError_TrackedProp_Success;
-
-            let size = system.GetStringTrackedDeviceProperty.unwrap()(
-                self.index as u32,
-                property.to_raw(),
-                val_out.as_ptr() as *mut i8,
-                256,
-                &mut err
-            );
-
-            if size > 0 {
-                let ptr = val_out.as_ptr() as *mut u8;
-                let mem = slice::from_raw_parts(ptr, size as usize);
-                let str = str::from_utf8(mem).unwrap();
-                return Ok(String::from(str));
-            } else {
-                return Err(Error::from_raw(err));
-            }
-        }
-    }
+    pub fn pose_is_valid(&self) -> bool { self.0.bPoseIsValid }
+    pub fn device_is_connected(&self) -> bool { self.0.bDeviceIsConnected }
 }
 
-
-#[derive(Debug, Copy, Clone)]
-pub struct TrackedDevicePoses {
-    pub count: usize,
-    pub poses: [TrackedDevicePose; 16],
+pub enum TrackingResult {
+    Uninitialized = sys::ETrackingResult_ETrackingResult_TrackingResult_Uninitialized as isize,
+    CalibratingInProgress = sys::ETrackingResult_ETrackingResult_TrackingResult_Calibrating_InProgress as isize,
+    CalibratingOutOfRange = sys::ETrackingResult_ETrackingResult_TrackingResult_Calibrating_OutOfRange as isize,
+    OK = sys::ETrackingResult_ETrackingResult_TrackingResult_Running_OK as isize,
+    RunningOutOfRange = sys::ETrackingResult_ETrackingResult_TrackingResult_Running_OutOfRange as isize,
 }
 
-pub struct TrackedDevicePosesIterator<'a> {
-    pub target: &'a TrackedDevicePoses,
-    pub index: usize
+pub enum TrackedDeviceClass {
+    Invalid = sys::ETrackedDeviceClass_ETrackedDeviceClass_TrackedDeviceClass_Invalid as isize,
+    HMD = sys::ETrackedDeviceClass_ETrackedDeviceClass_TrackedDeviceClass_HMD as isize,
+    Controller = sys::ETrackedDeviceClass_ETrackedDeviceClass_TrackedDeviceClass_Controller as isize,
+    GenericTracker = sys::ETrackedDeviceClass_ETrackedDeviceClass_TrackedDeviceClass_GenericTracker as isize,
+    TrackingReference = sys::ETrackedDeviceClass_ETrackedDeviceClass_TrackedDeviceClass_TrackingReference as isize,
+    DisplayRedirect = sys::ETrackedDeviceClass_ETrackedDeviceClass_TrackedDeviceClass_DisplayRedirect as isize,
 }
 
-impl TrackedDevicePoses {
-    pub fn as_slice(&self) -> &[TrackedDevicePose] {
-        &self.poses[0..self.count]
-    }
+pub type TrackedDeviceIndex = sys::TrackedDeviceIndex_t;
 
-    /// creates an iterator that will iterate over all connected devices
-    pub fn connected_iter(&self) -> TrackedDevicePosesIterator {
-        TrackedDevicePosesIterator { target: self, index: 0 }
-    }
+pub mod tracked_device_index {
+    use super::*;
+    pub const HMD: TrackedDeviceIndex = sys::k_unTrackedDeviceIndex_Hmd;
+    pub const INVALID: TrackedDeviceIndex = sys::k_unTrackedDeviceIndexInvalid;
 }
 
-impl<'a> Iterator for TrackedDevicePosesIterator<'a> {
-    type Item = &'a TrackedDevicePose;
-
-    fn next(&mut self) -> Option<&'a TrackedDevicePose> {
-        // end reached
-        if self.index == self.target.count {
-            return None;
-        }
-
-        let res = &self.target.poses[self.index];
-        if !res.is_valid || !res.is_connected {
-            return None;
-        }
-
-        self.index += 1;
-
-        Some(res)
-    }
-}
-
-pub unsafe fn to_tracked(data: [openvr_sys::TrackedDevicePose_t; 16]) -> TrackedDevicePoses {
-    use std;
-    let mut out: TrackedDevicePoses = std::mem::zeroed();
-    for (i, d) in data.iter().enumerate() {
-        if d.bDeviceIsConnected > 0 {
-            out.count = i + 1;
-        }
-        out.poses[i].index = i;
-        out.poses[i].is_connected = d.bDeviceIsConnected > 0;
-        out.poses[i].is_valid = d.bPoseIsValid > 0;
-        out.poses[i].to_device = d.mDeviceToAbsoluteTracking.m;
-        out.poses[i].velocity = d.vVelocity.v;
-        out.poses[i].angular_velocity = d.vAngularVelocity.v;
-    }
-    out
-}
+pub type TrackedDeviceProperty = sys::ETrackedDeviceProperty;
