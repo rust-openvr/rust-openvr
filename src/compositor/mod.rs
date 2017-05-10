@@ -13,6 +13,10 @@ use std::ffi::CString;
 
 use openvr_sys as sys;
 
+pub mod texture;
+
+pub use self::texture::Texture;
+
 use super::*;
 
 impl<'a> Compositor<'a> {
@@ -63,22 +67,31 @@ impl<'a> Compositor<'a> {
     /// Display the supplied texture for the next frame.
     ///
     /// If `bounds` is None, the entire texture will be used. Lens distortion is handled by the OpenVR implementation.
-    pub fn submit(&self, eye: Eye, texture: &Texture, bounds: Option<&TextureBounds>) -> Result<(), CompositorError> {
-        use self::TextureHandle::*;
+    pub fn submit(&self, eye: Eye, texture: &Texture, bounds: Option<&texture::Bounds>) -> Result<(), CompositorError> {
+        use self::texture::Handle::*;
+        let flags = match texture.handle {
+            Vulkan(_) => sys::EVRSubmitFlags_EVRSubmitFlags_Submit_Default,
+            OpenGLTexture(_) => sys::EVRSubmitFlags_EVRSubmitFlags_Submit_Default,
+            OpenGLRenderBuffer(_) => sys::EVRSubmitFlags_EVRSubmitFlags_Submit_GlRenderBuffer,
+        };
         let texture = sys::Texture_t {
             handle: match texture.handle {
                 Vulkan(ref x) => x as *const _ as *mut _,
+                OpenGLTexture(x) => x as *mut _,
+                OpenGLRenderBuffer(x) => x as *mut _,
             },
             eType: match texture.handle {
                 Vulkan(_) => sys::ETextureType_ETextureType_TextureType_Vulkan,
+                OpenGLTexture(_) => sys::ETextureType_ETextureType_TextureType_OpenGL,
+                OpenGLRenderBuffer(_) => sys::ETextureType_ETextureType_TextureType_OpenGL,
             },
             eColorSpace: texture.color_space as sys::EColorSpace,
         };
         let e = unsafe {
-            (self.0.Submit.unwrap())(eye as sys::EVREye,
-                                     &texture as *const _ as *mut _,
-                                     bounds.map(|x| x as *const _ as *mut TextureBounds as *mut _).unwrap_or(ptr::null_mut()),
-                                     sys::EVRSubmitFlags_EVRSubmitFlags_Submit_Default)
+            self.0.Submit.unwrap()(eye as sys::EVREye,
+                                   &texture as *const _ as *mut _,
+                                   bounds.map(|x| x as *const _ as *mut texture::Bounds as *mut _).unwrap_or(ptr::null_mut()),
+                                   flags)
         };
         if e == sys::EVRCompositorError_EVRCompositorError_VRCompositorError_None {
             Ok(())
@@ -98,55 +111,6 @@ pub struct WaitPoses {
     pub render: TrackedDevicePoses,
     /// Predicted to the point they will be at the frame after the upcoming frame, for use in game logic.
     pub game: TrackedDevicePoses,
-}
-
-pub use sys::VkPhysicalDevice_T;
-pub use sys::VkDevice_T;
-pub use sys::VkInstance_T;
-pub use sys::VkQueue_T;
-
-#[derive(Debug, Copy, Clone)]
-pub struct Texture {
-    pub handle: TextureHandle,
-    pub color_space: ColorSpace,
-}
-
-pub mod vulkan {
-    use super::*;
-    #[repr(C)]
-    #[derive(Debug, Copy, Clone)]
-    pub struct Texture {
-        pub image: u64,
-        pub device: *mut VkDevice_T,
-        pub physical_device: *mut VkPhysicalDevice_T,
-        pub instance: *mut VkInstance_T,
-        pub queue: *mut VkQueue_T,
-        pub queue_family_index: u32,
-        pub width: u32,
-        pub height: u32,
-        pub format: u32,
-        pub sample_count: u32,
-    }
-}
-
-#[derive(Debug, Copy, Clone)]
-pub enum TextureHandle {
-    Vulkan(vulkan::Texture),
-}
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum ColorSpace {
-    Auto = sys::EColorSpace_EColorSpace_ColorSpace_Auto as isize,
-    Gamma = sys::EColorSpace_EColorSpace_ColorSpace_Gamma as isize,
-    Linear = sys::EColorSpace_EColorSpace_ColorSpace_Linear as isize,
-}
-
-#[repr(C)]
-pub struct TextureBounds {
-    pub umin: f32,
-    pub vmin: f32,
-    pub umax: f32,
-    pub vmax: f32,
 }
 
 #[derive(Copy, Clone, Eq, PartialEq)]
@@ -197,3 +161,8 @@ impl fmt::Display for CompositorError {
         f.pad(error::Error::description(self))
     }
 }
+
+pub use sys::VkPhysicalDevice_T;
+pub use sys::VkDevice_T;
+pub use sys::VkInstance_T;
+pub use sys::VkQueue_T;

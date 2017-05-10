@@ -33,42 +33,33 @@ pub fn init(ty: ApplicationType) -> Result<Context, InitError> {
         unsafe { sys::VR_ShutdownInternal() }
         return Err(InitError(sys::EVRInitError_EVRInitError_VRInitError_Init_InterfaceNotFound));
     }
-    Ok(unsafe { Context::new() }?)
+    Ok(Context {})
 }
 
 pub struct System<'a>(&'a sys::VR_IVRSystem_FnTable);
 pub struct Compositor<'a>(&'a sys::VR_IVRCompositor_FnTable);
+pub struct RenderModels<'a>(&'a sys::VR_IVRRenderModels_FnTable);
 
 /// Entry points into OpenVR.
 ///
 /// At most one of this object may exist at a time.
-pub struct Context {
-    system: *const sys::VR_IVRSystem_FnTable,
-    compositor: *const sys::VR_IVRCompositor_FnTable,
+pub struct Context {}
+
+fn load<T>(suffix: &[u8]) -> Result<*const T, InitError> {
+    let mut magic = Vec::from(b"FnTable:".as_ref());
+    magic.extend(suffix);
+    let mut error = sys::EVRInitError_EVRInitError_VRInitError_None;
+    let result = unsafe { sys::VR_GetGenericInterface(magic.as_ptr() as *const i8, &mut error) };
+    if error != sys::EVRInitError_EVRInitError_VRInitError_None {
+        return Err(InitError(sys::EVRInitError_EVRInitError_VRInitError_Init_InterfaceNotFound));
+    }
+    Ok(result as *const T)
 }
 
 impl Context {
-    /// Must be called after sys::VR_InitInternal
-    unsafe fn new() -> Result<Self, InitError> {
-        fn load<T>(suffix: &[u8]) -> Result<*const T, InitError> {
-            let mut magic = Vec::from(b"FnTable:".as_ref());
-            magic.extend(suffix);
-            let mut error = sys::EVRInitError_EVRInitError_VRInitError_None;
-            let result = unsafe { sys::VR_GetGenericInterface(magic.as_ptr() as *const i8, &mut error) };
-            if error != sys::EVRInitError_EVRInitError_VRInitError_None {
-                return Err(InitError(sys::EVRInitError_EVRInitError_VRInitError_Init_InterfaceNotFound));
-            }
-            Ok(result as *const T)
-        }
-
-        Ok(Context {
-            system: load(sys::IVRSystem_Version)?,
-            compositor: load(sys::IVRCompositor_Version)?,
-        })
-    }
-
-    pub fn system(&self) -> System { unsafe { System(&*self.system) } }
-    pub fn compositor(&self) -> Compositor { unsafe { Compositor(&*self.compositor) } }
+    pub fn system(&self) -> Result<System, InitError> { load(sys::IVRSystem_Version).map(|x| unsafe { System(&*x) }) }
+    pub fn compositor(&self) -> Result<Compositor, InitError> { load(sys::IVRCompositor_Version).map(|x| unsafe { Compositor(&*x) }) }
+    pub fn render_models(&self) -> Result<RenderModels, InitError> { load(sys::IVRRenderModels_Version).map(|x| unsafe { RenderModels(&*x) }) }
 }
 
 impl Drop for Context {
@@ -100,6 +91,7 @@ pub enum ApplicationType {
     Bootstrapper = sys::EVRApplicationType_EVRApplicationType_VRApplication_Bootstrapper as isize,
 }
 
+#[derive(Copy, Clone)]
 pub struct InitError(sys::EVRInitError);
 
 impl fmt::Debug for InitError {
