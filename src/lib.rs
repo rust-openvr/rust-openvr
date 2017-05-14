@@ -123,13 +123,3 @@ pub enum Eye {
     Left = sys::EVREye_EVREye_Eye_Left as isize,
     Right = sys::EVREye_EVREye_Eye_Right as isize,
 }
-
-#[derive(Debug, Copy, Clone)]
-pub struct TrackedDevicePoses {
-    data: [TrackedDevicePose; sys::k_unMaxTrackedDeviceCount as usize]
-}
-
-impl TrackedDevicePoses {
-    pub fn iter(&self) -> slice::Iter<TrackedDevicePose> { self.data.iter() }
-    pub fn len(&self) -> usize { self.data.len() }
-}

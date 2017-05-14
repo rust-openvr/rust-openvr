@@ -64,3 +64,21 @@ pub enum TrackedControllerRole {
     LeftHand = sys::ETrackedControllerRole_ETrackedControllerRole_TrackedControllerRole_LeftHand as isize,
     RightHand = sys::ETrackedControllerRole_ETrackedControllerRole_TrackedControllerRole_RightHand as isize,
 }
+
+#[derive(Debug, Copy, Clone)]
+pub struct TrackedDevicePoses {
+    data: [TrackedDevicePose; sys::k_unMaxTrackedDeviceCount as usize]
+}
+
+impl TrackedDevicePoses {
+    pub fn iter(&self) -> slice::Iter<TrackedDevicePose> { self.data.iter() }
+    pub fn len(&self) -> usize { self.data.len() }
+}
+
+impl ::std::ops::Index<TrackedDeviceIndex> for TrackedDevicePoses {
+    type Output = TrackedDevicePose;
+
+    fn index(&self, index: TrackedDeviceIndex) -> &TrackedDevicePose {
+        &self.data[index as usize]
+    }
+}
