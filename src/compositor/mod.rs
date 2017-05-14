@@ -103,6 +103,11 @@ impl<'a> Compositor<'a> {
     pub fn post_present_handoff(&self) {
         unsafe { (self.0.PostPresentHandoff.unwrap())() };
     }
+
+    /// Return whether the compositor is fullscreen.
+    pub fn is_fullscreen(&self) -> bool {
+        unsafe { (self.0.IsFullscreen.unwrap())() }
+    }
 }
 
 #[derive(Debug, Copy, Clone)]

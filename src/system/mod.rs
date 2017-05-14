@@ -115,6 +115,27 @@ impl<'a> System<'a> {
             None
         }
     }
+
+    /// Computes the distortion caused by the optics
+    /// Gets the result of a single distortion value for use in a distortion map. Input UVs are in a single eye's viewport, and output UVs are for the source render target in the distortion shader.
+    pub fn compute_distortion(&self, eye: Eye, u: f32, v: f32) -> Option<DistortionCoordinates> {
+        let mut coord = unsafe { mem::uninitialized() };
+        let success = unsafe { self.0.ComputeDistortion.unwrap()(
+            eye as sys::EVREye,
+            u, v,
+            &mut coord
+        ) };
+        
+        if !success {
+            return None;
+        }
+
+        Some(DistortionCoordinates {
+            red: coord.rfRed,
+            blue: coord.rfBlue,
+            green: coord.rfGreen
+        })
+    }
 }
 
 /// Values represent the tangents of the half-angles from the center view axis
@@ -128,4 +149,11 @@ pub struct RawProjection {
     pub top: f32,
     /// tangent of the half-angle from center axis to the bottom clipping plane
     pub bottom: f32,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct DistortionCoordinates {
+    pub red: [f32; 2],
+    pub green: [f32; 2],
+    pub blue: [f32; 2],
 }
