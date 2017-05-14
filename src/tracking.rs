@@ -58,3 +58,9 @@ pub mod tracked_device_index {
 }
 
 pub type TrackedDeviceProperty = sys::ETrackedDeviceProperty;
+
+#[derive(Debug, Copy, Clone)]
+pub enum TrackedControllerRole {
+    LeftHand = sys::ETrackedControllerRole_ETrackedControllerRole_TrackedControllerRole_LeftHand as isize,
+    RightHand = sys::ETrackedControllerRole_ETrackedControllerRole_TrackedControllerRole_RightHand as isize,
+}

@@ -136,6 +136,22 @@ impl<'a> System<'a> {
             green: coord.rfGreen
         })
     }
+
+    /// Returns the device index associated with a specific role, for example the left hand or the right hand.
+    pub fn tracked_device_index_for_controller_role(&self, role: TrackedControllerRole) -> Option<TrackedDeviceIndex> {
+        let x = unsafe { self.0.GetTrackedDeviceIndexForControllerRole.unwrap()(role as sys::ETrackedControllerRole) };
+        if x == tracked_device_index::INVALID { None } else { Some(x) }
+    }
+
+    /// Returns the controller type associated with a device index.
+    pub fn get_controller_role_for_tracked_device_index(&self, i: TrackedDeviceIndex) -> Option<TrackedControllerRole> {
+        let x = unsafe { self.0.GetControllerRoleForTrackedDeviceIndex.unwrap()(i) };
+        match x {
+            sys::ETrackedControllerRole_ETrackedControllerRole_TrackedControllerRole_LeftHand => Some(TrackedControllerRole::LeftHand),
+            sys::ETrackedControllerRole_ETrackedControllerRole_TrackedControllerRole_RightHand => Some(TrackedControllerRole::RightHand),
+            _ => None,
+        }
+    }
 }
 
 /// Values represent the tangents of the half-angles from the center view axis
