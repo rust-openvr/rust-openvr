@@ -15,11 +15,13 @@ Using rust-openvr
 
 # Requirements
 
-When trying to start a program that uses rust-openvr you will probably get an error message because it can't find openvr.dll (or openvr.so)
-You can download the latest version here (https://github.com/ValveSoftware/openvr/tree/master/bin). After downloading please add it into your project folder (also for production releases!).
+openvr-sys needs cmake and a C++ compiler so that it can compile and statically link the OpenVR client library.
 
 # Building on Windows
-Rust provides 2 pre-compiled version for windows. MSVC ABI and GNU ABI. OpenVR doesn't have an offical build yet for the GNU Bindung and therefore MSVC is required! For more informations about the ABI in Rust see https://www.rust-lang.org/en-US/downloads.html#win-foot
+
+Rust provides 2 pre-compiled version for windows. MSVC ABI and GNU ABI. The proprietary OpenVR library which is loaded
+behind the scenes by the client library is MSVC only, and therefore MSVC is required! For more informations about the
+ABI in Rust see https://www.rust-lang.org/en-US/downloads.html#win-foot
 
 # Initializing
 
@@ -28,17 +30,11 @@ Rust provides 2 pre-compiled version for windows. MSVC ABI and GNU ABI. OpenVR d
 extern crate openvr;
 
 fn main() {
-    // Initialize system subsystem
-    let system = match openvr::init() {
-        Ok(sys) => sys,
-        Err(err) => {
-            println!("Could not initialize OpenVR SDK: \n\t{:?}", err);
-            return;           
-        }
-    };
+    // Initialize OpenVR
+    let context = openvr::init(openvr::ApplicationType::Scene).unwrap();
 
-    // accessing other sub systems
-    let ext = openvr::extended_display();
+    // accessing subsystems
+    let system = context.system().unwrap();
 
     // ..
 }

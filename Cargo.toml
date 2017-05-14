@@ -20,5 +20,4 @@ openvr_sys = { git = "https://github.com/Ralith/rust-openvr-sys.git", branch = "
 
 [dev_dependencies]
 glium = "0.14.0"
-num = "0.1.31"
-nalgebra = "0.8.2"
+nalgebra = "0.12"

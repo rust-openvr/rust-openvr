@@ -20,7 +20,7 @@ static INITIALIZED: AtomicBool = ATOMIC_BOOL_INIT;
 /// # Panics
 /// When the library has already been initialized
 pub fn init(ty: ApplicationType) -> Result<Context, InitError> {
-    if INITIALIZED.swap(true, Ordering::AcqRel) {
+    if INITIALIZED.swap(true, Ordering::Acquire) {
         panic!("OpenVR has already been initialized!");
     }
 
@@ -65,7 +65,7 @@ impl Context {
 impl Drop for Context {
     fn drop(&mut self) {
         unsafe { sys::VR_ShutdownInternal() }
-        INITIALIZED.store(false, Ordering::AcqRel);
+        INITIALIZED.store(false, Ordering::Release);
     }
 }
 
