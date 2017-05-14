@@ -54,8 +54,8 @@ impl<'a> Compositor<'a> {
     pub fn wait_get_poses(&self) -> Result<WaitPoses, CompositorError> {
         unsafe {
             let mut result: WaitPoses = mem::uninitialized();
-            let e = (self.0.WaitGetPoses.unwrap())(result.render.data.as_mut().as_mut_ptr() as *mut _, result.render.data.len() as u32,
-                                                   result.game.data.as_mut().as_mut_ptr() as *mut _, result.game.data.len() as u32);
+            let e = (self.0.WaitGetPoses.unwrap())(result.render.as_mut().as_mut_ptr() as *mut _, result.render.len() as u32,
+                                                   result.game.as_mut().as_mut_ptr() as *mut _, result.game.len() as u32);
             if e == sys::EVRCompositorError_EVRCompositorError_VRCompositorError_None {
                 Ok(result)
             } else {

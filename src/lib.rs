@@ -1,7 +1,7 @@
 extern crate openvr_sys;
 
 use std::sync::atomic::{Ordering, AtomicBool, ATOMIC_BOOL_INIT};
-use std::{fmt, error, slice};
+use std::{fmt, error};
 use std::ffi::CStr;
 
 use openvr_sys as sys;

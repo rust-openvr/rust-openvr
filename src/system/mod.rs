@@ -81,7 +81,7 @@ impl<'a> System<'a> {
         unsafe {
             let mut result: TrackedDevicePoses = mem::uninitialized();
             (self.0.GetDeviceToAbsoluteTrackingPose.unwrap())(origin as sys::ETrackingUniverseOrigin, predicted_seconds_to_photons_from_now,
-                                                              result.data.as_mut().as_mut_ptr() as *mut _, result.data.len() as u32);
+                                                              result.as_mut().as_mut_ptr() as *mut _, result.len() as u32);
             result
         }
     }
