@@ -22,7 +22,7 @@ use super::*;
 impl<'a> Compositor<'a> {
     pub fn vulkan_instance_extensions_required(&self) -> Vec<CString> {
         let temp = unsafe {
-            let n = (self.0.GetVulkanInstanceExtensionsRequired.unwrap())(ptr::null_mut(), 0);
+            let n = self.0.GetVulkanInstanceExtensionsRequired.unwrap()(ptr::null_mut(), 0);
             let mut buffer: Vec<u8> = Vec::new();
             buffer.resize(n as usize, mem::uninitialized());
             (self.0.GetVulkanInstanceExtensionsRequired.unwrap())(buffer.as_mut_ptr() as *mut i8, n);
@@ -33,7 +33,7 @@ impl<'a> Compositor<'a> {
 
     pub fn vulkan_device_extensions_required(&self, physical_device: *mut VkPhysicalDevice_T) -> Vec<CString> {
         let temp = unsafe {
-            let n = (self.0.GetVulkanDeviceExtensionsRequired.unwrap())(physical_device, ptr::null_mut(), 0);
+            let n = self.0.GetVulkanDeviceExtensionsRequired.unwrap()(physical_device, ptr::null_mut(), 0);
             let mut buffer: Vec<u8> = Vec::new();
             buffer.resize(n as usize, mem::uninitialized());
             (self.0.GetVulkanDeviceExtensionsRequired.unwrap())(physical_device as *mut _, buffer.as_mut_ptr() as *mut i8, n);
@@ -44,7 +44,7 @@ impl<'a> Compositor<'a> {
 
     /// Sets tracking space returned by WaitGetPoses
     pub fn set_tracking_space(&self, origin: TrackingUniverseOrigin) {
-        unsafe { (self.0.SetTrackingSpace.unwrap())(origin as sys::ETrackingUniverseOrigin) }
+        unsafe { self.0.SetTrackingSpace.unwrap()(origin as sys::ETrackingUniverseOrigin) }
     }
 
     /// Block until a few milliseconds before the next vsync, then return poses for the next step of rendering and game
@@ -54,7 +54,7 @@ impl<'a> Compositor<'a> {
     pub fn wait_get_poses(&self) -> Result<WaitPoses, CompositorError> {
         unsafe {
             let mut result: WaitPoses = mem::uninitialized();
-            let e = (self.0.WaitGetPoses.unwrap())(result.render.as_mut().as_mut_ptr() as *mut _, result.render.len() as u32,
+            let e = self.0.WaitGetPoses.unwrap()(result.render.as_mut().as_mut_ptr() as *mut _, result.render.len() as u32,
                                                    result.game.as_mut().as_mut_ptr() as *mut _, result.game.len() as u32);
             if e == sys::EVRCompositorError_EVRCompositorError_VRCompositorError_None {
                 Ok(result)

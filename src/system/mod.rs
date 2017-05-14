@@ -18,7 +18,7 @@ impl<'a> System<'a> {
     pub fn recommended_render_target_size(&self) -> (u32, u32) {
         unsafe {
             let mut result: (u32, u32) = mem::uninitialized();
-            (self.0.GetRecommendedRenderTargetSize.unwrap())(&mut result.0, &mut result.1);
+            self.0.GetRecommendedRenderTargetSize.unwrap()(&mut result.0, &mut result.1);
             result
         }
     }
@@ -27,7 +27,7 @@ impl<'a> System<'a> {
     ///
     /// Clip plane distances are in meters.
     pub fn projection_matrix(&self, eye: Eye, near_z: f32, far_z: f32) -> [[f32; 4]; 4] {
-        unsafe { (self.0.GetProjectionMatrix.unwrap())(eye as sys::EVREye, near_z, far_z) }.m
+        unsafe { self.0.GetProjectionMatrix.unwrap()(eye as sys::EVREye, near_z, far_z) }.m
     }
 
     /// Returns the raw project values to use for the specified eye. Most games should use GetProjectionMatrix instead
@@ -36,7 +36,7 @@ impl<'a> System<'a> {
     pub fn projection_raw(&self, eye: Eye) -> RawProjection {
         unsafe {
             let mut result: RawProjection = mem::uninitialized();
-            (self.0.GetProjectionRaw.unwrap())(eye as sys::EVREye, &mut result.left, &mut result.right, &mut result.top, &mut result.bottom);
+            self.0.GetProjectionRaw.unwrap()(eye as sys::EVREye, &mut result.left, &mut result.right, &mut result.top, &mut result.bottom);
             result
         }
     }
@@ -55,7 +55,7 @@ impl<'a> System<'a> {
     pub fn time_since_last_vsync(&self) -> Option<(f32, u64)> {
         unsafe {
             let mut result: (f32, u64) = mem::uninitialized();
-            if (self.0.GetTimeSinceLastVsync.unwrap())(&mut result.0, &mut result.1) {
+            if self.0.GetTimeSinceLastVsync.unwrap()(&mut result.0, &mut result.1) {
                 Some(result)
             } else {
                 None
@@ -80,15 +80,15 @@ impl<'a> System<'a> {
     pub fn device_to_absolute_tracking_pose(&self, origin: TrackingUniverseOrigin, predicted_seconds_to_photons_from_now: f32) -> TrackedDevicePoses {
         unsafe {
             let mut result: TrackedDevicePoses = mem::uninitialized();
-            (self.0.GetDeviceToAbsoluteTrackingPose.unwrap())(origin as sys::ETrackingUniverseOrigin, predicted_seconds_to_photons_from_now,
-                                                              result.as_mut().as_mut_ptr() as *mut _, result.len() as u32);
+            self.0.GetDeviceToAbsoluteTrackingPose.unwrap()(origin as sys::ETrackingUniverseOrigin, predicted_seconds_to_photons_from_now,
+                                                            result.as_mut().as_mut_ptr() as *mut _, result.len() as u32);
             result
         }
     }
 
     pub fn tracked_device_class(&self, index: TrackedDeviceIndex) -> TrackedDeviceClass {
         use self::TrackedDeviceClass::*;
-        match unsafe { (self.0.GetTrackedDeviceClass.unwrap())(index) } {
+        match unsafe { self.0.GetTrackedDeviceClass.unwrap()(index) } {
             sys::ETrackedDeviceClass_ETrackedDeviceClass_TrackedDeviceClass_Invalid => Invalid,
             sys::ETrackedDeviceClass_ETrackedDeviceClass_TrackedDeviceClass_HMD => HMD,
             sys::ETrackedDeviceClass_ETrackedDeviceClass_TrackedDeviceClass_Controller => Controller,
@@ -100,7 +100,7 @@ impl<'a> System<'a> {
     }
 
     pub fn is_tracked_device_connected(&self, index: TrackedDeviceIndex) -> bool {
-        unsafe { (self.0.IsTrackedDeviceConnected.unwrap())(index) }
+        unsafe { self.0.IsTrackedDeviceConnected.unwrap()(index) }
     }
 
     pub fn poll_next_event_with_pose(&self, origin: TrackingUniverseOrigin) -> Option<(EventInfo, TrackedDevicePose)> {
