@@ -4,7 +4,8 @@ version = "0.4.0"
 authors = [
     "Colin Sherratt",
     "Erick Tryzelaar",
-    "Rene Eichhorn"
+    "Rene Eichhorn",
+    "Benjamin Saunders"
 ]
 license-file = "LICENSE.md"
 
@@ -14,12 +15,8 @@ repository = "https://github.com/rust-openvr/rust-openvr"
 
 description = "A safe binding for openvr."
 
-[lib]
-name = "openvr"
-path = "src/lib.rs"
-
 [dependencies]
-openvr_sys = "1.0.2"
+openvr_sys = { git = "https://github.com/Ralith/rust-openvr-sys.git", branch = "update" }
 
 [dev_dependencies]
 glium = "0.14.0"
