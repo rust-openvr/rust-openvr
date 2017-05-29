@@ -30,6 +30,7 @@ impl TrackedDevicePose {
     pub fn device_is_connected(&self) -> bool { self.0.bDeviceIsConnected }
 }
 
+#[derive(Debug, Copy, Clone)]
 pub enum TrackingResult {
     Uninitialized = sys::ETrackingResult_ETrackingResult_TrackingResult_Uninitialized as isize,
     CalibratingInProgress = sys::ETrackingResult_ETrackingResult_TrackingResult_Calibrating_InProgress as isize,
@@ -38,6 +39,7 @@ pub enum TrackingResult {
     RunningOutOfRange = sys::ETrackingResult_ETrackingResult_TrackingResult_Running_OutOfRange as isize,
 }
 
+#[derive(Debug, Copy, Clone)]
 pub enum TrackedDeviceClass {
     Invalid = sys::ETrackedDeviceClass_ETrackedDeviceClass_TrackedDeviceClass_Invalid as isize,
     HMD = sys::ETrackedDeviceClass_ETrackedDeviceClass_TrackedDeviceClass_HMD as isize,
@@ -56,3 +58,11 @@ pub mod tracked_device_index {
 }
 
 pub type TrackedDeviceProperty = sys::ETrackedDeviceProperty;
+
+#[derive(Debug, Copy, Clone)]
+pub enum TrackedControllerRole {
+    LeftHand = sys::ETrackedControllerRole_ETrackedControllerRole_TrackedControllerRole_LeftHand as isize,
+    RightHand = sys::ETrackedControllerRole_ETrackedControllerRole_TrackedControllerRole_RightHand as isize,
+}
+
+pub type TrackedDevicePoses = [TrackedDevicePose; sys::k_unMaxTrackedDeviceCount as usize];
