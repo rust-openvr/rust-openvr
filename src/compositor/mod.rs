@@ -26,6 +26,7 @@ impl<'a> Compositor<'a> {
             let mut buffer: Vec<u8> = Vec::new();
             buffer.resize(n as usize, mem::uninitialized());
             (self.0.GetVulkanInstanceExtensionsRequired.unwrap())(buffer.as_mut_ptr() as *mut i8, n);
+            buffer.truncate((n-1) as usize); // Strip trailing null
             buffer
         };
         temp.split(|&x| x == b' ').map(|x| CString::new(x.to_vec()).expect("extension name contained null byte")).collect()
@@ -37,6 +38,7 @@ impl<'a> Compositor<'a> {
             let mut buffer: Vec<u8> = Vec::new();
             buffer.resize(n as usize, mem::uninitialized());
             (self.0.GetVulkanDeviceExtensionsRequired.unwrap())(physical_device as *mut _, buffer.as_mut_ptr() as *mut i8, n);
+            buffer.truncate((n-1) as usize); // Strip trailing null
             buffer
         };
         temp.split(|&x| x == b' ').map(|x| CString::new(x.to_vec()).expect("extension name contained null byte")).collect()
