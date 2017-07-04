@@ -13,6 +13,11 @@ mod compositor;
 
 pub use tracking::*;
 
+pub use sys::VkPhysicalDevice_T;
+pub use sys::VkDevice_T;
+pub use sys::VkInstance_T;
+pub use sys::VkQueue_T;
+
 static INITIALIZED: AtomicBool = ATOMIC_BOOL_INIT;
 
 /// Initialize OpenVR

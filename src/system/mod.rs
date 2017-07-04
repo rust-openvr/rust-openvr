@@ -152,6 +152,14 @@ impl<'a> System<'a> {
             _ => None,
         }
     }
+
+    pub fn vulkan_output_device(&self) -> Option<*mut VkPhysicalDevice_T> {
+        unsafe {
+            let mut device = mem::uninitialized();
+            self.0.GetOutputDevice.unwrap()(&mut device, sys::ETextureType_ETextureType_TextureType_Vulkan);
+            if device == 0 { None } else { Some(device as usize as *mut _) }
+        }
+    }
 }
 
 /// Values represent the tangents of the half-angles from the center view axis

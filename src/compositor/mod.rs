@@ -136,6 +136,7 @@ pub mod compositor_error {
     pub const SHARED_TEXTURES_NOT_SUPPORTED: CompositorError = CompositorError(sys::EVRCompositorError_EVRCompositorError_VRCompositorError_SharedTexturesNotSupported);
     pub const INDEX_OUT_OF_RANGE: CompositorError = CompositorError(sys::EVRCompositorError_EVRCompositorError_VRCompositorError_IndexOutOfRange);
     pub const ALREADY_SUBMITTED: CompositorError = CompositorError(sys::EVRCompositorError_EVRCompositorError_VRCompositorError_AlreadySubmitted);
+    pub const INVALID_BOUNDS: CompositorError = CompositorError(sys::EVRCompositorError_EVRCompositorError_VRCompositorError_InvalidBounds);
 }
 
 impl fmt::Debug for CompositorError {
@@ -168,8 +169,3 @@ impl fmt::Display for CompositorError {
         f.pad(error::Error::description(self))
     }
 }
-
-pub use sys::VkPhysicalDevice_T;
-pub use sys::VkDevice_T;
-pub use sys::VkInstance_T;
-pub use sys::VkQueue_T;
