@@ -32,8 +32,9 @@ impl<'a> Compositor<'a> {
         temp.split(|&x| x == b' ').map(|x| CString::new(x.to_vec()).expect("extension name contained null byte")).collect()
     }
 
-    pub fn vulkan_device_extensions_required(&self, physical_device: *mut VkPhysicalDevice_T) -> Vec<CString> {
-        let temp = unsafe {
+    /// Safety: physical_device must be a valid VkPhysicalDevice
+    pub unsafe fn vulkan_device_extensions_required(&self, physical_device: *mut VkPhysicalDevice_T) -> Vec<CString> {
+        let temp = {
             let n = self.0.GetVulkanDeviceExtensionsRequired.unwrap()(physical_device, ptr::null_mut(), 0);
             let mut buffer: Vec<u8> = Vec::new();
             buffer.resize(n as usize, mem::uninitialized());
@@ -69,7 +70,11 @@ impl<'a> Compositor<'a> {
     /// Display the supplied texture for the next frame.
     ///
     /// If `bounds` is None, the entire texture will be used. Lens distortion is handled by the OpenVR implementation.
-    pub fn submit(&self, eye: Eye, texture: &Texture, bounds: Option<&texture::Bounds>) -> Result<(), CompositorError> {
+    ///
+    /// # Safety
+    ///
+    /// The handles you supply must be valid and comply with the graphics API's synchronization requirements.
+    pub unsafe fn submit(&self, eye: Eye, texture: &Texture, bounds: Option<&texture::Bounds>) -> Result<(), CompositorError> {
         use self::texture::Handle::*;
         let flags = match texture.handle {
             Vulkan(_) => sys::EVRSubmitFlags_EVRSubmitFlags_Submit_Default,
@@ -89,12 +94,11 @@ impl<'a> Compositor<'a> {
             },
             eColorSpace: texture.color_space as sys::EColorSpace,
         };
-        let e = unsafe {
-            self.0.Submit.unwrap()(eye as sys::EVREye,
-                                   &texture as *const _ as *mut _,
-                                   bounds.map(|x| x as *const _ as *mut texture::Bounds as *mut _).unwrap_or(ptr::null_mut()),
-                                   flags)
-        };
+        let e = self.0.Submit.unwrap()(
+            eye as sys::EVREye,
+            &texture as *const _ as *mut _,
+            bounds.map(|x| x as *const _ as *mut texture::Bounds as *mut _).unwrap_or(ptr::null_mut()),
+            flags);
         if e == sys::EVRCompositorError_EVRCompositorError_VRCompositorError_None {
             Ok(())
         } else {
@@ -159,6 +163,7 @@ impl error::Error for CompositorError {
             SHARED_TEXTURES_NOT_SUPPORTED => "SHARED_TEXTURES_NOT_SUPPORTED",
             INDEX_OUT_OF_RANGE => "INDEX_OUT_OF_RANGE",
             ALREADY_SUBMITTED => "ALREADY_SUBMITTED",
+            INVALID_BOUNDS => "INVALID_BOUNDS",
             _ => "UNKNOWN",
         }
     }

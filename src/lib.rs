@@ -8,8 +8,8 @@ use openvr_sys as sys;
 
 mod tracking;
 
-mod system;
-mod compositor;
+pub mod system;
+pub mod compositor;
 
 pub use tracking::*;
 
