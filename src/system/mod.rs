@@ -1,7 +1,8 @@
 //! The `System` interface provides access to display configuration information, tracking data, controller state,
 //! events, and device properties. It is the main interface of OpenVR.
 
-use std::mem;
+use std::{mem, ptr};
+use std::ffi::CString;
 
 use openvr_sys as sys;
 
@@ -160,6 +161,59 @@ impl<'a> System<'a> {
             if device == 0 { None } else { Some(device as usize as *mut _) }
         }
     }
+
+    pub fn bool_tracked_device_property(&self, device: TrackedDeviceIndex, property: TrackedDeviceProperty) -> Result<bool, TrackedPropertyError> {
+        unsafe {
+            let mut error: TrackedPropertyError = mem::uninitialized();
+            let r = self.0.GetBoolTrackedDeviceProperty.unwrap()(device, property, &mut error.0);
+            if error == tracked_property_error::SUCCESS { Ok(r) } else { Err(error) }
+        }
+    }
+
+    pub fn float_tracked_device_property(&self, device: TrackedDeviceIndex, property: TrackedDeviceProperty) -> Result<f32, TrackedPropertyError> {
+        unsafe {
+            let mut error: TrackedPropertyError = mem::uninitialized();
+            let r = self.0.GetFloatTrackedDeviceProperty.unwrap()(device, property, &mut error.0);
+            if error == tracked_property_error::SUCCESS { Ok(r) } else { Err(error) }
+        }
+    }
+
+    pub fn int32_tracked_device_property(&self, device: TrackedDeviceIndex, property: TrackedDeviceProperty) -> Result<i32, TrackedPropertyError> {
+        unsafe {
+            let mut error: TrackedPropertyError = mem::uninitialized();
+            let r = self.0.GetInt32TrackedDeviceProperty.unwrap()(device, property, &mut error.0);
+            if error == tracked_property_error::SUCCESS { Ok(r) } else { Err(error) }
+        }
+    }
+
+    pub fn uint64_tracked_device_property(&self, device: TrackedDeviceIndex, property: TrackedDeviceProperty) -> Result<u64, TrackedPropertyError> {
+        unsafe {
+            let mut error: TrackedPropertyError = mem::uninitialized();
+            let r = self.0.GetUint64TrackedDeviceProperty.unwrap()(device, property, &mut error.0);
+            if error == tracked_property_error::SUCCESS { Ok(r) } else { Err(error) }
+        }
+    }
+
+    pub fn matrix34_tracked_device_property(&self, device: TrackedDeviceIndex, property: TrackedDeviceProperty) -> Result<[[f32; 4]; 3], TrackedPropertyError> {
+        unsafe {
+            let mut error: TrackedPropertyError = mem::uninitialized();
+            let r = self.0.GetMatrix34TrackedDeviceProperty.unwrap()(device, property, &mut error.0);
+            if error == tracked_property_error::SUCCESS { Ok(r.m) } else { Err(error) }
+        }
+    }
+
+    pub fn string_tracked_device_property(&self, device: TrackedDeviceIndex, property: TrackedDeviceProperty) -> Result<CString, TrackedPropertyError> {
+        unsafe {
+            let mut error = mem::uninitialized();
+            let n = self.0.GetStringTrackedDeviceProperty.unwrap()(device, property, ptr::null_mut(), 0, &mut error);
+            if n == 0 { return Err(TrackedPropertyError(error)); }
+            let mut storage = Vec::new();
+            storage.reserve_exact(n as usize);
+            storage.resize(n as usize, mem::uninitialized());
+            self.0.GetStringTrackedDeviceProperty.unwrap()(device, property, storage.as_mut_ptr() as *mut i8, n, ptr::null_mut());
+            Ok(CString::from_vec_unchecked(storage))
+        }
+    }
 }
 
 /// Values represent the tangents of the half-angles from the center view axis
@@ -180,4 +234,57 @@ pub struct DistortionCoordinates {
     pub red: [f32; 2],
     pub green: [f32; 2],
     pub blue: [f32; 2],
+}
+
+#[derive(Copy, Clone, Eq, PartialEq)]
+pub struct TrackedPropertyError(sys::TrackedPropertyError);
+
+pub mod tracked_property_error {
+    use super::{sys, TrackedPropertyError};
+
+    pub const SUCCESS: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_ETrackedPropertyError_TrackedProp_Success);
+    pub const WRONG_DATA_TYPE: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_ETrackedPropertyError_TrackedProp_WrongDataType);
+    pub const WRONG_DEVICE_CLASS: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_ETrackedPropertyError_TrackedProp_WrongDeviceClass);
+    pub const BUFFER_TOO_SMALL: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_ETrackedPropertyError_TrackedProp_BufferTooSmall);
+    pub const UNKNOWN_PROPERTY: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_ETrackedPropertyError_TrackedProp_UnknownProperty);
+    pub const INVALID_DEVICE: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_ETrackedPropertyError_TrackedProp_InvalidDevice);
+    pub const COULD_NOT_CONTACT_SERVER: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_ETrackedPropertyError_TrackedProp_CouldNotContactServer);
+    pub const VALUE_NOT_PROVIDED_BY_DEVICE: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_ETrackedPropertyError_TrackedProp_ValueNotProvidedByDevice);
+    pub const STRING_EXCEEDS_MAXIMUM_LENGTH: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_ETrackedPropertyError_TrackedProp_StringExceedsMaximumLength);
+    pub const NOT_YET_AVAILABLE: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_ETrackedPropertyError_TrackedProp_NotYetAvailable);
+    pub const PERMISSION_DENIED: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_ETrackedPropertyError_TrackedProp_PermissionDenied);
+    pub const INVALID_OPERATION: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_ETrackedPropertyError_TrackedProp_InvalidOperation);
+}
+
+impl fmt::Debug for TrackedPropertyError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.pad(::std::error::Error::description(self))
+    }
+}
+
+impl ::std::error::Error for TrackedPropertyError {
+    fn description(&self) -> &str {
+        use self::tracked_property_error::*;
+        match *self {
+            SUCCESS => "SUCCESS",
+            WRONG_DATA_TYPE => "WRONG_DATA_TYPE",
+            WRONG_DEVICE_CLASS => "WRONG_DEVICE_CLASS",
+            BUFFER_TOO_SMALL => "BUFFER_TOO_SMALL",
+            UNKNOWN_PROPERTY => "UNKNOWN_PROPERTY",
+            INVALID_DEVICE => "INVALID_DEVICE",
+            COULD_NOT_CONTACT_SERVER => "COULD_NOT_CONTACT_SERVER",
+            VALUE_NOT_PROVIDED_BY_DEVICE => "VALUE_NOT_PROVIDED_BY_DEVICE",
+            STRING_EXCEEDS_MAXIMUM_LENGTH => "STRING_EXCEEDS_MAXIMUM_LENGTH",
+            NOT_YET_AVAILABLE => "NOT_YET_AVAILABLE",
+            PERMISSION_DENIED => "PERMISSION_DENIED",
+            INVALID_OPERATION => "INVALID_OPERATION",
+            _ => "UNKNOWN",
+        }
+    }
+}
+
+impl fmt::Display for TrackedPropertyError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.pad(::std::error::Error::description(self))
+    }
 }
