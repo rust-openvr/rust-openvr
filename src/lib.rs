@@ -10,6 +10,8 @@ mod tracking;
 
 pub mod system;
 pub mod compositor;
+pub mod render_models;
+pub mod property;
 
 pub use tracking::*;
 

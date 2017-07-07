@@ -65,4 +65,6 @@ pub enum TrackedControllerRole {
     RightHand = sys::ETrackedControllerRole_ETrackedControllerRole_TrackedControllerRole_RightHand as isize,
 }
 
-pub type TrackedDevicePoses = [TrackedDevicePose; sys::k_unMaxTrackedDeviceCount as usize];
+pub const MAX_TRACKED_DEVICE_COUNT: usize = sys::k_unMaxTrackedDeviceCount as usize;
+
+pub type TrackedDevicePoses = [TrackedDevicePose; MAX_TRACKED_DEVICE_COUNT];
