@@ -2,9 +2,9 @@ use openvr_sys as sys;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum TrackingUniverseOrigin {
-    Seated = sys::ETrackingUniverseOrigin_ETrackingUniverseOrigin_TrackingUniverseSeated as isize,
-    Standing = sys::ETrackingUniverseOrigin_ETrackingUniverseOrigin_TrackingUniverseStanding as isize,
-    RawAndUncalibrated = sys::ETrackingUniverseOrigin_ETrackingUniverseOrigin_TrackingUniverseRawAndUncalibrated as isize,
+    Seated = sys::ETrackingUniverseOrigin_TrackingUniverseSeated as isize,
+    Standing = sys::ETrackingUniverseOrigin_TrackingUniverseStanding as isize,
+    RawAndUncalibrated = sys::ETrackingUniverseOrigin_TrackingUniverseRawAndUncalibrated as isize,
 }
 
 #[repr(C)]
@@ -18,11 +18,11 @@ impl TrackedDevicePose {
     pub fn tracking_result(&self) -> TrackingResult {
         use self::TrackingResult::*;
         match self.0.eTrackingResult {
-            sys::ETrackingResult_ETrackingResult_TrackingResult_Uninitialized => Uninitialized,
-            sys::ETrackingResult_ETrackingResult_TrackingResult_Calibrating_InProgress => CalibratingInProgress,
-            sys::ETrackingResult_ETrackingResult_TrackingResult_Calibrating_OutOfRange => CalibratingOutOfRange,
-            sys::ETrackingResult_ETrackingResult_TrackingResult_Running_OK => OK,
-            sys::ETrackingResult_ETrackingResult_TrackingResult_Running_OutOfRange => RunningOutOfRange,
+            sys::ETrackingResult_TrackingResult_Uninitialized => Uninitialized,
+            sys::ETrackingResult_TrackingResult_Calibrating_InProgress => CalibratingInProgress,
+            sys::ETrackingResult_TrackingResult_Calibrating_OutOfRange => CalibratingOutOfRange,
+            sys::ETrackingResult_TrackingResult_Running_OK => OK,
+            sys::ETrackingResult_TrackingResult_Running_OutOfRange => RunningOutOfRange,
             _ => panic!("unrecognized tracking result")
         }
     }
@@ -32,21 +32,21 @@ impl TrackedDevicePose {
 
 #[derive(Debug, Copy, Clone)]
 pub enum TrackingResult {
-    Uninitialized = sys::ETrackingResult_ETrackingResult_TrackingResult_Uninitialized as isize,
-    CalibratingInProgress = sys::ETrackingResult_ETrackingResult_TrackingResult_Calibrating_InProgress as isize,
-    CalibratingOutOfRange = sys::ETrackingResult_ETrackingResult_TrackingResult_Calibrating_OutOfRange as isize,
-    OK = sys::ETrackingResult_ETrackingResult_TrackingResult_Running_OK as isize,
-    RunningOutOfRange = sys::ETrackingResult_ETrackingResult_TrackingResult_Running_OutOfRange as isize,
+    Uninitialized = sys::ETrackingResult_TrackingResult_Uninitialized as isize,
+    CalibratingInProgress = sys::ETrackingResult_TrackingResult_Calibrating_InProgress as isize,
+    CalibratingOutOfRange = sys::ETrackingResult_TrackingResult_Calibrating_OutOfRange as isize,
+    OK = sys::ETrackingResult_TrackingResult_Running_OK as isize,
+    RunningOutOfRange = sys::ETrackingResult_TrackingResult_Running_OutOfRange as isize,
 }
 
 #[derive(Debug, Copy, Clone)]
 pub enum TrackedDeviceClass {
-    Invalid = sys::ETrackedDeviceClass_ETrackedDeviceClass_TrackedDeviceClass_Invalid as isize,
-    HMD = sys::ETrackedDeviceClass_ETrackedDeviceClass_TrackedDeviceClass_HMD as isize,
-    Controller = sys::ETrackedDeviceClass_ETrackedDeviceClass_TrackedDeviceClass_Controller as isize,
-    GenericTracker = sys::ETrackedDeviceClass_ETrackedDeviceClass_TrackedDeviceClass_GenericTracker as isize,
-    TrackingReference = sys::ETrackedDeviceClass_ETrackedDeviceClass_TrackedDeviceClass_TrackingReference as isize,
-    DisplayRedirect = sys::ETrackedDeviceClass_ETrackedDeviceClass_TrackedDeviceClass_DisplayRedirect as isize,
+    Invalid = sys::ETrackedDeviceClass_TrackedDeviceClass_Invalid as isize,
+    HMD = sys::ETrackedDeviceClass_TrackedDeviceClass_HMD as isize,
+    Controller = sys::ETrackedDeviceClass_TrackedDeviceClass_Controller as isize,
+    GenericTracker = sys::ETrackedDeviceClass_TrackedDeviceClass_GenericTracker as isize,
+    TrackingReference = sys::ETrackedDeviceClass_TrackedDeviceClass_TrackingReference as isize,
+    DisplayRedirect = sys::ETrackedDeviceClass_TrackedDeviceClass_DisplayRedirect as isize,
 }
 
 pub type TrackedDeviceIndex = sys::TrackedDeviceIndex_t;
@@ -61,8 +61,8 @@ pub type TrackedDeviceProperty = sys::ETrackedDeviceProperty;
 
 #[derive(Debug, Copy, Clone)]
 pub enum TrackedControllerRole {
-    LeftHand = sys::ETrackedControllerRole_ETrackedControllerRole_TrackedControllerRole_LeftHand as isize,
-    RightHand = sys::ETrackedControllerRole_ETrackedControllerRole_TrackedControllerRole_RightHand as isize,
+    LeftHand = sys::ETrackedControllerRole_TrackedControllerRole_LeftHand as isize,
+    RightHand = sys::ETrackedControllerRole_TrackedControllerRole_RightHand as isize,
 }
 
 pub const MAX_TRACKED_DEVICE_COUNT: usize = sys::k_unMaxTrackedDeviceCount as usize;

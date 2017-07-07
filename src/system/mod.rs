@@ -90,12 +90,12 @@ impl<'a> System<'a> {
     pub fn tracked_device_class(&self, index: TrackedDeviceIndex) -> TrackedDeviceClass {
         use self::TrackedDeviceClass::*;
         match unsafe { self.0.GetTrackedDeviceClass.unwrap()(index) } {
-            sys::ETrackedDeviceClass_ETrackedDeviceClass_TrackedDeviceClass_Invalid => Invalid,
-            sys::ETrackedDeviceClass_ETrackedDeviceClass_TrackedDeviceClass_HMD => HMD,
-            sys::ETrackedDeviceClass_ETrackedDeviceClass_TrackedDeviceClass_Controller => Controller,
-            sys::ETrackedDeviceClass_ETrackedDeviceClass_TrackedDeviceClass_GenericTracker => GenericTracker,
-            sys::ETrackedDeviceClass_ETrackedDeviceClass_TrackedDeviceClass_TrackingReference => TrackingReference,
-            sys::ETrackedDeviceClass_ETrackedDeviceClass_TrackedDeviceClass_DisplayRedirect => DisplayRedirect,
+            sys::ETrackedDeviceClass_TrackedDeviceClass_Invalid => Invalid,
+            sys::ETrackedDeviceClass_TrackedDeviceClass_HMD => HMD,
+            sys::ETrackedDeviceClass_TrackedDeviceClass_Controller => Controller,
+            sys::ETrackedDeviceClass_TrackedDeviceClass_GenericTracker => GenericTracker,
+            sys::ETrackedDeviceClass_TrackedDeviceClass_TrackingReference => TrackingReference,
+            sys::ETrackedDeviceClass_TrackedDeviceClass_DisplayRedirect => DisplayRedirect,
             _ => Invalid,
         }
     }
@@ -148,8 +148,8 @@ impl<'a> System<'a> {
     pub fn get_controller_role_for_tracked_device_index(&self, i: TrackedDeviceIndex) -> Option<TrackedControllerRole> {
         let x = unsafe { self.0.GetControllerRoleForTrackedDeviceIndex.unwrap()(i) };
         match x {
-            sys::ETrackedControllerRole_ETrackedControllerRole_TrackedControllerRole_LeftHand => Some(TrackedControllerRole::LeftHand),
-            sys::ETrackedControllerRole_ETrackedControllerRole_TrackedControllerRole_RightHand => Some(TrackedControllerRole::RightHand),
+            sys::ETrackedControllerRole_TrackedControllerRole_LeftHand => Some(TrackedControllerRole::LeftHand),
+            sys::ETrackedControllerRole_TrackedControllerRole_RightHand => Some(TrackedControllerRole::RightHand),
             _ => None,
         }
     }
@@ -157,7 +157,7 @@ impl<'a> System<'a> {
     pub fn vulkan_output_device(&self) -> Option<*mut VkPhysicalDevice_T> {
         unsafe {
             let mut device = mem::uninitialized();
-            self.0.GetOutputDevice.unwrap()(&mut device, sys::ETextureType_ETextureType_TextureType_Vulkan);
+            self.0.GetOutputDevice.unwrap()(&mut device, sys::ETextureType_TextureType_Vulkan);
             if device == 0 { None } else { Some(device as usize as *mut _) }
         }
     }
@@ -242,18 +242,18 @@ pub struct TrackedPropertyError(sys::TrackedPropertyError);
 pub mod tracked_property_error {
     use super::{sys, TrackedPropertyError};
 
-    pub const SUCCESS: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_ETrackedPropertyError_TrackedProp_Success);
-    pub const WRONG_DATA_TYPE: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_ETrackedPropertyError_TrackedProp_WrongDataType);
-    pub const WRONG_DEVICE_CLASS: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_ETrackedPropertyError_TrackedProp_WrongDeviceClass);
-    pub const BUFFER_TOO_SMALL: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_ETrackedPropertyError_TrackedProp_BufferTooSmall);
-    pub const UNKNOWN_PROPERTY: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_ETrackedPropertyError_TrackedProp_UnknownProperty);
-    pub const INVALID_DEVICE: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_ETrackedPropertyError_TrackedProp_InvalidDevice);
-    pub const COULD_NOT_CONTACT_SERVER: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_ETrackedPropertyError_TrackedProp_CouldNotContactServer);
-    pub const VALUE_NOT_PROVIDED_BY_DEVICE: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_ETrackedPropertyError_TrackedProp_ValueNotProvidedByDevice);
-    pub const STRING_EXCEEDS_MAXIMUM_LENGTH: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_ETrackedPropertyError_TrackedProp_StringExceedsMaximumLength);
-    pub const NOT_YET_AVAILABLE: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_ETrackedPropertyError_TrackedProp_NotYetAvailable);
-    pub const PERMISSION_DENIED: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_ETrackedPropertyError_TrackedProp_PermissionDenied);
-    pub const INVALID_OPERATION: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_ETrackedPropertyError_TrackedProp_InvalidOperation);
+    pub const SUCCESS: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_TrackedProp_Success);
+    pub const WRONG_DATA_TYPE: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_TrackedProp_WrongDataType);
+    pub const WRONG_DEVICE_CLASS: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_TrackedProp_WrongDeviceClass);
+    pub const BUFFER_TOO_SMALL: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_TrackedProp_BufferTooSmall);
+    pub const UNKNOWN_PROPERTY: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_TrackedProp_UnknownProperty);
+    pub const INVALID_DEVICE: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_TrackedProp_InvalidDevice);
+    pub const COULD_NOT_CONTACT_SERVER: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_TrackedProp_CouldNotContactServer);
+    pub const VALUE_NOT_PROVIDED_BY_DEVICE: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_TrackedProp_ValueNotProvidedByDevice);
+    pub const STRING_EXCEEDS_MAXIMUM_LENGTH: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_TrackedProp_StringExceedsMaximumLength);
+    pub const NOT_YET_AVAILABLE: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_TrackedProp_NotYetAvailable);
+    pub const PERMISSION_DENIED: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_TrackedProp_PermissionDenied);
+    pub const INVALID_OPERATION: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_TrackedProp_InvalidOperation);
 }
 
 impl fmt::Debug for TrackedPropertyError {

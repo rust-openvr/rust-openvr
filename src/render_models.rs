@@ -47,19 +47,19 @@ pub struct Error(sys::EVRRenderModelError);
 pub mod error {
     use super::{sys, Error};
 
-    pub const NONE: Error = Error(sys::EVRRenderModelError_EVRRenderModelError_VRRenderModelError_None);
-    pub const LOADING: Error = Error(sys::EVRRenderModelError_EVRRenderModelError_VRRenderModelError_Loading);
-    pub const NOT_SUPPORTED: Error = Error(sys::EVRRenderModelError_EVRRenderModelError_VRRenderModelError_NotSupported);
-    pub const INVALID_ARG: Error = Error(sys::EVRRenderModelError_EVRRenderModelError_VRRenderModelError_InvalidArg);
-    pub const INVALID_MODEL: Error = Error(sys::EVRRenderModelError_EVRRenderModelError_VRRenderModelError_InvalidModel);
-    pub const NO_SHAPES: Error = Error(sys::EVRRenderModelError_EVRRenderModelError_VRRenderModelError_NoShapes);
-    pub const MULTIPLE_SHAPES: Error = Error(sys::EVRRenderModelError_EVRRenderModelError_VRRenderModelError_MultipleShapes);
-    pub const TOO_MANY_VERTICES: Error = Error(sys::EVRRenderModelError_EVRRenderModelError_VRRenderModelError_TooManyVertices);
-    pub const MULTIPLE_TEXTURES: Error = Error(sys::EVRRenderModelError_EVRRenderModelError_VRRenderModelError_MultipleTextures);
-    pub const BUFFER_TOO_SMALL: Error = Error(sys::EVRRenderModelError_EVRRenderModelError_VRRenderModelError_BufferTooSmall);
-    pub const NOT_ENOUGH_NORMALS: Error = Error(sys::EVRRenderModelError_EVRRenderModelError_VRRenderModelError_NotEnoughNormals);
-    pub const NOT_ENOUGH_TEX_COORDS: Error = Error(sys::EVRRenderModelError_EVRRenderModelError_VRRenderModelError_NotEnoughTexCoords);
-    pub const INVALID_TEXTURE: Error = Error(sys::EVRRenderModelError_EVRRenderModelError_VRRenderModelError_InvalidTexture);
+    pub const NONE: Error = Error(sys::EVRRenderModelError_VRRenderModelError_None);
+    pub const LOADING: Error = Error(sys::EVRRenderModelError_VRRenderModelError_Loading);
+    pub const NOT_SUPPORTED: Error = Error(sys::EVRRenderModelError_VRRenderModelError_NotSupported);
+    pub const INVALID_ARG: Error = Error(sys::EVRRenderModelError_VRRenderModelError_InvalidArg);
+    pub const INVALID_MODEL: Error = Error(sys::EVRRenderModelError_VRRenderModelError_InvalidModel);
+    pub const NO_SHAPES: Error = Error(sys::EVRRenderModelError_VRRenderModelError_NoShapes);
+    pub const MULTIPLE_SHAPES: Error = Error(sys::EVRRenderModelError_VRRenderModelError_MultipleShapes);
+    pub const TOO_MANY_VERTICES: Error = Error(sys::EVRRenderModelError_VRRenderModelError_TooManyVertices);
+    pub const MULTIPLE_TEXTURES: Error = Error(sys::EVRRenderModelError_VRRenderModelError_MultipleTextures);
+    pub const BUFFER_TOO_SMALL: Error = Error(sys::EVRRenderModelError_VRRenderModelError_BufferTooSmall);
+    pub const NOT_ENOUGH_NORMALS: Error = Error(sys::EVRRenderModelError_VRRenderModelError_NotEnoughNormals);
+    pub const NOT_ENOUGH_TEX_COORDS: Error = Error(sys::EVRRenderModelError_VRRenderModelError_NotEnoughTexCoords);
+    pub const INVALID_TEXTURE: Error = Error(sys::EVRRenderModelError_VRRenderModelError_InvalidTexture);
 }
 
 impl fmt::Debug for Error {
