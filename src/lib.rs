@@ -1,8 +1,8 @@
 extern crate openvr_sys;
 
 use std::sync::atomic::{Ordering, AtomicBool, ATOMIC_BOOL_INIT};
-use std::{fmt, error};
-use std::ffi::CStr;
+use std::{fmt, error, ptr, mem};
+use std::ffi::{CStr, CString};
 
 use openvr_sys as sys;
 
@@ -129,4 +129,33 @@ impl fmt::Display for InitError {
 pub enum Eye {
     Left = sys::EVREye_Eye_Left as isize,
     Right = sys::EVREye_Eye_Right as isize,
+}
+
+/// Helper to call OpenVR functions that return strings
+unsafe fn get_string<F: FnMut(*mut std::os::raw::c_char, u32) -> u32>(mut f: F) -> Option<CString> {
+    let n = f(ptr::null_mut(), 0);
+    if n == 0 { return None }
+    let mut storage = Vec::new();
+    storage.reserve_exact(n as usize);
+    storage.resize(n as usize, mem::uninitialized());
+    let n_ = f(storage.as_mut_ptr() as *mut _, n);
+    assert!(n == n_);
+    storage.truncate((n-1) as usize); // Strip trailing null
+    Some(CString::from_vec_unchecked(storage))
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct ControllerAxis {
+    pub x: f32,
+    pub y: f32,
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct ControllerState {
+    pub packet_num: u32,
+    pub button_pressed: u64,
+    pub button_touched: u64,
+    pub axis: [ControllerAxis; 5],
 }

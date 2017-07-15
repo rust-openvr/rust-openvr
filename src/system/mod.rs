@@ -1,7 +1,7 @@
 //! The `System` interface provides access to display configuration information, tracking data, controller state,
 //! events, and device properties. It is the main interface of OpenVR.
 
-use std::{mem, ptr};
+use std::mem;
 use std::ffi::CString;
 
 use openvr_sys as sys;
@@ -205,13 +205,25 @@ impl<'a> System<'a> {
     pub fn string_tracked_device_property(&self, device: TrackedDeviceIndex, property: TrackedDeviceProperty) -> Result<CString, TrackedPropertyError> {
         unsafe {
             let mut error = mem::uninitialized();
-            let n = self.0.GetStringTrackedDeviceProperty.unwrap()(device, property, ptr::null_mut(), 0, &mut error);
-            if n == 0 { return Err(TrackedPropertyError(error)); }
-            let mut storage = Vec::new();
-            storage.reserve_exact(n as usize);
-            storage.resize(n as usize, mem::uninitialized());
-            self.0.GetStringTrackedDeviceProperty.unwrap()(device, property, storage.as_mut_ptr() as *mut i8, n, ptr::null_mut());
-            Ok(CString::from_vec_unchecked(storage))
+            let res = get_string(|ptr, n| self.0.GetStringTrackedDeviceProperty.unwrap()(device, property, ptr, n, &mut error));
+            res.map_or(Err(TrackedPropertyError(error)), Ok)
+        }
+    }
+
+    /// Looks up the current input state of a controller.
+    ///
+    /// Returns None if the device is not a controller, or if the user is currently in the system menu.
+    ///
+    /// Needed for rendering controller components (e.g. trigger) accurately wrt. user input using the `render_models`
+    /// API.
+    pub fn controller_state(&self, device: TrackedDeviceIndex) -> Option<ControllerState> {
+        unsafe {
+            let mut state = mem::uninitialized();
+            if self.0.GetControllerState.unwrap()(device, &mut state as *mut _ as *mut _, mem::size_of_val(&state) as u32) {
+                Some(state)
+            } else {
+                None
+            }
         }
     }
 }

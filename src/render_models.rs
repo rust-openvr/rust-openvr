@@ -1,9 +1,9 @@
-use std::{fmt, ptr, slice};
-use std::ffi::CStr;
+use std::{fmt, ptr, slice, mem};
+use std::ffi::{CStr, CString};
 
 use openvr_sys as sys;
 
-use {RenderModels};
+use {RenderModels, ControllerState, get_string};
 
 impl<'a> RenderModels<'a> {
     /// Loads and returns a render model for use in the application. `name` should be a render model name from the
@@ -14,12 +14,70 @@ impl<'a> RenderModels<'a> {
     pub fn load_render_model(&self, name: &CStr) -> Result<Option<Model>> {
         let mut ptr = ptr::null_mut();
         let r = unsafe {
-            self.0.LoadRenderModel_Async.unwrap()(name as *const _ as *mut _, &mut ptr)
+            self.0.LoadRenderModel_Async.unwrap()(name.as_ptr() as *mut _, &mut ptr)
         };
         match Error(r) {
             error::NONE => Ok(Some(Model { ptr: ptr, sys: self.0 })),
             error::LOADING => Ok(None),
             x => Err(x),
+        }
+    }
+
+    /// Returns the number of components of the specified render model.
+    ///
+    /// Components are useful when client application wish to draw, label, or otherwise interact with components of tracked objects.
+    /// Examples controller components:
+    ///  renderable things such as triggers, buttons
+    ///  non-renderable things which include coordinate systems such as 'tip', 'base', a neutral controller agnostic hand-pose
+    ///  If all controller components are enumerated and rendered, it will be equivalent to drawing the traditional render model
+    ///  Returns 0 if components not supported, >0 otherwise
+    pub fn component_count(&self, model: &CStr) -> u32 {
+        unsafe { self.0.GetComponentCount.unwrap()(model.as_ptr() as *mut _) }
+    }
+
+    /// Get the names of available components.
+    ///
+    /// `component` does not correlate to a tracked device index, but is only used for iterating over all available
+    /// components.  If it's out of range, this function will return None.  Otherwise, it will return the size of the
+    /// buffer required for the name.
+    pub fn component_name(&self, model: &CStr, component: u32) -> Option<CString> {
+        unsafe { get_string(|ptr, n| self.0.GetComponentName.unwrap()(model.as_ptr() as *mut _, component, ptr, n)) }
+    }
+
+    /// Gets all component names of a given model
+    pub fn component_names(&self, model: &CStr) -> ::std::vec::IntoIter<CString> { // FIXME: impl Iterator rather than allocating
+        let n = self.component_count(model);
+        (0..n).map(|i| self.component_name(model, i).expect("inconsistent component presence reported by OpenVR")).collect::<Vec<_>>().into_iter()
+    }
+
+    /// Use this to get the render model name for the specified rendermode/component combination, to be passed to
+    /// `load_render_model`.
+    ///
+    /// If the component name is out of range, this function will return None.
+    /// Otherwise, it will return the size of the buffer required for the name.
+    pub fn component_render_model_name(&self, model: &CStr, component: &CStr) -> Option<CString> {
+        unsafe {
+            get_string(|ptr, n| self.0.GetComponentRenderModelName.unwrap()(
+                model.as_ptr() as *mut _, component.as_ptr() as *mut _, ptr, n))
+        }
+    }
+
+    /// Use this to query information about the component, as a function of the controller state.
+    ///
+    /// Returns None if the component is invalid or should not be rendered in the current state.
+    ///
+    /// For dynamic controller components (ex: trigger) values will reflect component motions
+    /// For static components this will return a consistent value independent of the VRControllerState_t
+    pub fn component_state(&self, model: &CStr, component: &CStr, state: &ControllerState, mode: &ControllerMode) -> Option<ComponentState> {
+        unsafe {
+            let mut out = mem::uninitialized();
+            if self.0.GetComponentState.unwrap()(model.as_ptr() as *mut _, component.as_ptr() as *mut _,
+                                                 state as *const _ as *mut _, mode as *const _ as *mut _,
+                                                 &mut out as *mut _ as *mut _) {
+                Some(out)
+            } else {
+                None
+            }
         }
     }
 
@@ -161,4 +219,34 @@ pub struct Vertex {
     pub position: [f32; 3],
     pub normal: [f32; 3],
     pub texture_coord: [f32; 2],
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct ControllerMode {
+    pub scroll_wheel_visible: bool,
+}
+
+impl Default for ControllerMode {
+    fn default() -> Self { ControllerMode { scroll_wheel_visible: false } }
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct ComponentState {
+    pub tracking_to_component_render_model: [[f32; 4]; 3],
+    pub tracking_to_component_local: [[f32; 4]; 3],
+    pub properties: ComponentProperties,
+}
+
+type ComponentProperties = sys::VRComponentProperties;
+
+pub mod component_properties {
+    use super::{sys, ComponentProperties};
+
+    pub const IS_STATIC: ComponentProperties = sys::EVRComponentProperty_VRComponentProperty_IsStatic;
+    pub const IS_VISIBLE: ComponentProperties = sys::EVRComponentProperty_VRComponentProperty_IsVisible;
+    pub const IS_TOUCHED: ComponentProperties = sys::EVRComponentProperty_VRComponentProperty_IsTouched;
+    pub const IS_PRESSED: ComponentProperties = sys::EVRComponentProperty_VRComponentProperty_IsPressed;
+    pub const IS_SCROLLED: ComponentProperties = sys::EVRComponentProperty_VRComponentProperty_IsScrolled;
 }

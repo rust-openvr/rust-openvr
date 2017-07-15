@@ -21,28 +21,14 @@ use super::*;
 
 impl<'a> Compositor<'a> {
     pub fn vulkan_instance_extensions_required(&self) -> Vec<CString> {
-        let temp = unsafe {
-            let n = self.0.GetVulkanInstanceExtensionsRequired.unwrap()(ptr::null_mut(), 0);
-            let mut buffer: Vec<u8> = Vec::new();
-            buffer.resize(n as usize, mem::uninitialized());
-            (self.0.GetVulkanInstanceExtensionsRequired.unwrap())(buffer.as_mut_ptr() as *mut i8, n);
-            buffer.truncate((n-1) as usize); // Strip trailing null
-            buffer
-        };
-        temp.split(|&x| x == b' ').map(|x| CString::new(x.to_vec()).expect("extension name contained null byte")).collect()
+        let temp = unsafe { get_string(|ptr, n| self.0.GetVulkanInstanceExtensionsRequired.unwrap()(ptr, n)) }.unwrap();
+        temp.as_bytes().split(|&x| x == b' ').map(|x| CString::new(x.to_vec()).expect("extension name contained null byte")).collect()
     }
 
     /// Safety: physical_device must be a valid VkPhysicalDevice
     pub unsafe fn vulkan_device_extensions_required(&self, physical_device: *mut VkPhysicalDevice_T) -> Vec<CString> {
-        let temp = {
-            let n = self.0.GetVulkanDeviceExtensionsRequired.unwrap()(physical_device, ptr::null_mut(), 0);
-            let mut buffer: Vec<u8> = Vec::new();
-            buffer.resize(n as usize, mem::uninitialized());
-            (self.0.GetVulkanDeviceExtensionsRequired.unwrap())(physical_device as *mut _, buffer.as_mut_ptr() as *mut i8, n);
-            buffer.truncate((n-1) as usize); // Strip trailing null
-            buffer
-        };
-        temp.split(|&x| x == b' ').map(|x| CString::new(x.to_vec()).expect("extension name contained null byte")).collect()
+        let temp = get_string(|ptr, n| self.0.GetVulkanDeviceExtensionsRequired.unwrap()(physical_device, ptr, n)).unwrap();
+        temp.as_bytes().split(|&x| x == b' ').map(|x| CString::new(x.to_vec()).expect("extension name contained null byte")).collect()
     }
 
     /// Sets tracking space returned by WaitGetPoses
