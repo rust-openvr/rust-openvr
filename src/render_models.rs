@@ -239,6 +239,14 @@ pub struct ComponentState {
     pub properties: ComponentProperties,
 }
 
+impl ComponentState {
+    pub fn is_static(&self) -> bool { self.properties & component_properties::IS_STATIC != 0 }
+    pub fn is_visible(&self) -> bool { self.properties & component_properties::IS_VISIBLE != 0 }
+    pub fn is_touched(&self) -> bool { self.properties & component_properties::IS_TOUCHED != 0 }
+    pub fn is_pressed(&self) -> bool { self.properties & component_properties::IS_PRESSED != 0 }
+    pub fn is_scrolled(&self) -> bool { self.properties & component_properties::IS_SCROLLED != 0 }
+}
+
 type ComponentProperties = sys::VRComponentProperties;
 
 pub mod component_properties {
