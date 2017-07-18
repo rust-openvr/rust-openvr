@@ -92,6 +92,14 @@ impl<'a> Compositor<'a> {
         }
     }
 
+    /// Call immediately after presenting your app's window (i.e. companion window) to unblock the compositor.
+    ///
+    /// This is an optional call, which only needs to be used if you can't instead call `wait_get_poses` immediately
+    /// after submitting frames.  For example, if your engine's render and game loop are not on separate threads, or
+    /// blocking the render thread until 3ms before the next vsync would introduce a deadlock of some sort.  This
+    /// function tells the compositor that you have finished all rendering after having Submitted buffers for both eyes,
+    /// and it is free to start its rendering work.  This should only be called from the same thread you are rendering
+    /// on.
     pub fn post_present_handoff(&self) {
         unsafe { (self.0.PostPresentHandoff.unwrap())() };
     }
@@ -99,6 +107,13 @@ impl<'a> Compositor<'a> {
     /// Return whether the compositor is fullscreen.
     pub fn is_fullscreen(&self) -> bool {
         unsafe { (self.0.IsFullscreen.unwrap())() }
+    }
+
+    /// Clears the frame that was sent with the last call to `submit.
+    ///
+    /// This will cause the compositor to show the grid until `submit` is called again.
+    pub fn clear_last_submitted_frame(&self) {
+        unsafe { self.0.ClearLastSubmittedFrame.unwrap()() }
     }
 }
 

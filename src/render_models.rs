@@ -38,8 +38,7 @@ impl<'a> RenderModels<'a> {
     /// Get the names of available components.
     ///
     /// `component` does not correlate to a tracked device index, but is only used for iterating over all available
-    /// components.  If it's out of range, this function will return None.  Otherwise, it will return the size of the
-    /// buffer required for the name.
+    /// components.  If it's out of range, this function will return None.
     pub fn component_name(&self, model: &CStr, component: u32) -> Option<CString> {
         unsafe { get_string(|ptr, n| self.0.GetComponentName.unwrap()(model.as_ptr() as *mut _, component, ptr, n)) }
     }
@@ -50,7 +49,7 @@ impl<'a> RenderModels<'a> {
         (0..n).map(|i| self.component_name(model, i).expect("inconsistent component presence reported by OpenVR")).collect::<Vec<_>>().into_iter()
     }
 
-    /// Use this to get the render model name for the specified rendermode/component combination, to be passed to
+    /// Use this to get the render model name for the specified rendermodel/component combination, to be passed to
     /// `load_render_model`.
     ///
     /// If the component name is out of range, this function will return None.
@@ -64,10 +63,12 @@ impl<'a> RenderModels<'a> {
 
     /// Use this to query information about the component, as a function of the controller state.
     ///
-    /// Returns None if the component is invalid or should not be rendered in the current state.
+    /// Returns None if the component is invalid.
     ///
-    /// For dynamic controller components (ex: trigger) values will reflect component motions
-    /// For static components this will return a consistent value independent of the VRControllerState_t
+    /// Check `ComponentState::is_visible()` to determine whether the returned component should be rendered.
+    ///
+    /// For dynamic controller components (ex: trigger) values will reflect component motions.
+    /// For static components this will return a consistent value independent of the `ControllerState`.
     pub fn component_state(&self, model: &CStr, component: &CStr, state: &ControllerState, mode: &ControllerMode) -> Option<ComponentState> {
         unsafe {
             let mut out = mem::uninitialized();
