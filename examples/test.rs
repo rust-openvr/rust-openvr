@@ -16,7 +16,7 @@ fn print_matrix_4x3(offset: u32, mat: [[f32; 4]; 3]) {
 }
 
 fn main() {
-    let context = match openvr::init(openvr::ApplicationType::Other) {
+    let context = match unsafe { openvr::init(openvr::ApplicationType::Other) } {
         Ok(ivr) => ivr,
         Err(err) => {
             println!("Failed to initialize openvr {:?}", err);

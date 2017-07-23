@@ -3,6 +3,7 @@ extern crate openvr_sys;
 use std::sync::atomic::{Ordering, AtomicBool, ATOMIC_BOOL_INIT};
 use std::{fmt, error, ptr, mem};
 use std::ffi::{CStr, CString};
+use std::cell::Cell;
 
 use openvr_sys as sys;
 
@@ -25,22 +26,27 @@ static INITIALIZED: AtomicBool = ATOMIC_BOOL_INIT;
 /// Initialize OpenVR
 ///
 /// # Panics
+///
 /// When the library has already been initialized
-pub fn init(ty: ApplicationType) -> Result<Context, InitError> {
+///
+/// # Safety
+///
+/// The `Context` MUST be dropped or shut down with `Context::shutdown` before shutting down the graphics API.
+pub unsafe fn init(ty: ApplicationType) -> Result<Context, InitError> {
     if INITIALIZED.swap(true, Ordering::Acquire) {
         panic!("OpenVR has already been initialized!");
     }
 
     let mut error = sys::EVRInitError_VRInitError_None;
-    unsafe { sys::VR_InitInternal(&mut error, ty as sys::EVRApplicationType) };
+    sys::VR_InitInternal(&mut error, ty as sys::EVRApplicationType);
     if error != sys::EVRInitError_VRInitError_None {
         return Err(InitError(error));
     }
-    if !unsafe { sys::VR_IsInterfaceVersionValid(sys::IVRSystem_Version.as_ptr() as *const i8) } {
-        unsafe { sys::VR_ShutdownInternal() }
+    if !sys::VR_IsInterfaceVersionValid(sys::IVRSystem_Version.as_ptr() as *const i8) {
+        sys::VR_ShutdownInternal();
         return Err(InitError(sys::EVRInitError_VRInitError_Init_InterfaceNotFound));
     }
-    Ok(Context {})
+    Ok(Context { live: Cell::new(true) })
 }
 
 pub struct System<'a>(&'a sys::VR_IVRSystem_FnTable);
@@ -50,7 +56,7 @@ pub struct RenderModels<'a>(&'a sys::VR_IVRRenderModels_FnTable);
 /// Entry points into OpenVR.
 ///
 /// At most one of this object may exist at a time.
-pub struct Context {}
+pub struct Context { live: Cell<bool> }
 
 fn load<T>(suffix: &[u8]) -> Result<*const T, InitError> {
     let mut magic = Vec::from(b"FnTable:".as_ref());
@@ -71,8 +77,24 @@ impl Context {
 
 impl Drop for Context {
     fn drop(&mut self) {
-        unsafe { sys::VR_ShutdownInternal() }
-        INITIALIZED.store(false, Ordering::Release);
+        unsafe { self.shutdown() }
+    }
+}
+
+impl Context {
+    /// Shut down OpenVR. Repeated calls are safe.
+    ///
+    /// Called implicitly by `Context::drop`. This MUST be called before shutting down the graphics API, or OpenVR may
+    /// invoke undefined behavior.
+    ///
+    /// # Safety
+    ///
+    /// No OpenVR calls may be made after this has been called unless a new `Context` is subsequently constructed.
+    pub unsafe fn shutdown(&self) {
+        if self.live.replace(false) {
+            sys::VR_ShutdownInternal();
+            INITIALIZED.store(false, Ordering::Release);
+        }
     }
 }
 
