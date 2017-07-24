@@ -1,8 +1,9 @@
 //! The `System` interface provides access to display configuration information, tracking data, controller state,
 //! events, and device properties. It is the main interface of OpenVR.
 
-use std::mem;
+use std::{mem, slice, ptr};
 use std::ffi::CString;
+use std::marker::PhantomData;
 
 use openvr_sys as sys;
 
@@ -210,6 +211,25 @@ impl<'a> System<'a> {
         }
     }
 
+    /// Returns the hidden area mesh for the current HMD.
+    ///
+    /// The pixels covered by this mesh will never be seen by the user after the lens distortion is applied based on
+    /// visibility to the panels. If this HMD does not have a hidden area mesh, None is returned.  This mesh is meant to
+    /// be rendered into the stencil buffer (or into the depth buffer setting nearz) before rendering each eye's view.
+    /// This will improve performance by letting the GPU early-reject pixels the user will never see before running the
+    /// pixel shader.
+    ///
+    /// NOTE: Render this mesh with backface culling disabled since the winding order of the vertices can
+    /// be different per-HMD or per-eye.
+    ///
+    /// Passing `HiddenAreaMeshType::Inverse` will produce the visible area mesh that is commonly used in place of
+    /// full-screen quads. The visible area mesh covers all of the pixels the hidden area mesh does not cover.
+    // TODO: Handle line loops with a separate method and return type, since HiddenAreaMesh assumes triangles.
+    pub fn hidden_area_mesh(&self, eye: Eye, ty: HiddenAreaMeshType) -> Option<HiddenAreaMesh> {
+        let mesh = unsafe { self.0.GetHiddenAreaMesh.unwrap()(eye as sys::EVREye, ty as sys::EHiddenAreaMeshType) };
+        if mesh.pVertexData == ptr::null_mut() { None } else { Some(HiddenAreaMesh { mesh, _phantom: PhantomData }) }
+    }
+
     /// Looks up the current input state of a controller.
     ///
     /// Returns None if the device is not a controller, or if the user is currently in the system menu.
@@ -225,6 +245,46 @@ impl<'a> System<'a> {
                 None
             }
         }
+    }
+
+    pub fn controller_state_with_pose(&self, origin: TrackingUniverseOrigin, device: TrackedDeviceIndex) -> Option<(ControllerState, TrackedDevicePose)> {
+        unsafe {
+            let mut state = mem::uninitialized();
+            let mut pose = mem::uninitialized();
+            if self.0.GetControllerStateWithPose.unwrap()(
+                origin as sys::ETrackingUniverseOrigin,
+                device, &mut state as *mut _ as *mut _, mem::size_of_val(&state) as u32,
+                &mut pose) {
+                Some((state, pose.into()))
+            } else {
+                None
+            }
+        }
+    }
+
+    /// Trigger a single haptic pulse on a controller.
+    ///
+    /// After this call the application may not trigger another haptic pulse on this controller and axis combination for
+    /// 5ms.
+    ///
+    /// Vive controller haptics respond to axis 0. OpenVR seems to reject durations longer than 3999us.
+    pub fn trigger_haptic_pulse(&self, device: TrackedDeviceIndex, axis: u32, microseconds: u16) {
+        unsafe { self.0.TriggerHapticPulse.unwrap()(device, axis, microseconds) }
+    }
+
+    /// Call this to acknowledge to the system that `Event::Quit` has been received and that the process is exiting.
+    ///
+    /// This extends the timeout until the process is killed.
+    pub fn acknowledge_quit_exiting(&self) {
+        unsafe { self.0.AcknowledgeQuit_Exiting.unwrap()(); }
+    }
+
+    /// Call this to tell the system that the user is being prompted to save data.
+    ///
+    /// This halts the timeout and dismisses the dashboard (if it was up). Applications should be sure to actually
+    /// prompt the user to save and then exit afterward, otherwise the user will be left in a confusing state.
+    pub fn acknowledge_quit_user_prompt(&self) {
+        unsafe { self.0.AcknowledgeQuit_Exiting.unwrap()(); }
     }
 }
 
@@ -298,5 +358,32 @@ impl ::std::error::Error for TrackedPropertyError {
 impl fmt::Display for TrackedPropertyError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.pad(::std::error::Error::description(self))
+    }
+}
+
+pub enum HiddenAreaMeshType {
+    /// The mesh that covers pixels which cannot be seen by the wearer of the HMD for optical reasons.
+    Standard = sys::EHiddenAreaMeshType_k_eHiddenAreaMesh_Standard as isize,
+    /// The inverse of `Standard`, useful for doing full-screen render passes such as postprocessing.
+    Inverse = sys::EHiddenAreaMeshType_k_eHiddenAreaMesh_Inverse as isize,
+}
+
+impl Default for HiddenAreaMeshType {
+    fn default() -> Self { HiddenAreaMeshType::Standard }
+}
+
+/// A triangle mesh containing geometry determined by `HiddenAreaMeshType`.
+///
+/// Render this mesh with backface culling disabled since the winding order of the vertices can be different per-HMD or
+/// per-eye.
+pub struct HiddenAreaMesh<'a> {
+    mesh: sys::HiddenAreaMesh_t,
+    _phantom: PhantomData<&'a [[f32; 2]]>,
+}
+
+impl<'a> ::std::ops::Deref for HiddenAreaMesh<'a> {
+    type Target = [[f32; 2]];
+    fn deref(&self) -> &Self::Target {
+        unsafe { slice::from_raw_parts(&(*self.mesh.pVertexData).v, self.mesh.unTriangleCount as usize * 3) }
     }
 }

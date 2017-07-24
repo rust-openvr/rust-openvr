@@ -30,6 +30,10 @@ impl TrackedDevicePose {
     pub fn device_is_connected(&self) -> bool { self.0.bDeviceIsConnected }
 }
 
+impl From<sys::TrackedDevicePose_t> for TrackedDevicePose {
+    fn from(x: sys::TrackedDevicePose_t) -> Self { TrackedDevicePose(x) }
+}
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum TrackingResult {
     Uninitialized = sys::ETrackingResult_TrackingResult_Uninitialized as isize,

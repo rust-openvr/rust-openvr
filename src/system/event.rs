@@ -271,6 +271,7 @@ pub enum Event {
     Notification_BeginInteraction,
     Notification_Destroyed,
 
+    /// The application has been asked to quit
     Quit(Process),
     ProcessQuit(Process),
     QuitAborted_UserPrompt(Process),

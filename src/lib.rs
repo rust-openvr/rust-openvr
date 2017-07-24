@@ -181,3 +181,25 @@ pub struct ControllerState {
     pub button_touched: u64,
     pub axis: [ControllerAxis; 5],
 }
+
+pub mod button_id {
+    use super::sys;
+    pub const SYSTEM: sys::EVRButtonId = sys::EVRButtonId_k_EButton_System;
+    pub const APPLICATION_MENU: sys::EVRButtonId = sys::EVRButtonId_k_EButton_ApplicationMenu;
+    pub const GRIP: sys::EVRButtonId = sys::EVRButtonId_k_EButton_Grip;
+    pub const DPAD_LEFT: sys::EVRButtonId = sys::EVRButtonId_k_EButton_DPad_Left;
+    pub const DPAD_UP: sys::EVRButtonId = sys::EVRButtonId_k_EButton_DPad_Up;
+    pub const DPAD_RIGHT: sys::EVRButtonId = sys::EVRButtonId_k_EButton_DPad_Right;
+    pub const DPAD_DOWN: sys::EVRButtonId = sys::EVRButtonId_k_EButton_DPad_Down;
+    pub const A: sys::EVRButtonId = sys::EVRButtonId_k_EButton_A;
+    pub const PROXIMITY_SENSOR: sys::EVRButtonId = sys::EVRButtonId_k_EButton_ProximitySensor;
+    pub const AXIS0: sys::EVRButtonId = sys::EVRButtonId_k_EButton_Axis0;
+    pub const AXIS1: sys::EVRButtonId = sys::EVRButtonId_k_EButton_Axis1;
+    pub const AXIS2: sys::EVRButtonId = sys::EVRButtonId_k_EButton_Axis2;
+    pub const AXIS3: sys::EVRButtonId = sys::EVRButtonId_k_EButton_Axis3;
+    pub const AXIS4: sys::EVRButtonId = sys::EVRButtonId_k_EButton_Axis4;
+    pub const STEAM_VR_TOUCHPAD: sys::EVRButtonId = sys::EVRButtonId_k_EButton_SteamVR_Touchpad;
+    pub const STEAM_VR_TRIGGER: sys::EVRButtonId = sys::EVRButtonId_k_EButton_SteamVR_Trigger;
+    pub const DASHBOARD_BACK: sys::EVRButtonId = sys::EVRButtonId_k_EButton_Dashboard_Back;
+    pub const MAX: sys::EVRButtonId = sys::EVRButtonId_k_EButton_Max;
+}
