@@ -1,225 +1,261 @@
-use openvr_sys;
-use openvr_sys::EVRRenderModelError::*;
+use std::{fmt, ptr, slice, mem};
+use std::ffi::{CStr, CString};
 
-use std::string::String;
-use std::ptr::null_mut;
-use std::slice;
-use subsystems::render_models;
-use error::*;
+use openvr_sys as sys;
 
-pub struct IVRRenderModels(pub *const ());
+use {RenderModels, ControllerState, get_string};
 
-pub struct RenderModel(*mut openvr_sys::RenderModel_t);
-pub struct RenderModelTexture(*mut openvr_sys::RenderModel_TextureMap_t);
-
-trait AsyncError {
-    /// checks if result is currently loading
-    fn is_loading(&self) -> bool;
-}
-
-impl AsyncError for Error<openvr_sys::EVRRenderModelError> {
-    fn is_loading(&self) -> bool {
-        match self.to_raw() {
-            EVRRenderModelError_VRRenderModelError_Loading => {
-                true
-            },
-            _ => {
-                false
-            }
-        }
-    }
-}
-
-impl Drop for RenderModel {
-    /// will inform openvr that the memory for the render model is no longer required
-    fn drop (&mut self) {
-        unsafe {
-            let models = * { render_models().unwrap().0 as *mut openvr_sys::VR_IVRRenderModels_FnTable};
-            models.FreeRenderModel.unwrap()(
-                self.0
-            );
-        }
-    }
-}
-
-impl Drop for RenderModelTexture {
-    /// will inform openvr that the memory for the render model is no longer required
-    fn drop (&mut self) {
-        unsafe {
-            let models = * { render_models().unwrap().0 as *mut openvr_sys::VR_IVRRenderModels_FnTable};
-            models.FreeTexture.unwrap()(
-                self.0
-            );
-        }
-    }
-}
-
-impl RenderModel {
-    /// Returns an iterator that iterates over vertices
-    pub fn vertex_iter(&self) -> slice::Iter<openvr_sys::RenderModel_Vertex_t> {
-        unsafe {
-            let slice = slice::from_raw_parts((*self.0).rVertexData, (*self.0).unVertexCount as usize);
-            slice.iter()
-        }
-    }
-
-    /// Returns an iterator that iterates over indices
-    pub fn index_iter(&self) -> slice::Iter<u16> {
-        unsafe {
-            let slice = slice::from_raw_parts((*self.0).rIndexData, (*self.0).unTriangleCount as usize * 3);
-            slice.iter()
-        }
-    }
-
-    /// asynchronosly loads the texture for the current render model
-    /// see IVRRenderModels::load_async for info how openvr async work
-    pub fn load_texture_async(&self) -> Result<RenderModelTexture, Error<openvr_sys::EVRRenderModelError>> {
-        unsafe {
-            let models = * { render_models().unwrap().0 as *mut openvr_sys::VR_IVRRenderModels_FnTable};
-            let mut resp: *mut openvr_sys::RenderModel_TextureMap_t = null_mut();
-
-            let err = models.LoadTexture_Async.unwrap()(
-                (*self.0).diffuseTextureId,
-                &mut resp
-            );
-
-            match err {
-                EVRRenderModelError_VRRenderModelError_None => {
-                    Ok(RenderModelTexture (resp))
-                },
-                _ => {
-                    Err(Error::from_raw(err))
-                }
-            }
-
-        }
-    }
-
-    /// loads the texture for current model
-    pub fn load_texture(&self) -> Result<RenderModelTexture, Error<openvr_sys::EVRRenderModelError>> {
-        use std;
-
-        loop {
-            let result = self.load_texture_async();
-            match result {
-                Ok(texture) => {
-                    return Ok(texture);
-                },
-                Err(err) => {
-                    if !err.is_loading() {
-                        return Err(err);
-                    }
-                }
-            }
-            std::thread::sleep(std::time::Duration::from_millis(10));
-        }
-    }
-}
-
-impl RenderModelTexture {
-    /// Returns the dimension from the texture (width, height)
-    pub fn dimension(&self) -> (usize, usize) {
-        unsafe {
-            ((*self.0).unWidth as usize, (*self.0).unHeight as usize)
-        }
-    }
-
-    /// Creates a 1 dimensional vector of pixels, format: rgba@32
-    pub fn to_vec(&self) -> Vec<u8> {
-        unsafe {
-            let dimension = self.dimension();
-            let slice = slice::from_raw_parts((*self.0).rubTextureMapData, dimension.0 * dimension.1 * 4);
-            let mut vec = Vec::new();
-            vec.extend_from_slice(slice);
-            vec
-        }
-    }
-}
-
-impl IVRRenderModels {
-    pub unsafe fn from_raw(ptr: *const ()) -> Self {
-        IVRRenderModels(ptr as *mut ())
-    }
-
-    /// Returns the amount of render models available
-    pub fn get_count(&self) -> u32 {
-        unsafe {
-            let models = * { self.0 as *mut openvr_sys::VR_IVRRenderModels_FnTable};
-
-            models.GetRenderModelCount.unwrap()()
-        }
-    }
-
-    /// Returns the name of an available render model
-    pub fn get_name(&self, index: u32) -> String {
-        unsafe {
-            let models = * { self.0 as *mut openvr_sys::VR_IVRRenderModels_FnTable};
-            let name_out = String::with_capacity(256);
-
-            let size = models.GetRenderModelName.unwrap()(
-                index,
-                name_out.as_ptr() as *mut i8,
-                256
-            );
-
-            if size > 0 {
-                return String::from_raw_parts(name_out.as_ptr() as *mut _, (size - 1) as usize, (size - 1) as usize);
-            } else {
-                return String::from("");
-            }
+impl<'a> RenderModels<'a> {
+    /// Loads and returns a render model for use in the application. `name` should be a render model name from the
+    /// `RenderModelName_String` property or an absolute path name to a render model on disk.
+    ///
+    /// The method returns `Ok(None)` while the render model is still being loaded. Call it at regular intervals until
+    /// it returns `Ok(Some(model))`.
+    pub fn load_render_model(&self, name: &CStr) -> Result<Option<Model>> {
+        let mut ptr = ptr::null_mut();
+        let r = unsafe {
+            self.0.LoadRenderModel_Async.unwrap()(name.as_ptr() as *mut _, &mut ptr)
         };
-    }
-
-    /// Loads an render model into local memory
-    ///  blocks the thread and waits until driver responds with model
-    pub fn load(&self, name: String) -> Result<RenderModel, Error<openvr_sys::EVRRenderModelError>> {
-        use std;
-
-        loop {
-            let result = self.load_async(name.clone());
-            match result {
-                Ok(model) => {
-                    return Ok(model);
-                },
-                Err(err) => {
-                    if !err.is_loading() {
-                        return Err(err);
-                    }
-                }
-            }
-            std::thread::sleep(std::time::Duration::from_millis(10));
+        match Error(r) {
+            error::NONE => Ok(Some(Model { ptr: ptr, sys: self.0 })),
+            error::LOADING => Ok(None),
+            x => Err(x),
         }
     }
 
-    /// Loads an render model into local memory
-    ///  When called for the first time openvr will start to load the model into memory
-    ///  In the mean time this call will respond with EVRRenderModelError_VRRenderModelError_Loading
-    ///  It is designed to be used wihtin the render loop as it won't block the user, for sync usage use load()
-    pub fn load_async(&self, name: String) -> Result<RenderModel, Error<openvr_sys::EVRRenderModelError>> {
-        use std;
+    /// Returns the number of components of the specified render model.
+    ///
+    /// Components are useful when client application wish to draw, label, or otherwise interact with components of tracked objects.
+    /// Examples controller components:
+    ///  renderable things such as triggers, buttons
+    ///  non-renderable things which include coordinate systems such as 'tip', 'base', a neutral controller agnostic hand-pose
+    ///  If all controller components are enumerated and rendered, it will be equivalent to drawing the traditional render model
+    ///  Returns 0 if components not supported, >0 otherwise
+    pub fn component_count(&self, model: &CStr) -> u32 {
+        unsafe { self.0.GetComponentCount.unwrap()(model.as_ptr() as *mut _) }
+    }
 
+    /// Get the names of available components.
+    ///
+    /// `component` does not correlate to a tracked device index, but is only used for iterating over all available
+    /// components.  If it's out of range, this function will return None.
+    pub fn component_name(&self, model: &CStr, component: u32) -> Option<CString> {
+        unsafe { get_string(|ptr, n| self.0.GetComponentName.unwrap()(model.as_ptr() as *mut _, component, ptr, n)) }
+    }
+
+    /// Gets all component names of a given model
+    pub fn component_names(&self, model: &CStr) -> ::std::vec::IntoIter<CString> { // FIXME: impl Iterator rather than allocating
+        let n = self.component_count(model);
+        (0..n).map(|i| self.component_name(model, i).expect("inconsistent component presence reported by OpenVR")).collect::<Vec<_>>().into_iter()
+    }
+
+    /// Use this to get the render model name for the specified rendermodel/component combination, to be passed to
+    /// `load_render_model`.
+    ///
+    /// If the component name is out of range, this function will return None.
+    /// Otherwise, it will return the size of the buffer required for the name.
+    pub fn component_render_model_name(&self, model: &CStr, component: &CStr) -> Option<CString> {
         unsafe {
-            let models = * { self.0 as *mut openvr_sys::VR_IVRRenderModels_FnTable};
-            let mut resp: *mut openvr_sys::RenderModel_t = null_mut();
-            let cname = std::ffi::CString::new(name.as_str()).unwrap();
-            let rawname = cname.into_raw();
-
-            let err = models.LoadRenderModel_Async.unwrap()(
-                rawname,
-                &mut resp
-            );
-
-            let _ = std::ffi::CString::from_raw(rawname);
-
-            match err {
-                EVRRenderModelError_VRRenderModelError_None => {
-                    Ok(RenderModel ( resp ))
-                },
-                _ => {
-                    Err(Error::from_raw(err))
-                }
-            }
-
+            get_string(|ptr, n| self.0.GetComponentRenderModelName.unwrap()(
+                model.as_ptr() as *mut _, component.as_ptr() as *mut _, ptr, n))
         }
     }
+
+    /// Use this to query information about the component, as a function of the controller state.
+    ///
+    /// Returns None if the component is invalid.
+    ///
+    /// Check `ComponentState::is_visible()` to determine whether the returned component should be rendered.
+    ///
+    /// For dynamic controller components (ex: trigger) values will reflect component motions.
+    /// For static components this will return a consistent value independent of the `ControllerState`.
+    pub fn component_state(&self, model: &CStr, component: &CStr, state: &ControllerState, mode: &ControllerMode) -> Option<ComponentState> {
+        unsafe {
+            let mut out = mem::uninitialized();
+            if self.0.GetComponentState.unwrap()(model.as_ptr() as *mut _, component.as_ptr() as *mut _,
+                                                 state as *const _ as *mut _, mode as *const _ as *mut _,
+                                                 &mut out as *mut _ as *mut _) {
+                Some(out)
+            } else {
+                None
+            }
+        }
+    }
+
+    /// Loads and returns a texture for use in the application. Texture IDs can be obtained from
+    /// `Model::diffuse_texture_id()`.
+    ///
+    /// The method returns `Ok(None)` while the texture is still being loaded. Call it at regular intervals until it
+    /// returns `Ok(Some(texture))`.
+    pub fn load_texture(&self, id: TextureId) -> Result<Option<Texture>> {
+        let mut ptr = ptr::null_mut();
+        let r = unsafe {
+            self.0.LoadTexture_Async.unwrap()(id, &mut ptr)
+        };
+        match Error(r) {
+            error::NONE => Ok(Some(Texture { ptr: ptr, sys: self.0 })),
+            error::LOADING => Ok(None),
+            x => Err(x),
+        }
+    }
+}
+
+#[derive(Copy, Clone, Eq, PartialEq)]
+pub struct Error(sys::EVRRenderModelError);
+
+pub mod error {
+    use super::{sys, Error};
+
+    pub const NONE: Error = Error(sys::EVRRenderModelError_VRRenderModelError_None);
+    pub const LOADING: Error = Error(sys::EVRRenderModelError_VRRenderModelError_Loading);
+    pub const NOT_SUPPORTED: Error = Error(sys::EVRRenderModelError_VRRenderModelError_NotSupported);
+    pub const INVALID_ARG: Error = Error(sys::EVRRenderModelError_VRRenderModelError_InvalidArg);
+    pub const INVALID_MODEL: Error = Error(sys::EVRRenderModelError_VRRenderModelError_InvalidModel);
+    pub const NO_SHAPES: Error = Error(sys::EVRRenderModelError_VRRenderModelError_NoShapes);
+    pub const MULTIPLE_SHAPES: Error = Error(sys::EVRRenderModelError_VRRenderModelError_MultipleShapes);
+    pub const TOO_MANY_VERTICES: Error = Error(sys::EVRRenderModelError_VRRenderModelError_TooManyVertices);
+    pub const MULTIPLE_TEXTURES: Error = Error(sys::EVRRenderModelError_VRRenderModelError_MultipleTextures);
+    pub const BUFFER_TOO_SMALL: Error = Error(sys::EVRRenderModelError_VRRenderModelError_BufferTooSmall);
+    pub const NOT_ENOUGH_NORMALS: Error = Error(sys::EVRRenderModelError_VRRenderModelError_NotEnoughNormals);
+    pub const NOT_ENOUGH_TEX_COORDS: Error = Error(sys::EVRRenderModelError_VRRenderModelError_NotEnoughTexCoords);
+    pub const INVALID_TEXTURE: Error = Error(sys::EVRRenderModelError_VRRenderModelError_InvalidTexture);
+}
+
+impl fmt::Debug for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.pad(::std::error::Error::description(self))
+    }
+}
+
+impl ::std::error::Error for Error {
+    fn description(&self) -> &str {
+        use self::error::*;
+        match *self {
+            NONE => "NONE",
+            LOADING => "LOADING",
+            NOT_SUPPORTED => "NOT_SUPPORTED",
+            INVALID_ARG => "INVALID_ARG",
+            INVALID_MODEL => "INVALID_MODEL",
+            NO_SHAPES => "NO_SHAPES",
+            MULTIPLE_SHAPES => "MULTIPLE_SHAPES",
+            TOO_MANY_VERTICES => "TOO_MANY_VERTICES",
+            MULTIPLE_TEXTURES => "MULTIPLE_TEXTURES",
+            BUFFER_TOO_SMALL => "BUFFER_TOO_SMALL",
+            NOT_ENOUGH_NORMALS => "NOT_ENOUGH_NORMALS",
+            NOT_ENOUGH_TEX_COORDS => "NOT_ENOUGH_TEX_COORDS",
+            INVALID_TEXTURE => "INVALID_TEXTURE",
+            _ => "UNKNOWN",
+        }
+    }
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.pad(::std::error::Error::description(self))
+    }
+}
+
+pub type Result<T> = ::std::result::Result<T, Error>;
+
+/// 3D geometry for rendering as an indexed triangle list
+pub struct Model<'a> {
+    ptr: *mut sys::RenderModel_t,
+    sys: &'a sys::VR_IVRRenderModels_FnTable,
+}
+
+impl<'a> Model<'a> {
+    pub fn vertices(&self) -> &[Vertex] {
+        unsafe {
+            let model = &*self.ptr;
+            slice::from_raw_parts(model.rVertexData as *mut Vertex, model.unVertexCount as usize)
+        }
+    }
+
+    pub fn indices(&self) -> &[u16] {
+        unsafe {
+            let model = &*self.ptr;
+            slice::from_raw_parts(model.rIndexData, 3 * model.unTriangleCount as usize)
+        }
+    }
+
+    pub fn diffuse_texture_id(&self) -> Option<TextureId> {
+        let id = unsafe { (&*self.ptr).diffuseTextureId };
+        if id < 0 { None } else { Some(id) }
+    }
+}
+
+impl<'a> Drop for Model<'a> {
+    fn drop(&mut self) { unsafe { self.sys.FreeRenderModel.unwrap()(self.ptr) } }
+}
+
+pub struct Texture<'a> {
+    ptr: *mut sys::RenderModel_TextureMap_t,
+    sys: &'a sys::VR_IVRRenderModels_FnTable,
+}
+
+impl<'a> Texture<'a> {
+    pub fn dimensions(&self) -> (u16, u16) {
+        let tex = unsafe { &*self.ptr };
+        (tex.unWidth, tex.unHeight)
+    }
+
+    /// R8G8B8A8
+    pub fn data(&self) -> &[u8] {
+        unsafe {
+            let tex = &*self.ptr;
+            slice::from_raw_parts(tex.rubTextureMapData, tex.unWidth as usize * tex.unHeight as usize * 4)
+        }
+    }
+}
+
+impl<'a> Drop for Texture<'a> {
+    fn drop(&mut self) { unsafe { self.sys.FreeTexture.unwrap()(self.ptr) } }
+}
+
+pub type TextureId = sys::TextureID_t;
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Vertex {
+    pub position: [f32; 3],
+    pub normal: [f32; 3],
+    pub texture_coord: [f32; 2],
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct ControllerMode {
+    pub scroll_wheel_visible: bool,
+}
+
+impl Default for ControllerMode {
+    fn default() -> Self { ControllerMode { scroll_wheel_visible: false } }
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct ComponentState {
+    pub tracking_to_component_render_model: [[f32; 4]; 3],
+    pub tracking_to_component_local: [[f32; 4]; 3],
+    pub properties: ComponentProperties,
+}
+
+impl ComponentState {
+    pub fn is_static(&self) -> bool { self.properties & component_properties::IS_STATIC != 0 }
+    pub fn is_visible(&self) -> bool { self.properties & component_properties::IS_VISIBLE != 0 }
+    pub fn is_touched(&self) -> bool { self.properties & component_properties::IS_TOUCHED != 0 }
+    pub fn is_pressed(&self) -> bool { self.properties & component_properties::IS_PRESSED != 0 }
+    pub fn is_scrolled(&self) -> bool { self.properties & component_properties::IS_SCROLLED != 0 }
+}
+
+type ComponentProperties = sys::VRComponentProperties;
+
+pub mod component_properties {
+    use super::{sys, ComponentProperties};
+
+    pub const IS_STATIC: ComponentProperties = sys::EVRComponentProperty_VRComponentProperty_IsStatic;
+    pub const IS_VISIBLE: ComponentProperties = sys::EVRComponentProperty_VRComponentProperty_IsVisible;
+    pub const IS_TOUCHED: ComponentProperties = sys::EVRComponentProperty_VRComponentProperty_IsTouched;
+    pub const IS_PRESSED: ComponentProperties = sys::EVRComponentProperty_VRComponentProperty_IsPressed;
+    pub const IS_SCROLLED: ComponentProperties = sys::EVRComponentProperty_VRComponentProperty_IsScrolled;
 }

@@ -16,7 +16,7 @@ repository = "https://github.com/rust-openvr/rust-openvr"
 description = "A safe binding for openvr."
 
 [dependencies]
-openvr_sys = { git = "https://github.com/Ralith/rust-openvr-sys.git", branch = "update" }
+openvr_sys = { git = "https://github.com/Ralith/rust-openvr-sys.git", branch = "enum-rename" }
 
 [dev_dependencies]
 glium = "0.14.0"

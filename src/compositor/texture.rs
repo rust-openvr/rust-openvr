@@ -39,7 +39,7 @@ pub enum Handle {
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum ColorSpace {
-    Auto = sys::EColorSpace_EColorSpace_ColorSpace_Auto as isize,
-    Gamma = sys::EColorSpace_EColorSpace_ColorSpace_Gamma as isize,
-    Linear = sys::EColorSpace_EColorSpace_ColorSpace_Linear as isize,
+    Auto = sys::EColorSpace_ColorSpace_Auto as isize,
+    Gamma = sys::EColorSpace_ColorSpace_Gamma as isize,
+    Linear = sys::EColorSpace_ColorSpace_Linear as isize,
 }

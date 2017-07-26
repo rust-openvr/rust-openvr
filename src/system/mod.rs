@@ -1,7 +1,9 @@
 //! The `System` interface provides access to display configuration information, tracking data, controller state,
 //! events, and device properties. It is the main interface of OpenVR.
 
-use std::mem;
+use std::{mem, slice, ptr};
+use std::ffi::CString;
+use std::marker::PhantomData;
 
 use openvr_sys as sys;
 
@@ -89,12 +91,12 @@ impl<'a> System<'a> {
     pub fn tracked_device_class(&self, index: TrackedDeviceIndex) -> TrackedDeviceClass {
         use self::TrackedDeviceClass::*;
         match unsafe { self.0.GetTrackedDeviceClass.unwrap()(index) } {
-            sys::ETrackedDeviceClass_ETrackedDeviceClass_TrackedDeviceClass_Invalid => Invalid,
-            sys::ETrackedDeviceClass_ETrackedDeviceClass_TrackedDeviceClass_HMD => HMD,
-            sys::ETrackedDeviceClass_ETrackedDeviceClass_TrackedDeviceClass_Controller => Controller,
-            sys::ETrackedDeviceClass_ETrackedDeviceClass_TrackedDeviceClass_GenericTracker => GenericTracker,
-            sys::ETrackedDeviceClass_ETrackedDeviceClass_TrackedDeviceClass_TrackingReference => TrackingReference,
-            sys::ETrackedDeviceClass_ETrackedDeviceClass_TrackedDeviceClass_DisplayRedirect => DisplayRedirect,
+            sys::ETrackedDeviceClass_TrackedDeviceClass_Invalid => Invalid,
+            sys::ETrackedDeviceClass_TrackedDeviceClass_HMD => HMD,
+            sys::ETrackedDeviceClass_TrackedDeviceClass_Controller => Controller,
+            sys::ETrackedDeviceClass_TrackedDeviceClass_GenericTracker => GenericTracker,
+            sys::ETrackedDeviceClass_TrackedDeviceClass_TrackingReference => TrackingReference,
+            sys::ETrackedDeviceClass_TrackedDeviceClass_DisplayRedirect => DisplayRedirect,
             _ => Invalid,
         }
     }
@@ -147,10 +149,142 @@ impl<'a> System<'a> {
     pub fn get_controller_role_for_tracked_device_index(&self, i: TrackedDeviceIndex) -> Option<TrackedControllerRole> {
         let x = unsafe { self.0.GetControllerRoleForTrackedDeviceIndex.unwrap()(i) };
         match x {
-            sys::ETrackedControllerRole_ETrackedControllerRole_TrackedControllerRole_LeftHand => Some(TrackedControllerRole::LeftHand),
-            sys::ETrackedControllerRole_ETrackedControllerRole_TrackedControllerRole_RightHand => Some(TrackedControllerRole::RightHand),
+            sys::ETrackedControllerRole_TrackedControllerRole_LeftHand => Some(TrackedControllerRole::LeftHand),
+            sys::ETrackedControllerRole_TrackedControllerRole_RightHand => Some(TrackedControllerRole::RightHand),
             _ => None,
         }
+    }
+
+    pub fn vulkan_output_device(&self) -> Option<*mut VkPhysicalDevice_T> {
+        unsafe {
+            let mut device = mem::uninitialized();
+            self.0.GetOutputDevice.unwrap()(&mut device, sys::ETextureType_TextureType_Vulkan);
+            if device == 0 { None } else { Some(device as usize as *mut _) }
+        }
+    }
+
+    pub fn bool_tracked_device_property(&self, device: TrackedDeviceIndex, property: TrackedDeviceProperty) -> Result<bool, TrackedPropertyError> {
+        unsafe {
+            let mut error: TrackedPropertyError = mem::uninitialized();
+            let r = self.0.GetBoolTrackedDeviceProperty.unwrap()(device, property, &mut error.0);
+            if error == tracked_property_error::SUCCESS { Ok(r) } else { Err(error) }
+        }
+    }
+
+    pub fn float_tracked_device_property(&self, device: TrackedDeviceIndex, property: TrackedDeviceProperty) -> Result<f32, TrackedPropertyError> {
+        unsafe {
+            let mut error: TrackedPropertyError = mem::uninitialized();
+            let r = self.0.GetFloatTrackedDeviceProperty.unwrap()(device, property, &mut error.0);
+            if error == tracked_property_error::SUCCESS { Ok(r) } else { Err(error) }
+        }
+    }
+
+    pub fn int32_tracked_device_property(&self, device: TrackedDeviceIndex, property: TrackedDeviceProperty) -> Result<i32, TrackedPropertyError> {
+        unsafe {
+            let mut error: TrackedPropertyError = mem::uninitialized();
+            let r = self.0.GetInt32TrackedDeviceProperty.unwrap()(device, property, &mut error.0);
+            if error == tracked_property_error::SUCCESS { Ok(r) } else { Err(error) }
+        }
+    }
+
+    pub fn uint64_tracked_device_property(&self, device: TrackedDeviceIndex, property: TrackedDeviceProperty) -> Result<u64, TrackedPropertyError> {
+        unsafe {
+            let mut error: TrackedPropertyError = mem::uninitialized();
+            let r = self.0.GetUint64TrackedDeviceProperty.unwrap()(device, property, &mut error.0);
+            if error == tracked_property_error::SUCCESS { Ok(r) } else { Err(error) }
+        }
+    }
+
+    pub fn matrix34_tracked_device_property(&self, device: TrackedDeviceIndex, property: TrackedDeviceProperty) -> Result<[[f32; 4]; 3], TrackedPropertyError> {
+        unsafe {
+            let mut error: TrackedPropertyError = mem::uninitialized();
+            let r = self.0.GetMatrix34TrackedDeviceProperty.unwrap()(device, property, &mut error.0);
+            if error == tracked_property_error::SUCCESS { Ok(r.m) } else { Err(error) }
+        }
+    }
+
+    pub fn string_tracked_device_property(&self, device: TrackedDeviceIndex, property: TrackedDeviceProperty) -> Result<CString, TrackedPropertyError> {
+        unsafe {
+            let mut error = mem::uninitialized();
+            let res = get_string(|ptr, n| self.0.GetStringTrackedDeviceProperty.unwrap()(device, property, ptr, n, &mut error));
+            res.map_or(Err(TrackedPropertyError(error)), Ok)
+        }
+    }
+
+    /// Returns the hidden area mesh for the current HMD.
+    ///
+    /// The pixels covered by this mesh will never be seen by the user after the lens distortion is applied based on
+    /// visibility to the panels. If this HMD does not have a hidden area mesh, None is returned.  This mesh is meant to
+    /// be rendered into the stencil buffer (or into the depth buffer setting nearz) before rendering each eye's view.
+    /// This will improve performance by letting the GPU early-reject pixels the user will never see before running the
+    /// pixel shader.
+    ///
+    /// NOTE: Render this mesh with backface culling disabled since the winding order of the vertices can
+    /// be different per-HMD or per-eye.
+    ///
+    /// Passing `HiddenAreaMeshType::Inverse` will produce the visible area mesh that is commonly used in place of
+    /// full-screen quads. The visible area mesh covers all of the pixels the hidden area mesh does not cover.
+    // TODO: Handle line loops with a separate method and return type, since HiddenAreaMesh assumes triangles.
+    pub fn hidden_area_mesh(&self, eye: Eye, ty: HiddenAreaMeshType) -> Option<HiddenAreaMesh> {
+        let mesh = unsafe { self.0.GetHiddenAreaMesh.unwrap()(eye as sys::EVREye, ty as sys::EHiddenAreaMeshType) };
+        if mesh.pVertexData == ptr::null_mut() { None } else { Some(HiddenAreaMesh { mesh, _phantom: PhantomData }) }
+    }
+
+    /// Looks up the current input state of a controller.
+    ///
+    /// Returns None if the device is not a controller, or if the user is currently in the system menu.
+    ///
+    /// Needed for rendering controller components (e.g. trigger) accurately wrt. user input using the `render_models`
+    /// API.
+    pub fn controller_state(&self, device: TrackedDeviceIndex) -> Option<ControllerState> {
+        unsafe {
+            let mut state = mem::uninitialized();
+            if self.0.GetControllerState.unwrap()(device, &mut state as *mut _ as *mut _, mem::size_of_val(&state) as u32) {
+                Some(state)
+            } else {
+                None
+            }
+        }
+    }
+
+    pub fn controller_state_with_pose(&self, origin: TrackingUniverseOrigin, device: TrackedDeviceIndex) -> Option<(ControllerState, TrackedDevicePose)> {
+        unsafe {
+            let mut state = mem::uninitialized();
+            let mut pose = mem::uninitialized();
+            if self.0.GetControllerStateWithPose.unwrap()(
+                origin as sys::ETrackingUniverseOrigin,
+                device, &mut state as *mut _ as *mut _, mem::size_of_val(&state) as u32,
+                &mut pose) {
+                Some((state, pose.into()))
+            } else {
+                None
+            }
+        }
+    }
+
+    /// Trigger a single haptic pulse on a controller.
+    ///
+    /// After this call the application may not trigger another haptic pulse on this controller and axis combination for
+    /// 5ms.
+    ///
+    /// Vive controller haptics respond to axis 0. OpenVR seems to reject durations longer than 3999us.
+    pub fn trigger_haptic_pulse(&self, device: TrackedDeviceIndex, axis: u32, microseconds: u16) {
+        unsafe { self.0.TriggerHapticPulse.unwrap()(device, axis, microseconds) }
+    }
+
+    /// Call this to acknowledge to the system that `Event::Quit` has been received and that the process is exiting.
+    ///
+    /// This extends the timeout until the process is killed.
+    pub fn acknowledge_quit_exiting(&self) {
+        unsafe { self.0.AcknowledgeQuit_Exiting.unwrap()(); }
+    }
+
+    /// Call this to tell the system that the user is being prompted to save data.
+    ///
+    /// This halts the timeout and dismisses the dashboard (if it was up). Applications should be sure to actually
+    /// prompt the user to save and then exit afterward, otherwise the user will be left in a confusing state.
+    pub fn acknowledge_quit_user_prompt(&self) {
+        unsafe { self.0.AcknowledgeQuit_Exiting.unwrap()(); }
     }
 }
 
@@ -172,4 +306,84 @@ pub struct DistortionCoordinates {
     pub red: [f32; 2],
     pub green: [f32; 2],
     pub blue: [f32; 2],
+}
+
+#[derive(Copy, Clone, Eq, PartialEq)]
+pub struct TrackedPropertyError(sys::TrackedPropertyError);
+
+pub mod tracked_property_error {
+    use super::{sys, TrackedPropertyError};
+
+    pub const SUCCESS: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_TrackedProp_Success);
+    pub const WRONG_DATA_TYPE: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_TrackedProp_WrongDataType);
+    pub const WRONG_DEVICE_CLASS: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_TrackedProp_WrongDeviceClass);
+    pub const BUFFER_TOO_SMALL: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_TrackedProp_BufferTooSmall);
+    pub const UNKNOWN_PROPERTY: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_TrackedProp_UnknownProperty);
+    pub const INVALID_DEVICE: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_TrackedProp_InvalidDevice);
+    pub const COULD_NOT_CONTACT_SERVER: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_TrackedProp_CouldNotContactServer);
+    pub const VALUE_NOT_PROVIDED_BY_DEVICE: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_TrackedProp_ValueNotProvidedByDevice);
+    pub const STRING_EXCEEDS_MAXIMUM_LENGTH: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_TrackedProp_StringExceedsMaximumLength);
+    pub const NOT_YET_AVAILABLE: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_TrackedProp_NotYetAvailable);
+    pub const PERMISSION_DENIED: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_TrackedProp_PermissionDenied);
+    pub const INVALID_OPERATION: TrackedPropertyError = TrackedPropertyError(sys::ETrackedPropertyError_TrackedProp_InvalidOperation);
+}
+
+impl fmt::Debug for TrackedPropertyError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.pad(::std::error::Error::description(self))
+    }
+}
+
+impl ::std::error::Error for TrackedPropertyError {
+    fn description(&self) -> &str {
+        use self::tracked_property_error::*;
+        match *self {
+            SUCCESS => "SUCCESS",
+            WRONG_DATA_TYPE => "WRONG_DATA_TYPE",
+            WRONG_DEVICE_CLASS => "WRONG_DEVICE_CLASS",
+            BUFFER_TOO_SMALL => "BUFFER_TOO_SMALL",
+            UNKNOWN_PROPERTY => "UNKNOWN_PROPERTY",
+            INVALID_DEVICE => "INVALID_DEVICE",
+            COULD_NOT_CONTACT_SERVER => "COULD_NOT_CONTACT_SERVER",
+            VALUE_NOT_PROVIDED_BY_DEVICE => "VALUE_NOT_PROVIDED_BY_DEVICE",
+            STRING_EXCEEDS_MAXIMUM_LENGTH => "STRING_EXCEEDS_MAXIMUM_LENGTH",
+            NOT_YET_AVAILABLE => "NOT_YET_AVAILABLE",
+            PERMISSION_DENIED => "PERMISSION_DENIED",
+            INVALID_OPERATION => "INVALID_OPERATION",
+            _ => "UNKNOWN",
+        }
+    }
+}
+
+impl fmt::Display for TrackedPropertyError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.pad(::std::error::Error::description(self))
+    }
+}
+
+pub enum HiddenAreaMeshType {
+    /// The mesh that covers pixels which cannot be seen by the wearer of the HMD for optical reasons.
+    Standard = sys::EHiddenAreaMeshType_k_eHiddenAreaMesh_Standard as isize,
+    /// The inverse of `Standard`, useful for doing full-screen render passes such as postprocessing.
+    Inverse = sys::EHiddenAreaMeshType_k_eHiddenAreaMesh_Inverse as isize,
+}
+
+impl Default for HiddenAreaMeshType {
+    fn default() -> Self { HiddenAreaMeshType::Standard }
+}
+
+/// A triangle mesh containing geometry determined by `HiddenAreaMeshType`.
+///
+/// Render this mesh with backface culling disabled since the winding order of the vertices can be different per-HMD or
+/// per-eye.
+pub struct HiddenAreaMesh<'a> {
+    mesh: sys::HiddenAreaMesh_t,
+    _phantom: PhantomData<&'a [[f32; 2]]>,
+}
+
+impl<'a> ::std::ops::Deref for HiddenAreaMesh<'a> {
+    type Target = [[f32; 2]];
+    fn deref(&self) -> &Self::Target {
+        unsafe { slice::from_raw_parts(&(*self.mesh.pVertexData).v, self.mesh.unTriangleCount as usize * 3) }
+    }
 }
