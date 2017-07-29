@@ -1,4 +1,6 @@
 extern crate openvr_sys;
+#[macro_use]
+extern crate lazy_static;
 
 use std::sync::atomic::{Ordering, AtomicBool, ATOMIC_BOOL_INIT};
 use std::{fmt, error, ptr, mem};

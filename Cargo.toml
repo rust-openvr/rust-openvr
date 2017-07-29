@@ -17,6 +17,7 @@ description = "A safe binding for openvr."
 
 [dependencies]
 openvr_sys = { git = "https://github.com/Ralith/rust-openvr-sys.git", branch = "enum-rename" }
+lazy_static = "0.2.8"
 
 [dev_dependencies]
 glium = "0.14.0"
