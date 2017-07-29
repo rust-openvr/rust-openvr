@@ -259,3 +259,19 @@ pub mod component_properties {
     pub const IS_PRESSED: ComponentProperties = sys::EVRComponentProperty_VRComponentProperty_IsPressed;
     pub const IS_SCROLLED: ComponentProperties = sys::EVRComponentProperty_VRComponentProperty_IsScrolled;
 }
+
+pub mod component {
+    pub mod controller {
+        use std::ffi::CStr;
+        use openvr_sys as sys;
+
+        // TODO: Real constants
+        lazy_static! {
+            pub static ref GDC2015: &'static CStr = unsafe { CStr::from_bytes_with_nul_unchecked(sys::k_pch_Controller_Component_GDC2015) };
+            pub static ref BASE: &'static CStr = unsafe { CStr::from_bytes_with_nul_unchecked(sys::k_pch_Controller_Component_Base) };
+            pub static ref TIP: &'static CStr = unsafe { CStr::from_bytes_with_nul_unchecked(sys::k_pch_Controller_Component_Tip) };
+            pub static ref HAND_GRIP: &'static CStr = unsafe { CStr::from_bytes_with_nul_unchecked(sys::k_pch_Controller_Component_HandGrip) };
+            pub static ref STATUS: &'static CStr = unsafe { CStr::from_bytes_with_nul_unchecked(sys::k_pch_Controller_Component_Status) };
+        }
+    }
+}
