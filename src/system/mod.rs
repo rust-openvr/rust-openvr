@@ -155,10 +155,10 @@ impl<'a> System<'a> {
         }
     }
 
-    pub fn vulkan_output_device(&self) -> Option<*mut VkPhysicalDevice_T> {
+    pub fn vulkan_output_device(&self, instance: *mut VkInstance_T) -> Option<*mut VkPhysicalDevice_T> {
         unsafe {
             let mut device = mem::uninitialized();
-            self.0.GetOutputDevice.unwrap()(&mut device, sys::ETextureType_TextureType_Vulkan);
+            self.0.GetOutputDevice.unwrap()(&mut device, sys::ETextureType_TextureType_Vulkan, instance);
             if device == 0 { None } else { Some(device as usize as *mut _) }
         }
     }
