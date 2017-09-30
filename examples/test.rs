@@ -19,7 +19,7 @@ fn main() {
     let context = match unsafe { openvr::init(openvr::ApplicationType::Other) } {
         Ok(ivr) => ivr,
         Err(err) => {
-            println!("Failed to initialize openvr {:?}", err);
+            println!("Failed to initialize openvr: {}", err);
             return;
         }
     };
@@ -29,7 +29,7 @@ fn main() {
     let system = match context.system() {
         Ok(sys) => sys,
         Err(err) => {
-            println!("Failed to get system interface {:?}", err);
+            println!("Failed to get system interface: {}", err);
             return;
         }
     };
@@ -42,7 +42,7 @@ fn main() {
     print!("\tProjection matrix right ");
     print_matrix_4x4(31, system.projection_matrix(openvr::Eye::Right, 0.1, 100.));
 
-    print!("\tEye_to_head ");
+    print!("\tEye to head left ");
     print_matrix_4x3(8+12, system.eye_to_head_transform(openvr::Eye::Left));
 
     print!("\tPoses ");
@@ -65,49 +65,20 @@ fn main() {
         println!("");
     }
 
-    /*
-    let ext = match context.extended_display() {
-        Ok(ext) => ext,
-        Err(err) => {
-            println!("Failed to create IVRExtendedDisplay subsystem {:?}", err);
-            return;
-        }
-    };
-    println!("\nIVRExtendedDisplay was created");
-
-    println!("\tBounds: {:?}", ext.window_bounds());
-    println!("\tEye output: {:?} {:?}", ext.eye_viewport(openvr::Eye::Left), ext.eye_viewport(openvr::Eye::Right));
-    */
-
     let comp = match context.compositor() {
         Ok(ext) => ext,
         Err(err) => {
-            println!("Failed to create IVRCompositor subsystem {:?}", err);
+            println!("Failed to create IVRCompositor subsystem: {}", err);
             return;
         }
     };
 
     println!("\nIVRCompositor was created");
     println!("\tIs fullscreen    = {}", comp.is_fullscreen());
-    println!("\tInstance Extensions:");
+    println!("\tVulkan Instance Extensions:");
     for ext in comp.vulkan_instance_extensions_required() {
         println!("\t\t{:?}", ext);
     }
-
-    /*
-    let model = match context.render_models() {
-        Ok(ext) => ext,
-        Err(err) => {
-            println!("Failed to create IVRRenderModels subsystem {:?}", err);
-            return;
-        }
-    };
-
-    println!("\nIVRRenderModels was created\n Count: {}", model.get_count());
-    for i in 0..model.get_count() {
-        println!("\t{}", model.get_name(i));
-    }
-    */
 
     println!("Done! \\o/");
 }
