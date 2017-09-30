@@ -284,7 +284,7 @@ impl<'a> System<'a> {
     /// This halts the timeout and dismisses the dashboard (if it was up). Applications should be sure to actually
     /// prompt the user to save and then exit afterward, otherwise the user will be left in a confusing state.
     pub fn acknowledge_quit_user_prompt(&self) {
-        unsafe { self.0.AcknowledgeQuit_Exiting.unwrap()(); }
+        unsafe { self.0.AcknowledgeQuit_UserPrompt.unwrap()(); }
     }
 }
 
