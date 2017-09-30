@@ -247,6 +247,7 @@ impl<'a> System<'a> {
         }
     }
 
+    /// See `controller_state`
     pub fn controller_state_with_pose(&self, origin: TrackingUniverseOrigin, device: TrackedDeviceIndex) -> Option<(ControllerState, TrackedDevicePose)> {
         unsafe {
             let mut state = mem::uninitialized();
