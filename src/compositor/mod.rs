@@ -19,7 +19,7 @@ pub use self::texture::Texture;
 
 use super::*;
 
-impl<'a> Compositor<'a> {
+impl Compositor {
     pub fn vulkan_instance_extensions_required(&self) -> Vec<CString> {
         let temp = unsafe { get_string(|ptr, n| self.0.GetVulkanInstanceExtensionsRequired.unwrap()(ptr, n)) }.unwrap();
         temp.as_bytes().split(|&x| x == b' ').map(|x| CString::new(x.to_vec()).expect("extension name contained null byte")).collect()

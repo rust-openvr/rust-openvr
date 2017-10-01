@@ -5,7 +5,7 @@ use openvr_sys as sys;
 
 use {RenderModels, ControllerState, get_string};
 
-impl<'a> RenderModels<'a> {
+impl RenderModels {
     /// Loads and returns a render model for use in the application. `name` should be a render model name from the
     /// `RenderModelName_String` property or an absolute path name to a render model on disk.
     ///

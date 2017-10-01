@@ -51,9 +51,9 @@ pub unsafe fn init(ty: ApplicationType) -> Result<Context, InitError> {
     Ok(Context { live: Cell::new(true) })
 }
 
-pub struct System<'a>(&'a sys::VR_IVRSystem_FnTable);
-pub struct Compositor<'a>(&'a sys::VR_IVRCompositor_FnTable);
-pub struct RenderModels<'a>(&'a sys::VR_IVRRenderModels_FnTable);
+pub struct System(&'static sys::VR_IVRSystem_FnTable);
+pub struct Compositor(&'static sys::VR_IVRCompositor_FnTable);
+pub struct RenderModels(&'static sys::VR_IVRRenderModels_FnTable);
 
 /// Entry points into OpenVR.
 ///
@@ -91,7 +91,7 @@ impl Context {
     ///
     /// # Safety
     ///
-    /// No OpenVR calls may be made after this has been called unless a new `Context` is subsequently constructed.
+    /// No calls to other OpenVR methods may be made after this has been called unless a new `Context` is first constructed.
     pub unsafe fn shutdown(&self) {
         if self.live.replace(false) {
             sys::VR_ShutdownInternal();
