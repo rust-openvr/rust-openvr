@@ -16,5 +16,5 @@ repository = "https://github.com/rust-openvr/rust-openvr"
 description = "A safe binding for openvr."
 
 [dependencies]
-openvr_sys = { git = "https://github.com/Ralith/rust-openvr-sys.git" }
+openvr_sys = { git = "https://github.com/rust-openvr/rust-openvr-sys.git" }
 lazy_static = "0.2.8"
