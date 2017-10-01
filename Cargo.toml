@@ -13,7 +13,14 @@ documentation = "http://rust-openvr.github.io/rust-openvr/openvr/index.html"
 homepage = "https://github.com/rust-openvr/rust-openvr"
 repository = "https://github.com/rust-openvr/rust-openvr"
 
-description = "A safe binding for openvr."
+description = "A high-level binding for openvr."
+
+keywords = ["vr", "vive", "steamvr"]
+categories = [ "hardware-support", "api-bindings" ]
+
+[badges]
+travis-ci = { repository = "rust-openvr/rust-openvr" }
+maintenance = { status = "passively-maintained" }
 
 [dependencies]
 openvr_sys = { git = "https://github.com/rust-openvr/rust-openvr-sys.git" }
