@@ -13,7 +13,7 @@ use super::*;
 
 pub use self::event::{Event, EventInfo};
 
-impl<'a> System<'a> {
+impl System {
     /// Provides the game with the minimum size that it should use for its offscreen render target to minimize pixel
     /// stretching. This size is matched with the projection matrix and distortion function and will change from display
     /// to display depending on resolution, distortion, and field of view.
@@ -155,10 +155,10 @@ impl<'a> System<'a> {
         }
     }
 
-    pub fn vulkan_output_device(&self) -> Option<*mut VkPhysicalDevice_T> {
+    pub fn vulkan_output_device(&self, instance: *mut VkInstance_T) -> Option<*mut VkPhysicalDevice_T> {
         unsafe {
             let mut device = mem::uninitialized();
-            self.0.GetOutputDevice.unwrap()(&mut device, sys::ETextureType_TextureType_Vulkan);
+            self.0.GetOutputDevice.unwrap()(&mut device, sys::ETextureType_TextureType_Vulkan, instance);
             if device == 0 { None } else { Some(device as usize as *mut _) }
         }
     }
@@ -247,6 +247,7 @@ impl<'a> System<'a> {
         }
     }
 
+    /// See `controller_state`
     pub fn controller_state_with_pose(&self, origin: TrackingUniverseOrigin, device: TrackedDeviceIndex) -> Option<(ControllerState, TrackedDevicePose)> {
         unsafe {
             let mut state = mem::uninitialized();
@@ -284,7 +285,7 @@ impl<'a> System<'a> {
     /// This halts the timeout and dismisses the dashboard (if it was up). Applications should be sure to actually
     /// prompt the user to save and then exit afterward, otherwise the user will be left in a confusing state.
     pub fn acknowledge_quit_user_prompt(&self) {
-        unsafe { self.0.AcknowledgeQuit_Exiting.unwrap()(); }
+        unsafe { self.0.AcknowledgeQuit_UserPrompt.unwrap()(); }
     }
 }
 

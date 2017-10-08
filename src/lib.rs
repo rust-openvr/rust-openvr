@@ -33,7 +33,8 @@ static INITIALIZED: AtomicBool = ATOMIC_BOOL_INIT;
 ///
 /// # Safety
 ///
-/// The `Context` MUST be dropped or shut down with `Context::shutdown` before shutting down the graphics API.
+/// The `Context` MUST be dropped or shut down with `Context::shutdown` before shutting down the graphics API. No OpenVR
+/// calls may be made on object derived from a `Context` after the `Context` has been dropped or explicitly shut down.
 pub unsafe fn init(ty: ApplicationType) -> Result<Context, InitError> {
     if INITIALIZED.swap(true, Ordering::Acquire) {
         panic!("OpenVR has already been initialized!");
@@ -51,13 +52,15 @@ pub unsafe fn init(ty: ApplicationType) -> Result<Context, InitError> {
     Ok(Context { live: Cell::new(true) })
 }
 
-pub struct System<'a>(&'a sys::VR_IVRSystem_FnTable);
-pub struct Compositor<'a>(&'a sys::VR_IVRCompositor_FnTable);
-pub struct RenderModels<'a>(&'a sys::VR_IVRRenderModels_FnTable);
+pub struct System(&'static sys::VR_IVRSystem_FnTable);
+pub struct Compositor(&'static sys::VR_IVRCompositor_FnTable);
+pub struct RenderModels(&'static sys::VR_IVRRenderModels_FnTable);
 
 /// Entry points into OpenVR.
 ///
 /// At most one of this object may exist at a time.
+///
+/// See safety notes in `init`.
 pub struct Context { live: Cell<bool> }
 
 fn load<T>(suffix: &[u8]) -> Result<*const T, InitError> {
@@ -86,12 +89,15 @@ impl Drop for Context {
 impl Context {
     /// Shut down OpenVR. Repeated calls are safe.
     ///
-    /// Called implicitly by `Context::drop`. This MUST be called before shutting down the graphics API, or OpenVR may
-    /// invoke undefined behavior.
+    /// Called implicitly by `Context::drop`.
     ///
     /// # Safety
     ///
-    /// No OpenVR calls may be made after this has been called unless a new `Context` is subsequently constructed.
+    /// This *must* be called *before* shutting down the graphics API, or OpenVR may invoke undefined behavior by
+    /// attempting to free graphics resources.
+    ///
+    /// No calls to other OpenVR methods may be made after this has been called unless a new `Context` is first
+    /// constructed.
     pub unsafe fn shutdown(&self) {
         if self.live.replace(false) {
             sys::VR_ShutdownInternal();

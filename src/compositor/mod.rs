@@ -19,7 +19,7 @@ pub use self::texture::Texture;
 
 use super::*;
 
-impl<'a> Compositor<'a> {
+impl Compositor {
     pub fn vulkan_instance_extensions_required(&self) -> Vec<CString> {
         let temp = unsafe { get_string(|ptr, n| self.0.GetVulkanInstanceExtensionsRequired.unwrap()(ptr, n)) }.unwrap();
         temp.as_bytes().split(|&x| x == b' ').map(|x| CString::new(x.to_vec()).expect("extension name contained null byte")).collect()
@@ -60,14 +60,14 @@ impl<'a> Compositor<'a> {
     /// # Safety
     ///
     /// The handles you supply must be valid and comply with the graphics API's synchronization requirements.
-    pub unsafe fn submit(&self, eye: Eye, texture: &Texture, bounds: Option<&texture::Bounds>) -> Result<(), CompositorError> {
+    pub unsafe fn submit(&self, eye: Eye, texture: &Texture, bounds: Option<&texture::Bounds>, pose: Option<[[f32; 4]; 3]>) -> Result<(), CompositorError> {
         use self::texture::Handle::*;
         let flags = match texture.handle {
             Vulkan(_) => sys::EVRSubmitFlags_Submit_Default,
             OpenGLTexture(_) => sys::EVRSubmitFlags_Submit_Default,
             OpenGLRenderBuffer(_) => sys::EVRSubmitFlags_Submit_GlRenderBuffer,
-        };
-        let texture = sys::Texture_t {
+        } | if pose.is_some() { sys::EVRSubmitFlags_Submit_TextureWithPose } else { 0 };
+        let texture = sys::VRTextureWithPose_t_real {
             handle: match texture.handle {
                 Vulkan(ref x) => x as *const _ as *mut _,
                 OpenGLTexture(x) => x as *mut _,
@@ -79,6 +79,7 @@ impl<'a> Compositor<'a> {
                 OpenGLRenderBuffer(_) => sys::ETextureType_TextureType_OpenGL,
             },
             eColorSpace: texture.color_space as sys::EColorSpace,
+            mDeviceToAbsoluteTracking: sys::HmdMatrix34_t { m: pose.unwrap_or([[0.0; 4]; 3]) },
         };
         let e = self.0.Submit.unwrap()(
             eye as sys::EVREye,
@@ -114,6 +115,39 @@ impl<'a> Compositor<'a> {
     /// This will cause the compositor to show the grid until `submit` is called again.
     pub fn clear_last_submitted_frame(&self) {
         unsafe { self.0.ClearLastSubmittedFrame.unwrap()() }
+    }
+
+    /// Controls whether the application should flag the time at which the frame begins explicitly
+    ///
+    /// *Vulkan/D3D12 Only*
+    /// There are two purposes for SetExplicitTimingMode:
+    ///	1. To get a more accurate GPU timestamp for when the frame begins in Vulkan/D3D12 applications.
+    ///	2. (Optional) To avoid having WaitGetPoses access the Vulkan queue so that the queue can be accessed from
+    ///	another thread while WaitGetPoses is executing.
+    ///
+    /// More accurate GPU timestamp for the start of the frame is achieved by the application calling
+    /// SubmitExplicitTimingData immediately before its first submission to the Vulkan/D3D12 queue.  This is more
+    /// accurate because normally this GPU timestamp is recorded during WaitGetPoses.  In D3D11, WaitGetPoses queues a
+    /// GPU timestamp write, but it does not actually get submitted to the GPU until the application flushes.  By using
+    /// SubmitExplicitTimingData, the timestamp is recorded at the same place for Vulkan/D3D12 as it is for D3D11,
+    /// resulting in a more accurate GPU time measurement for the frame.
+    ///
+    /// Avoiding WaitGetPoses accessing the Vulkan queue can be achieved using SetExplicitTimingMode as well.  If this
+    /// is desired, the application *MUST* call PostPresentHandoff itself prior to WaitGetPoses.  If
+    /// SetExplicitTimingMode is true and the application calls PostPresentHandoff, then WaitGetPoses is guaranteed not
+    /// to access the queue.  Note that PostPresentHandoff and SubmitExplicitTimingData will access the queue, so only
+    /// WaitGetPoses becomes safe for accessing the queue from another thread.
+    pub fn set_explicit_timing_mode(&self, mode: bool) {
+        unsafe { self.0.SetExplicitTimingMode.unwrap()(mode) }
+    }
+
+    pub fn submit_explicit_timing_data(&self) -> Result<(), CompositorError> {
+        let e = unsafe { self.0.SubmitExplicitTimingData.unwrap()() };
+        if e == sys::EVRCompositorError_VRCompositorError_None {
+            Ok(())
+        } else {
+            Err(CompositorError(e))
+        }
     }
 }
 

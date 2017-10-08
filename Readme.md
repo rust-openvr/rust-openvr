@@ -4,11 +4,11 @@ rust-openvr
 [![Build Status](https://travis-ci.org/rust-openvr/rust-openvr.svg?branch=master)](https://travis-ci.org/rust-openvr/rust-openvr)
 [![Join the chat at https://gitter.im/rust-openvr/rust-openvr](https://badges.gitter.im/rust-openvr/rust-openvr.svg)](https://gitter.im/rust-openvr/rust-openvr?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-rust-openvr is a binding for openvr.
+A high-level binding for OpenVR 1.0.10. 
 
-## [Link to the documentation](http://rust-openvr.github.io/rust-openvr/openvr/index.html)
-## Current sdk version: OpenVR SDK 1.0.1
+[API documentation](http://rust-openvr.github.io/rust-openvr/openvr/index.html)
 
+High-level documentation can be found at [the OpenVR wiki](https://github.com/ValveSoftware/openvr/wiki/API-Documentation).
 
 Using rust-openvr
 -----------
@@ -17,11 +17,9 @@ Using rust-openvr
 
 openvr-sys needs cmake and a C++ compiler so that it can compile and statically link the OpenVR client library.
 
-# Building on Windows
+## Windows
 
-Rust provides 2 pre-compiled version for windows. MSVC ABI and GNU ABI. The proprietary OpenVR library which is loaded
-behind the scenes by the client library is MSVC only, and therefore MSVC is required! For more informations about the
-ABI in Rust see https://www.rust-lang.org/en-US/downloads.html#win-foot
+Upstream OpenVR does not support MinGW. You must use an MSVC-targeted rust toolchain and C++ compiler.
 
 # Initializing
 
@@ -31,7 +29,7 @@ extern crate openvr;
 
 fn main() {
     // Initialize OpenVR
-    let context = openvr::init(openvr::ApplicationType::Scene).unwrap();
+    let context = unsafe { openvr::init(openvr::ApplicationType::Scene) }.unwrap();
 
     // accessing subsystems
     let system = context.system().unwrap();
@@ -41,5 +39,4 @@ fn main() {
 ```
 
 # Examples
-For data collection examples/test.rs can be used.
-For an actual opengl implementation see examples/opengl.rs (WIP)
+See examples/test.rs for a more detailed example.

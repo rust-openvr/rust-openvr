@@ -34,8 +34,7 @@ pub struct Controller {
 
 impl FromEventData for Controller {
     unsafe fn from_event_data(x: &sys::VREvent_Data_t) -> Self {
-        let x = x.controller.as_ref();
-        Controller { button: x.button }
+        Controller { button: x.controller.button }
     }
 }
 
@@ -50,8 +49,7 @@ pub struct Mouse {
 
 impl FromEventData for Mouse {
     unsafe fn from_event_data(x: &sys::VREvent_Data_t) -> Self {
-        let x = x.mouse.as_ref();
-        Mouse { position: (x.x, x.y), button: x.button }
+        Mouse { position: (x.mouse.x, x.mouse.y), button: x.mouse.button }
     }
 }
 
@@ -67,8 +65,7 @@ pub struct Scroll {
 
 impl FromEventData for Scroll {
     unsafe fn from_event_data(x: &sys::VREvent_Data_t) -> Self {
-        let x = x.scroll.as_ref();
-        Scroll { delta: (x.xdelta, x.ydelta), repeat_count: x.repeatCount }
+        Scroll { delta: (x.scroll.xdelta, x.scroll.ydelta), repeat_count: x.scroll.repeatCount }
     }
 }
 
@@ -88,10 +85,9 @@ pub struct TouchPadMove {
 
 impl FromEventData for TouchPadMove {
     unsafe fn from_event_data(x: &sys::VREvent_Data_t) -> Self {
-        let x = x.touchPadMove.as_ref();
-        TouchPadMove { finger_down: x.bFingerDown, seconds_finger_down: x.flSecondsFingerDown,
-                       first: (x.fValueXFirst, x.fValueYFirst),
-                       raw: (x.fValueXRaw, x.fValueYRaw) }
+        TouchPadMove { finger_down: x.touchPadMove.bFingerDown, seconds_finger_down: x.touchPadMove.flSecondsFingerDown,
+                       first: (x.touchPadMove.fValueXFirst, x.touchPadMove.fValueYFirst),
+                       raw: (x.touchPadMove.fValueXRaw, x.touchPadMove.fValueYRaw) }
     }
 }
 
@@ -111,8 +107,7 @@ pub struct Process {
 
 impl FromEventData for Process {
     unsafe fn from_event_data(x: &sys::VREvent_Data_t) -> Self {
-        let x = x.process.as_ref();
-        Process { pid: x.pid, old_pid: x.oldPid, forced: x.bForced }
+        Process { pid: x.process.pid, old_pid: x.process.oldPid, forced: x.process.bForced }
     }
 }
 
@@ -123,8 +118,7 @@ pub struct Overlay {
 
 impl FromEventData for Overlay {
     unsafe fn from_event_data(x: &sys::VREvent_Data_t) -> Self {
-        let x = x.overlay.as_ref();
-        Overlay { overlay_handle: x.overlayHandle }
+        Overlay { overlay_handle: x.overlay.overlayHandle }
     }
 }
 
@@ -141,7 +135,7 @@ pub struct Keyboard {
 
 impl FromEventData for Keyboard {
     unsafe fn from_event_data(x: &sys::VREvent_Data_t) -> Self {
-        let x = &*(x.keyboard.as_ref() as *const _ as *const sys::VREvent_Keyboard_t_real);
+        let x = &*(&x.keyboard as *const _ as *const sys::VREvent_Keyboard_t_real);
         Keyboard { new_input: *(x.cNewInput.as_ptr() as *const _), user_value: x.uUserValue }
     }
 }
