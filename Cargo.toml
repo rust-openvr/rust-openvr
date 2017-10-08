@@ -23,5 +23,5 @@ travis-ci = { repository = "rust-openvr/rust-openvr" }
 maintenance = { status = "passively-maintained" }
 
 [dependencies]
-openvr_sys = { git = "https://github.com/rust-openvr/rust-openvr-sys.git" }
+openvr_sys = "2"
 lazy_static = "0.2.8"
