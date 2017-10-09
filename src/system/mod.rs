@@ -287,6 +287,20 @@ impl System {
     pub fn acknowledge_quit_user_prompt(&self) {
         unsafe { self.0.AcknowledgeQuit_UserPrompt.unwrap()(); }
     }
+
+    /// Sets the zero pose for the seated tracker coordinate system to the current position and yaw of the HMD.
+    ///
+    /// After `reset_seated_zero_pose` all `device_to_absolute_tracking_pose` calls that pass
+    /// `TrackingUniverseOrigin::Seated` as the origin will be relative to this new zero pose. The new zero coordinate
+    /// system will not change the fact that the Y axis is up in the real world, so the next pose returned from
+    /// `device_to_absolute_tracking_pose` after a call to `reset_seated_zero_pose` may not be exactly an identity
+    /// matrix.
+    ///
+    /// NOTE: This function overrides the user's previously saved seated zero pose and should only be called as the
+    /// result of a user action.  Users are also able to set their seated zero pose via the OpenVR Dashboard.
+    pub fn reset_seated_zero_pose(&self) {
+        unsafe { self.0.ResetSeatedZeroPose.unwrap()(); }
+    }
 }
 
 /// Values represent the tangents of the half-angles from the center view axis
