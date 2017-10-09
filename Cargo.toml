@@ -1,6 +1,6 @@
 [package]
 name = "openvr"
-version = "0.5.0"
+version = "0.5.1"
 authors = [
     "Colin Sherratt",
     "Erick Tryzelaar",
@@ -9,7 +9,6 @@ authors = [
 ]
 license-file = "LICENSE.md"
 
-documentation = "http://rust-openvr.github.io/rust-openvr/openvr/index.html"
 homepage = "https://github.com/rust-openvr/rust-openvr"
 repository = "https://github.com/rust-openvr/rust-openvr"
 
