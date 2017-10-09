@@ -6,7 +6,7 @@ rust-openvr
 
 A high-level binding for OpenVR 1.0.10. 
 
-[API documentation](http://rust-openvr.github.io/rust-openvr/openvr/index.html)
+[API documentation](https://docs.rs/openvr/*/openvr/)
 
 High-level documentation can be found at [the OpenVR wiki](https://github.com/ValveSoftware/openvr/wiki/API-Documentation).
 
