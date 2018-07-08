@@ -7,7 +7,7 @@ authors = [
     "Rene Eichhorn",
     "Benjamin Saunders"
 ]
-license-file = "LICENSE.md"
+license = "MIT"
 
 homepage = "https://github.com/rust-openvr/rust-openvr"
 repository = "https://github.com/rust-openvr/rust-openvr"
