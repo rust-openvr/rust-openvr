@@ -23,8 +23,6 @@ pub use sys::VkPhysicalDevice_T;
 pub use sys::VkDevice_T;
 pub use sys::VkInstance_T;
 pub use sys::VkQueue_T;
-pub use sys::HmdQuad_t;
-pub use sys::HmdVector3_t;
 pub use sys::HmdColor_t;
 
 static INITIALIZED: AtomicBool = ATOMIC_BOOL_INIT;
