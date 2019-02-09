@@ -14,6 +14,7 @@ mod tracking;
 pub mod system;
 pub mod compositor;
 pub mod render_models;
+pub mod chaperone;
 pub mod property;
 
 pub use tracking::*;
@@ -22,6 +23,9 @@ pub use sys::VkPhysicalDevice_T;
 pub use sys::VkDevice_T;
 pub use sys::VkInstance_T;
 pub use sys::VkQueue_T;
+pub use sys::HmdQuad_t;
+pub use sys::HmdVector3_t;
+pub use sys::HmdColor_t;
 
 static INITIALIZED: AtomicBool = ATOMIC_BOOL_INIT;
 
@@ -55,6 +59,7 @@ pub unsafe fn init(ty: ApplicationType) -> Result<Context, InitError> {
 pub struct System(&'static sys::VR_IVRSystem_FnTable);
 pub struct Compositor(&'static sys::VR_IVRCompositor_FnTable);
 pub struct RenderModels(&'static sys::VR_IVRRenderModels_FnTable);
+pub struct Chaperone(&'static sys::VR_IVRChaperone_FnTable);
 
 /// Entry points into OpenVR.
 ///
@@ -78,6 +83,7 @@ impl Context {
     pub fn system(&self) -> Result<System, InitError> { load(sys::IVRSystem_Version).map(|x| unsafe { System(&*x) }) }
     pub fn compositor(&self) -> Result<Compositor, InitError> { load(sys::IVRCompositor_Version).map(|x| unsafe { Compositor(&*x) }) }
     pub fn render_models(&self) -> Result<RenderModels, InitError> { load(sys::IVRRenderModels_Version).map(|x| unsafe { RenderModels(&*x) }) }
+    pub fn chaperone(&self) -> Result<Chaperone, InitError> { load(sys::IVRChaperone_Version).map(|x| unsafe { Chaperone(&*x) }) }
 }
 
 impl Drop for Context {
