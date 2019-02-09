@@ -2,7 +2,7 @@ use std::convert::From;
 
 use openvr_sys as sys;
 
-use {Chaperone, HmdColor_t};
+use Chaperone;
 
 /// Chaperone warning states
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
@@ -110,18 +110,6 @@ impl Chaperone {
         }
     }
 
-    // Do not understand what this does
-    /// Reload chaperone info
-    fn reload_info(&mut self) {
-        unsafe { self.0.ReloadInfo.unwrap()() };
-    }
-
-    // Do not understand what this does
-    /// Set scene color
-    fn set_scene_color(&mut self, color: HmdColor_t) {
-        unsafe { self.0.SetSceneColor.unwrap()(color) };
-    }
-
     /// Are chaperone bounds visible?
     pub fn are_bounds_visible(&self) -> bool {
         unsafe { self.0.AreBoundsVisible.unwrap()() }
@@ -141,7 +129,7 @@ mod test {
     use super::*;
 
     #[test]
-    fn convert_ChaperoneCalibrationState() {
+    fn convert_chaperone_state() {
         assert_eq!(
             ChaperoneCalibrationState::from(sys::ChaperoneCalibrationState_OK),
             ChaperoneCalibrationState::Ok
