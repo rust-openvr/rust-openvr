@@ -2,7 +2,7 @@ use std::convert::From;
 
 use openvr_sys as sys;
 
-use {Chaperone, HmdColor_t, HmdQuad_t, HmdVector3_t};
+use {Chaperone, HmdColor_t};
 
 /// Chaperone warning states
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
@@ -98,13 +98,13 @@ impl Chaperone {
     }
 
     /// Returns the 4 corner positions of the PlayArea.
-    pub fn get_play_area_rect(&self) -> Option<HmdQuad_t> {
-        let mut play_area_rect = HmdQuad_t {
-            vCorners: [HmdVector3_t { v: [0.0; 3] }; 4],
+    pub fn get_play_area_rect(&self) -> Option<[[f32; 3]; 4]> {
+        let mut r = sys::HmdQuad_t {
+            vCorners: [sys::HmdVector3_t { v: [0.0; 3] }; 4],
         };
-        let is_ok = unsafe { self.0.GetPlayAreaRect.unwrap()(&mut play_area_rect) };
+        let is_ok = unsafe { self.0.GetPlayAreaRect.unwrap()(&mut r) };
         if is_ok {
-            Some(play_area_rect)
+            Some([r.vCorners[0].v, r.vCorners[1].v, r.vCorners[2].v, r.vCorners[3].v])
         } else {
             None
         }
