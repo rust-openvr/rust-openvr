@@ -50,7 +50,7 @@ pub unsafe fn init(ty: ApplicationType) -> Result<Context, InitError> {
         sys::VR_ShutdownInternal();
         return Err(InitError(sys::EVRInitError_VRInitError_Init_InterfaceNotFound));
     }
-    Ok(Context { live: Cell::new(true) })
+    Ok(Context { live: AtomicBool::new(true) })
 }
 
 pub struct System(&'static sys::VR_IVRSystem_FnTable);
@@ -63,7 +63,7 @@ pub struct Chaperone(&'static sys::VR_IVRChaperone_FnTable);
 /// At most one of this object may exist at a time.
 ///
 /// See safety notes in `init`.
-pub struct Context { live: Cell<bool> }
+pub struct Context { live: AtomicBool }
 
 fn load<T>(suffix: &[u8]) -> Result<*const T, InitError> {
     let mut magic = Vec::from(b"FnTable:".as_ref());
@@ -100,9 +100,10 @@ impl Context {
     /// attempting to free graphics resources.
     ///
     /// No calls to other OpenVR methods may be made after this has been called unless a new `Context` is first
+   
     /// constructed.
     pub unsafe fn shutdown(&self) {
-        if self.live.replace(false) {
+        if self.live.swap(false, Ordering::Acquire) {
             sys::VR_ShutdownInternal();
             INITIALIZED.store(false, Ordering::Release);
         }
