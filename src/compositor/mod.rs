@@ -8,8 +8,8 @@
 //! It is recommended that you continue presenting your application's own window, reusing either the left or right eye
 //! camera render target to draw a single quad (perhaps cropped to a lower fov to hide the hidden area mask).
 
-use std::{mem, ptr, error, fmt};
 use std::ffi::CString;
+use std::{error, fmt, mem, ptr};
 
 use openvr_sys as sys;
 
@@ -21,14 +21,29 @@ use super::*;
 
 impl Compositor {
     pub fn vulkan_instance_extensions_required(&self) -> Vec<CString> {
-        let temp = unsafe { get_string(|ptr, n| self.0.GetVulkanInstanceExtensionsRequired.unwrap()(ptr, n)) }.unwrap();
-        temp.as_bytes().split(|&x| x == b' ').map(|x| CString::new(x.to_vec()).expect("extension name contained null byte")).collect()
+        let temp = unsafe {
+            get_string(|ptr, n| self.0.GetVulkanInstanceExtensionsRequired.unwrap()(ptr, n))
+        }
+        .unwrap();
+        temp.as_bytes()
+            .split(|&x| x == b' ')
+            .map(|x| CString::new(x.to_vec()).expect("extension name contained null byte"))
+            .collect()
     }
 
     /// Safety: physical_device must be a valid VkPhysicalDevice
-    pub unsafe fn vulkan_device_extensions_required(&self, physical_device: *mut VkPhysicalDevice_T) -> Vec<CString> {
-        let temp = get_string(|ptr, n| self.0.GetVulkanDeviceExtensionsRequired.unwrap()(physical_device, ptr, n)).unwrap();
-        temp.as_bytes().split(|&x| x == b' ').map(|x| CString::new(x.to_vec()).expect("extension name contained null byte")).collect()
+    pub unsafe fn vulkan_device_extensions_required(
+        &self,
+        physical_device: *mut VkPhysicalDevice_T,
+    ) -> Vec<CString> {
+        let temp = get_string(|ptr, n| {
+            self.0.GetVulkanDeviceExtensionsRequired.unwrap()(physical_device, ptr, n)
+        })
+        .unwrap();
+        temp.as_bytes()
+            .split(|&x| x == b' ')
+            .map(|x| CString::new(x.to_vec()).expect("extension name contained null byte"))
+            .collect()
     }
 
     /// Sets tracking space returned by WaitGetPoses
@@ -43,8 +58,12 @@ impl Compositor {
     pub fn wait_get_poses(&self) -> Result<WaitPoses, CompositorError> {
         unsafe {
             let mut result: WaitPoses = mem::uninitialized();
-            let e = self.0.WaitGetPoses.unwrap()(result.render.as_mut().as_mut_ptr() as *mut _, result.render.len() as u32,
-                                                   result.game.as_mut().as_mut_ptr() as *mut _, result.game.len() as u32);
+            let e = self.0.WaitGetPoses.unwrap()(
+                result.render.as_mut().as_mut_ptr() as *mut _,
+                result.render.len() as u32,
+                result.game.as_mut().as_mut_ptr() as *mut _,
+                result.game.len() as u32,
+            );
             if e == sys::EVRCompositorError_VRCompositorError_None {
                 Ok(result)
             } else {
@@ -60,13 +79,23 @@ impl Compositor {
     /// # Safety
     ///
     /// The handles you supply must be valid and comply with the graphics API's synchronization requirements.
-    pub unsafe fn submit(&self, eye: Eye, texture: &Texture, bounds: Option<&texture::Bounds>, pose: Option<[[f32; 4]; 3]>) -> Result<(), CompositorError> {
+    pub unsafe fn submit(
+        &self,
+        eye: Eye,
+        texture: &Texture,
+        bounds: Option<&texture::Bounds>,
+        pose: Option<[[f32; 4]; 3]>,
+    ) -> Result<(), CompositorError> {
         use self::texture::Handle::*;
         let flags = match texture.handle {
             Vulkan(_) => sys::EVRSubmitFlags_Submit_Default,
             OpenGLTexture(_) => sys::EVRSubmitFlags_Submit_Default,
             OpenGLRenderBuffer(_) => sys::EVRSubmitFlags_Submit_GlRenderBuffer,
-        } | if pose.is_some() { sys::EVRSubmitFlags_Submit_TextureWithPose } else { 0 };
+        } | if pose.is_some() {
+            sys::EVRSubmitFlags_Submit_TextureWithPose
+        } else {
+            0
+        };
         let texture = sys::VRTextureWithPose_t_real {
             handle: match texture.handle {
                 Vulkan(ref x) => x as *const _ as *mut _,
@@ -79,13 +108,18 @@ impl Compositor {
                 OpenGLRenderBuffer(_) => sys::ETextureType_TextureType_OpenGL,
             },
             eColorSpace: texture.color_space as sys::EColorSpace,
-            mDeviceToAbsoluteTracking: sys::HmdMatrix34_t { m: pose.unwrap_or([[0.0; 4]; 3]) },
+            mDeviceToAbsoluteTracking: sys::HmdMatrix34_t {
+                m: pose.unwrap_or([[0.0; 4]; 3]),
+            },
         };
         let e = self.0.Submit.unwrap()(
             eye as sys::EVREye,
             &texture as *const _ as *mut _,
-            bounds.map(|x| x as *const _ as *mut texture::Bounds as *mut _).unwrap_or(ptr::null_mut()),
-            flags);
+            bounds
+                .map(|x| x as *const _ as *mut texture::Bounds as *mut _)
+                .unwrap_or(ptr::null_mut()),
+            flags,
+        );
         if e == sys::EVRCompositorError_VRCompositorError_None {
             Ok(())
         } else {
@@ -165,17 +199,28 @@ pub struct CompositorError(sys::EVRCompositorError);
 pub mod compositor_error {
     use super::*;
 
-    pub const REQUEST_FAILED: CompositorError = CompositorError(sys::EVRCompositorError_VRCompositorError_RequestFailed);
-    pub const INCOMPATIBLE_VERSION: CompositorError = CompositorError(sys::EVRCompositorError_VRCompositorError_IncompatibleVersion);
-    pub const DO_NOT_HAVE_FOCUS: CompositorError = CompositorError(sys::EVRCompositorError_VRCompositorError_DoNotHaveFocus);
-    pub const INVALID_TEXTURE: CompositorError = CompositorError(sys::EVRCompositorError_VRCompositorError_InvalidTexture);
-    pub const IS_NOT_SCENE_APPLICATION: CompositorError = CompositorError(sys::EVRCompositorError_VRCompositorError_IsNotSceneApplication);
-    pub const TEXTURE_IS_ON_WRONG_DEVICE: CompositorError = CompositorError(sys::EVRCompositorError_VRCompositorError_TextureIsOnWrongDevice);
-    pub const TEXTURE_USES_UNSUPPORTED_FORMAT: CompositorError = CompositorError(sys::EVRCompositorError_VRCompositorError_TextureUsesUnsupportedFormat);
-    pub const SHARED_TEXTURES_NOT_SUPPORTED: CompositorError = CompositorError(sys::EVRCompositorError_VRCompositorError_SharedTexturesNotSupported);
-    pub const INDEX_OUT_OF_RANGE: CompositorError = CompositorError(sys::EVRCompositorError_VRCompositorError_IndexOutOfRange);
-    pub const ALREADY_SUBMITTED: CompositorError = CompositorError(sys::EVRCompositorError_VRCompositorError_AlreadySubmitted);
-    pub const INVALID_BOUNDS: CompositorError = CompositorError(sys::EVRCompositorError_VRCompositorError_InvalidBounds);
+    pub const REQUEST_FAILED: CompositorError =
+        CompositorError(sys::EVRCompositorError_VRCompositorError_RequestFailed);
+    pub const INCOMPATIBLE_VERSION: CompositorError =
+        CompositorError(sys::EVRCompositorError_VRCompositorError_IncompatibleVersion);
+    pub const DO_NOT_HAVE_FOCUS: CompositorError =
+        CompositorError(sys::EVRCompositorError_VRCompositorError_DoNotHaveFocus);
+    pub const INVALID_TEXTURE: CompositorError =
+        CompositorError(sys::EVRCompositorError_VRCompositorError_InvalidTexture);
+    pub const IS_NOT_SCENE_APPLICATION: CompositorError =
+        CompositorError(sys::EVRCompositorError_VRCompositorError_IsNotSceneApplication);
+    pub const TEXTURE_IS_ON_WRONG_DEVICE: CompositorError =
+        CompositorError(sys::EVRCompositorError_VRCompositorError_TextureIsOnWrongDevice);
+    pub const TEXTURE_USES_UNSUPPORTED_FORMAT: CompositorError =
+        CompositorError(sys::EVRCompositorError_VRCompositorError_TextureUsesUnsupportedFormat);
+    pub const SHARED_TEXTURES_NOT_SUPPORTED: CompositorError =
+        CompositorError(sys::EVRCompositorError_VRCompositorError_SharedTexturesNotSupported);
+    pub const INDEX_OUT_OF_RANGE: CompositorError =
+        CompositorError(sys::EVRCompositorError_VRCompositorError_IndexOutOfRange);
+    pub const ALREADY_SUBMITTED: CompositorError =
+        CompositorError(sys::EVRCompositorError_VRCompositorError_AlreadySubmitted);
+    pub const INVALID_BOUNDS: CompositorError =
+        CompositorError(sys::EVRCompositorError_VRCompositorError_InvalidBounds);
 }
 
 impl fmt::Debug for CompositorError {

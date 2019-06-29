@@ -104,7 +104,12 @@ impl Chaperone {
         };
         let is_ok = unsafe { self.0.GetPlayAreaRect.unwrap()(&mut r) };
         if is_ok {
-            Some([r.vCorners[0].v, r.vCorners[1].v, r.vCorners[2].v, r.vCorners[3].v])
+            Some([
+                r.vCorners[0].v,
+                r.vCorners[1].v,
+                r.vCorners[2].v,
+                r.vCorners[3].v,
+            ])
         } else {
             None
         }
