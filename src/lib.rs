@@ -2,7 +2,7 @@ extern crate openvr_sys;
 #[macro_use]
 extern crate lazy_static;
 
-use std::sync::atomic::{Ordering, AtomicBool, ATOMIC_BOOL_INIT};
+use std::sync::atomic::{Ordering, AtomicBool};
 use std::{fmt, error, ptr, mem};
 use std::ffi::{CStr, CString};
 use std::cell::Cell;
@@ -24,7 +24,7 @@ pub use sys::VkDevice_T;
 pub use sys::VkInstance_T;
 pub use sys::VkQueue_T;
 
-static INITIALIZED: AtomicBool = ATOMIC_BOOL_INIT;
+static INITIALIZED: AtomicBool = AtomicBool::new(false);
 
 /// Initialize OpenVR
 ///

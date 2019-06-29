@@ -138,7 +138,7 @@ impl Compositor {
     /// to access the queue.  Note that PostPresentHandoff and SubmitExplicitTimingData will access the queue, so only
     /// WaitGetPoses becomes safe for accessing the queue from another thread.
     pub fn set_explicit_timing_mode(&self, mode: bool) {
-        unsafe { self.0.SetExplicitTimingMode.unwrap()(mode) }
+        unsafe { self.0.SetExplicitTimingMode.unwrap()(mode as sys::EVRCompositorTimingMode) }
     }
 
     pub fn submit_explicit_timing_data(&self) -> Result<(), CompositorError> {
@@ -151,7 +151,7 @@ impl Compositor {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy, Clone)]
 pub struct WaitPoses {
     /// Predicted to the point they will be at the upcoming frame.
     pub render: TrackedDevicePoses,

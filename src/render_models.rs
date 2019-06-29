@@ -253,11 +253,11 @@ type ComponentProperties = sys::VRComponentProperties;
 pub mod component_properties {
     use super::{sys, ComponentProperties};
 
-    pub const IS_STATIC: ComponentProperties = sys::EVRComponentProperty_VRComponentProperty_IsStatic;
-    pub const IS_VISIBLE: ComponentProperties = sys::EVRComponentProperty_VRComponentProperty_IsVisible;
-    pub const IS_TOUCHED: ComponentProperties = sys::EVRComponentProperty_VRComponentProperty_IsTouched;
-    pub const IS_PRESSED: ComponentProperties = sys::EVRComponentProperty_VRComponentProperty_IsPressed;
-    pub const IS_SCROLLED: ComponentProperties = sys::EVRComponentProperty_VRComponentProperty_IsScrolled;
+    pub const IS_STATIC: ComponentProperties = sys::EVRComponentProperty_VRComponentProperty_IsStatic as ComponentProperties;
+    pub const IS_VISIBLE: ComponentProperties = sys::EVRComponentProperty_VRComponentProperty_IsVisible as ComponentProperties;
+    pub const IS_TOUCHED: ComponentProperties = sys::EVRComponentProperty_VRComponentProperty_IsTouched as ComponentProperties;
+    pub const IS_PRESSED: ComponentProperties = sys::EVRComponentProperty_VRComponentProperty_IsPressed as ComponentProperties;
+    pub const IS_SCROLLED: ComponentProperties = sys::EVRComponentProperty_VRComponentProperty_IsScrolled as ComponentProperties;
 }
 
 pub mod component {
