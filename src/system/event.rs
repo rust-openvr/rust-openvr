@@ -11,11 +11,12 @@ pub struct EventInfo {
 }
 
 impl From<sys::VREvent_t> for EventInfo {
+    #[allow(unused_unsafe)]
     fn from(x: sys::VREvent_t) -> Self {
         EventInfo {
             tracked_device_index: x.trackedDeviceIndex,
             age: x.eventAgeSeconds,
-            event: Event::from_sys(x.eventType as sys::EVREventType, &x.data),
+            event: Event::from_sys(x.eventType as sys::EVREventType, unsafe { &x.data }),
         }
     }
 }
