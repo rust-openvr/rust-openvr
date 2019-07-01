@@ -28,6 +28,8 @@ pub mod vulkan {
         pub format: u32,
         pub sample_count: u32,
     }
+    unsafe impl Send for Texture{}
+    unsafe impl Sync for Texture{}
 }
 
 #[derive(Debug, Copy, Clone)]
