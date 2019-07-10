@@ -2,29 +2,29 @@ extern crate openvr_sys;
 #[macro_use]
 extern crate lazy_static;
 
-use std::sync::atomic::{Ordering, AtomicBool, ATOMIC_BOOL_INIT};
-use std::{fmt, error, ptr, mem};
-use std::ffi::{CStr, CString};
 use std::cell::Cell;
+use std::ffi::{CStr, CString};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::{error, fmt, mem, ptr};
 
 use openvr_sys as sys;
 
 mod tracking;
 
-pub mod system;
-pub mod compositor;
-pub mod render_models;
 pub mod chaperone;
+pub mod compositor;
 pub mod property;
+pub mod render_models;
+pub mod system;
 
 pub use tracking::*;
 
-pub use sys::VkPhysicalDevice_T;
 pub use sys::VkDevice_T;
 pub use sys::VkInstance_T;
+pub use sys::VkPhysicalDevice_T;
 pub use sys::VkQueue_T;
 
-static INITIALIZED: AtomicBool = ATOMIC_BOOL_INIT;
+static INITIALIZED: AtomicBool = AtomicBool::new(false);
 
 /// Initialize OpenVR
 ///
@@ -48,9 +48,13 @@ pub unsafe fn init(ty: ApplicationType) -> Result<Context, InitError> {
     }
     if !sys::VR_IsInterfaceVersionValid(sys::IVRSystem_Version.as_ptr() as *const i8) {
         sys::VR_ShutdownInternal();
-        return Err(InitError(sys::EVRInitError_VRInitError_Init_InterfaceNotFound));
+        return Err(InitError(
+            sys::EVRInitError_VRInitError_Init_InterfaceNotFound,
+        ));
     }
-    Ok(Context { live: Cell::new(true) })
+    Ok(Context {
+        live: Cell::new(true),
+    })
 }
 
 pub struct System(&'static sys::VR_IVRSystem_FnTable);
@@ -63,7 +67,9 @@ pub struct Chaperone(&'static sys::VR_IVRChaperone_FnTable);
 /// At most one of this object may exist at a time.
 ///
 /// See safety notes in `init`.
-pub struct Context { live: Cell<bool> }
+pub struct Context {
+    live: Cell<bool>,
+}
 
 fn load<T>(suffix: &[u8]) -> Result<*const T, InitError> {
     let mut magic = Vec::from(b"FnTable:".as_ref());
@@ -71,16 +77,26 @@ fn load<T>(suffix: &[u8]) -> Result<*const T, InitError> {
     let mut error = sys::EVRInitError_VRInitError_None;
     let result = unsafe { sys::VR_GetGenericInterface(magic.as_ptr() as *const i8, &mut error) };
     if error != sys::EVRInitError_VRInitError_None {
-        return Err(InitError(sys::EVRInitError_VRInitError_Init_InterfaceNotFound));
+        return Err(InitError(
+            sys::EVRInitError_VRInitError_Init_InterfaceNotFound,
+        ));
     }
     Ok(result as *const T)
 }
 
 impl Context {
-    pub fn system(&self) -> Result<System, InitError> { load(sys::IVRSystem_Version).map(|x| unsafe { System(&*x) }) }
-    pub fn compositor(&self) -> Result<Compositor, InitError> { load(sys::IVRCompositor_Version).map(|x| unsafe { Compositor(&*x) }) }
-    pub fn render_models(&self) -> Result<RenderModels, InitError> { load(sys::IVRRenderModels_Version).map(|x| unsafe { RenderModels(&*x) }) }
-    pub fn chaperone(&self) -> Result<Chaperone, InitError> { load(sys::IVRChaperone_Version).map(|x| unsafe { Chaperone(&*x) }) }
+    pub fn system(&self) -> Result<System, InitError> {
+        load(sys::IVRSystem_Version).map(|x| unsafe { System(&*x) })
+    }
+    pub fn compositor(&self) -> Result<Compositor, InitError> {
+        load(sys::IVRCompositor_Version).map(|x| unsafe { Compositor(&*x) })
+    }
+    pub fn render_models(&self) -> Result<RenderModels, InitError> {
+        load(sys::IVRRenderModels_Version).map(|x| unsafe { RenderModels(&*x) })
+    }
+    pub fn chaperone(&self) -> Result<Chaperone, InitError> {
+        load(sys::IVRChaperone_Version).map(|x| unsafe { Chaperone(&*x) })
+    }
 }
 
 impl Drop for Context {
@@ -111,7 +127,7 @@ impl Context {
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum ApplicationType {
-    /// Some other kind of application that isn't covered by the other entries 
+    /// Some other kind of application that isn't covered by the other entries
     Other = sys::EVRApplicationType_VRApplication_Other as isize,
     /// Application will submit 3D frames
     Scene = sys::EVRApplicationType_VRApplication_Scene as isize,
@@ -136,19 +152,19 @@ pub struct InitError(sys::EVRInitError);
 
 impl fmt::Debug for InitError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let msg = unsafe {
-            CStr::from_ptr(sys::VR_GetVRInitErrorAsSymbol(self.0))
-        };
-        f.pad(msg.to_str().expect("OpenVR init error symbol was not valid UTF-8"))
+        let msg = unsafe { CStr::from_ptr(sys::VR_GetVRInitErrorAsSymbol(self.0)) };
+        f.pad(
+            msg.to_str()
+                .expect("OpenVR init error symbol was not valid UTF-8"),
+        )
     }
 }
 
 impl error::Error for InitError {
     fn description(&self) -> &str {
-        let msg = unsafe {
-            CStr::from_ptr(sys::VR_GetVRInitErrorAsEnglishDescription(self.0))
-        };
-        msg.to_str().expect("OpenVR init error description was not valid UTF-8")
+        let msg = unsafe { CStr::from_ptr(sys::VR_GetVRInitErrorAsEnglishDescription(self.0)) };
+        msg.to_str()
+            .expect("OpenVR init error description was not valid UTF-8")
     }
 }
 
@@ -167,13 +183,15 @@ pub enum Eye {
 /// Helper to call OpenVR functions that return strings
 unsafe fn get_string<F: FnMut(*mut std::os::raw::c_char, u32) -> u32>(mut f: F) -> Option<CString> {
     let n = f(ptr::null_mut(), 0);
-    if n == 0 { return None }
+    if n == 0 {
+        return None;
+    }
     let mut storage = Vec::new();
     storage.reserve_exact(n as usize);
     storage.resize(n as usize, mem::uninitialized());
     let n_ = f(storage.as_mut_ptr() as *mut _, n);
     assert!(n == n_);
-    storage.truncate((n-1) as usize); // Strip trailing null
+    storage.truncate((n - 1) as usize); // Strip trailing null
     Some(CString::from_vec_unchecked(storage))
 }
 

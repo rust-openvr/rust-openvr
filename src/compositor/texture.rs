@@ -1,4 +1,4 @@
-use super::{sys, VkInstance_T, VkDevice_T, VkPhysicalDevice_T, VkQueue_T};
+use super::{sys, VkDevice_T, VkInstance_T, VkPhysicalDevice_T, VkQueue_T};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Texture {
