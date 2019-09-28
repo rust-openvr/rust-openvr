@@ -53,10 +53,7 @@ fn main() {
     print!("\tPoses ");
     let poses = system
         .device_to_absolute_tracking_pose(openvr::TrackingUniverseOrigin::RawAndUncalibrated, 0.0);
-    for pose in poses.iter() {
-        print_matrix(8 + 6, pose.device_to_absolute_tracking());
-        break;
-    }
+    print_matrix(8 + 6, poses[0].device_to_absolute_tracking());
 
     println!("\tDistortion example");
     for u in 0..2 {

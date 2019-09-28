@@ -57,7 +57,7 @@ impl Compositor {
     /// Poses are relative to the origin set by `set_tracking_space`.
     pub fn wait_get_poses(&self) -> Result<WaitPoses, CompositorError> {
         unsafe {
-            let mut result: WaitPoses = mem::uninitialized();
+            let mut result: WaitPoses = mem::MaybeUninit::uninit().assume_init();
             let e = self.0.WaitGetPoses.unwrap()(
                 result.render.as_mut().as_mut_ptr() as *mut _,
                 result.render.len() as u32,

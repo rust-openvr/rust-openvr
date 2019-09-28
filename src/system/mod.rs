@@ -3,7 +3,7 @@
 
 use std::ffi::CString;
 use std::marker::PhantomData;
-use std::{mem, ptr, slice};
+use std::{mem, slice};
 
 use openvr_sys as sys;
 
@@ -19,7 +19,7 @@ impl System {
     /// to display depending on resolution, distortion, and field of view.
     pub fn recommended_render_target_size(&self) -> (u32, u32) {
         unsafe {
-            let mut result: (u32, u32) = mem::uninitialized();
+            let mut result: (u32, u32) = mem::MaybeUninit::uninit().assume_init();
             self.0.GetRecommendedRenderTargetSize.unwrap()(&mut result.0, &mut result.1);
             result
         }
@@ -37,7 +37,7 @@ impl System {
     /// compute its own matrix.
     pub fn projection_raw(&self, eye: Eye) -> RawProjection {
         unsafe {
-            let mut result: RawProjection = mem::uninitialized();
+            let mut result: RawProjection = mem::MaybeUninit::uninit().assume_init();
             self.0.GetProjectionRaw.unwrap()(
                 eye as sys::EVREye,
                 &mut result.left,
@@ -62,7 +62,7 @@ impl System {
     /// None.
     pub fn time_since_last_vsync(&self) -> Option<(f32, u64)> {
         unsafe {
-            let mut result: (f32, u64) = mem::uninitialized();
+            let mut result: (f32, u64) = mem::MaybeUninit::uninit().assume_init();
             if self.0.GetTimeSinceLastVsync.unwrap()(&mut result.0, &mut result.1) {
                 Some(result)
             } else {
@@ -91,7 +91,7 @@ impl System {
         predicted_seconds_to_photons_from_now: f32,
     ) -> TrackedDevicePoses {
         unsafe {
-            let mut result: TrackedDevicePoses = mem::uninitialized();
+            let mut result: TrackedDevicePoses = mem::MaybeUninit::uninit().assume_init();
             self.0.GetDeviceToAbsoluteTrackingPose.unwrap()(
                 origin as sys::ETrackingUniverseOrigin,
                 predicted_seconds_to_photons_from_now,
@@ -123,8 +123,8 @@ impl System {
         &self,
         origin: TrackingUniverseOrigin,
     ) -> Option<(EventInfo, TrackedDevicePose)> {
-        let mut event = unsafe { mem::uninitialized() };
-        let mut pose = unsafe { mem::uninitialized() };
+        let mut event = unsafe { mem::MaybeUninit::uninit().assume_init() };
+        let mut pose = unsafe { mem::MaybeUninit::uninit().assume_init() };
         if unsafe {
             self.0.PollNextEventWithPose.unwrap()(
                 origin as sys::ETrackingUniverseOrigin,
@@ -142,7 +142,7 @@ impl System {
     /// Computes the distortion caused by the optics
     /// Gets the result of a single distortion value for use in a distortion map. Input UVs are in a single eye's viewport, and output UVs are for the source render target in the distortion shader.
     pub fn compute_distortion(&self, eye: Eye, u: f32, v: f32) -> Option<DistortionCoordinates> {
-        let mut coord = unsafe { mem::uninitialized() };
+        let mut coord = unsafe { mem::MaybeUninit::uninit().assume_init() };
         let success =
             unsafe { self.0.ComputeDistortion.unwrap()(eye as sys::EVREye, u, v, &mut coord) };
 
@@ -191,22 +191,20 @@ impl System {
         }
     }
 
-    pub fn vulkan_output_device(
+    pub unsafe fn vulkan_output_device(
         &self,
         instance: *mut VkInstance_T,
     ) -> Option<*mut VkPhysicalDevice_T> {
-        unsafe {
-            let mut device = mem::uninitialized();
-            self.0.GetOutputDevice.unwrap()(
-                &mut device,
-                sys::ETextureType_TextureType_Vulkan,
-                instance,
-            );
-            if device == 0 {
-                None
-            } else {
-                Some(device as usize as *mut _)
-            }
+        let mut device = mem::MaybeUninit::uninit().assume_init();
+        self.0.GetOutputDevice.unwrap()(
+            &mut device,
+            sys::ETextureType_TextureType_Vulkan,
+            instance,
+        );
+        if device == 0 {
+            None
+        } else {
+            Some(device as usize as *mut _)
         }
     }
 
@@ -216,7 +214,7 @@ impl System {
         property: TrackedDeviceProperty,
     ) -> Result<bool, TrackedPropertyError> {
         unsafe {
-            let mut error: TrackedPropertyError = mem::uninitialized();
+            let mut error: TrackedPropertyError = mem::MaybeUninit::uninit().assume_init();
             let r = self.0.GetBoolTrackedDeviceProperty.unwrap()(device, property, &mut error.0);
             if error == tracked_property_error::SUCCESS {
                 Ok(r)
@@ -232,7 +230,7 @@ impl System {
         property: TrackedDeviceProperty,
     ) -> Result<f32, TrackedPropertyError> {
         unsafe {
-            let mut error: TrackedPropertyError = mem::uninitialized();
+            let mut error: TrackedPropertyError = mem::MaybeUninit::uninit().assume_init();
             let r = self.0.GetFloatTrackedDeviceProperty.unwrap()(device, property, &mut error.0);
             if error == tracked_property_error::SUCCESS {
                 Ok(r)
@@ -248,7 +246,7 @@ impl System {
         property: TrackedDeviceProperty,
     ) -> Result<i32, TrackedPropertyError> {
         unsafe {
-            let mut error: TrackedPropertyError = mem::uninitialized();
+            let mut error: TrackedPropertyError = mem::MaybeUninit::uninit().assume_init();
             let r = self.0.GetInt32TrackedDeviceProperty.unwrap()(device, property, &mut error.0);
             if error == tracked_property_error::SUCCESS {
                 Ok(r)
@@ -264,7 +262,7 @@ impl System {
         property: TrackedDeviceProperty,
     ) -> Result<u64, TrackedPropertyError> {
         unsafe {
-            let mut error: TrackedPropertyError = mem::uninitialized();
+            let mut error: TrackedPropertyError = mem::MaybeUninit::uninit().assume_init();
             let r = self.0.GetUint64TrackedDeviceProperty.unwrap()(device, property, &mut error.0);
             if error == tracked_property_error::SUCCESS {
                 Ok(r)
@@ -280,7 +278,7 @@ impl System {
         property: TrackedDeviceProperty,
     ) -> Result<[[f32; 4]; 3], TrackedPropertyError> {
         unsafe {
-            let mut error: TrackedPropertyError = mem::uninitialized();
+            let mut error: TrackedPropertyError = mem::MaybeUninit::uninit().assume_init();
             let r =
                 self.0.GetMatrix34TrackedDeviceProperty.unwrap()(device, property, &mut error.0);
             if error == tracked_property_error::SUCCESS {
@@ -297,7 +295,7 @@ impl System {
         property: TrackedDeviceProperty,
     ) -> Result<CString, TrackedPropertyError> {
         unsafe {
-            let mut error = mem::uninitialized();
+            let mut error = mem::MaybeUninit::uninit().assume_init();
             let res = get_string(|ptr, n| {
                 self.0.GetStringTrackedDeviceProperty.unwrap()(device, property, ptr, n, &mut error)
             });
@@ -323,7 +321,7 @@ impl System {
         let mesh = unsafe {
             self.0.GetHiddenAreaMesh.unwrap()(eye as sys::EVREye, ty as sys::EHiddenAreaMeshType)
         };
-        if mesh.pVertexData == ptr::null_mut() {
+        if mesh.pVertexData.is_null() {
             None
         } else {
             Some(HiddenAreaMesh {
@@ -341,7 +339,7 @@ impl System {
     /// API.
     pub fn controller_state(&self, device: TrackedDeviceIndex) -> Option<ControllerState> {
         unsafe {
-            let mut state = mem::uninitialized();
+            let mut state = mem::MaybeUninit::uninit().assume_init();
             if self.0.GetControllerState.unwrap()(
                 device,
                 &mut state as *mut _ as *mut _,
@@ -361,8 +359,8 @@ impl System {
         device: TrackedDeviceIndex,
     ) -> Option<(ControllerState, TrackedDevicePose)> {
         unsafe {
-            let mut state = mem::uninitialized();
-            let mut pose = mem::uninitialized();
+            let mut state = mem::MaybeUninit::uninit().assume_init();
+            let mut pose = mem::MaybeUninit::uninit().assume_init();
             if self.0.GetControllerStateWithPose.unwrap()(
                 origin as sys::ETrackingUniverseOrigin,
                 device,

@@ -15,10 +15,7 @@ impl RenderModels {
         let mut ptr = ptr::null_mut();
         let r = unsafe { self.0.LoadRenderModel_Async.unwrap()(name.as_ptr() as *mut _, &mut ptr) };
         match Error(r) {
-            error::NONE => Ok(Some(Model {
-                ptr: ptr,
-                sys: self.0,
-            })),
+            error::NONE => Ok(Some(Model { ptr, sys: self.0 })),
             error::LOADING => Ok(None),
             x => Err(x),
         }
@@ -87,6 +84,7 @@ impl RenderModels {
     ///
     /// For dynamic controller components (ex: trigger) values will reflect component motions.
     /// For static components this will return a consistent value independent of the `ControllerState`.
+    #[allow(clippy::trivially_copy_pass_by_ref)]
     pub fn component_state(
         &self,
         model: &CStr,
@@ -95,7 +93,7 @@ impl RenderModels {
         mode: &ControllerMode,
     ) -> Option<ComponentState> {
         unsafe {
-            let mut out = mem::uninitialized();
+            let mut out = mem::MaybeUninit::uninit().assume_init();
             if self.0.GetComponentState.unwrap()(
                 model.as_ptr() as *mut _,
                 component.as_ptr() as *mut _,
@@ -119,10 +117,7 @@ impl RenderModels {
         let mut ptr = ptr::null_mut();
         let r = unsafe { self.0.LoadTexture_Async.unwrap()(id, &mut ptr) };
         match Error(r) {
-            error::NONE => Ok(Some(Texture {
-                ptr: ptr,
-                sys: self.0,
-            })),
+            error::NONE => Ok(Some(Texture { ptr, sys: self.0 })),
             error::LOADING => Ok(None),
             x => Err(x),
         }
@@ -220,7 +215,7 @@ impl<'a> Model<'a> {
     }
 
     pub fn diffuse_texture_id(&self) -> Option<TextureId> {
-        let id = unsafe { (&*self.ptr).diffuseTextureId };
+        let id = unsafe { (*self.ptr).diffuseTextureId };
         if id < 0 {
             None
         } else {
