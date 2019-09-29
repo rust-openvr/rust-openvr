@@ -61,9 +61,9 @@ impl Compositor {
             let mut game: mem::MaybeUninit<TrackedDevicePoses> = mem::MaybeUninit::uninit();
             let e = self.0.WaitGetPoses.unwrap()(
                 render.as_mut_ptr() as *mut _,
-                render.assume_init().len() as u32,
+                MAX_TRACKED_DEVICE_COUNT as u32,
                 game.as_mut_ptr() as *mut _,
-                game.assume_init().len() as u32,
+                MAX_TRACKED_DEVICE_COUNT as u32,
             );
             if e == sys::EVRCompositorError_VRCompositorError_None {
                 Ok(WaitPoses {
