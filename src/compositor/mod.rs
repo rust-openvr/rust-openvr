@@ -57,15 +57,19 @@ impl Compositor {
     /// Poses are relative to the origin set by `set_tracking_space`.
     pub fn wait_get_poses(&self) -> Result<WaitPoses, CompositorError> {
         unsafe {
-            let mut result: WaitPoses = mem::MaybeUninit::uninit().assume_init();
+            let mut render: mem::MaybeUninit<TrackedDevicePoses> = mem::MaybeUninit::uninit();
+            let mut game: mem::MaybeUninit<TrackedDevicePoses> = mem::MaybeUninit::uninit();
             let e = self.0.WaitGetPoses.unwrap()(
-                result.render.as_mut().as_mut_ptr() as *mut _,
-                result.render.len() as u32,
-                result.game.as_mut().as_mut_ptr() as *mut _,
-                result.game.len() as u32,
+                render.as_mut_ptr() as *mut _,
+                render.assume_init().len() as u32,
+                game.as_mut_ptr() as *mut _,
+                game.assume_init().len() as u32,
             );
             if e == sys::EVRCompositorError_VRCompositorError_None {
-                Ok(result)
+                Ok(WaitPoses {
+                    render: render.assume_init(),
+                    game: game.assume_init(),
+                })
             } else {
                 Err(CompositorError(e))
             }
