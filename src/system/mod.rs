@@ -139,7 +139,7 @@ impl System {
             if self.0.PollNextEventWithPose.unwrap()(
                 origin as sys::ETrackingUniverseOrigin,
                 event.as_mut_ptr(),
-                mem::size_of_val(&event.assume_init()) as u32,
+                mem::size_of_val(&event) as u32,
                 pose.as_mut_ptr() as *mut _ as *mut _,
             ) {
                 Some((event.assume_init().into(), pose.assume_init()))
@@ -378,7 +378,7 @@ impl System {
             if self.0.GetControllerState.unwrap()(
                 device,
                 state.as_mut_ptr() as *mut _ as *mut _,
-                mem::size_of_val(&state.assume_init()) as u32,
+                mem::size_of_val(&state) as u32,
             ) {
                 Some(state.assume_init())
             } else {
@@ -400,7 +400,7 @@ impl System {
                 origin as sys::ETrackingUniverseOrigin,
                 device,
                 state.as_mut_ptr() as *mut _ as *mut _,
-                mem::size_of_val(&state.assume_init()) as u32,
+                mem::size_of_val(&state) as u32,
                 pose.as_mut_ptr(),
             ) {
                 Some((state.assume_init(), pose.assume_init().into()))
