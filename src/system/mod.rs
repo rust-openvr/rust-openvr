@@ -106,7 +106,7 @@ impl System {
                 origin as sys::ETrackingUniverseOrigin,
                 predicted_seconds_to_photons_from_now,
                 result.as_mut_ptr() as *mut _,
-                result.assume_init().len() as u32,
+                MAX_TRACKED_DEVICE_COUNT as u32,
             );
             result.assume_init()
         }
