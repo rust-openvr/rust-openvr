@@ -186,12 +186,13 @@ unsafe fn get_string<F: FnMut(*mut std::os::raw::c_char, u32) -> u32>(mut f: F) 
     if n == 0 {
         return None;
     }
-    let mut storage = Vec::new();
+    let mut storage: Vec<mem::MaybeUninit<u8>> = Vec::new();
     storage.reserve_exact(n as usize);
-    storage.resize(n as usize, mem::MaybeUninit::uninit().assume_init());
+    storage.resize(n as usize, mem::MaybeUninit::uninit());
     let n_ = f(storage.as_mut_ptr() as *mut _, n);
     assert!(n == n_);
     storage.truncate((n - 1) as usize); // Strip trailing null
+    let storage = storage.iter().map(|v| v.assume_init()).collect::<Vec<u8>>();
     Some(CString::from_vec_unchecked(storage))
 }
 
