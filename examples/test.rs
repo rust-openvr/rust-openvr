@@ -1,8 +1,9 @@
 extern crate openvr;
 
 fn print_matrix<M, N>(offset: u32, mat: M)
-    where M: AsRef<[N]>,
-          N: AsRef<[f32]>,
+where
+    M: AsRef<[N]>,
+    N: AsRef<[f32]>,
 {
     let offset: String = (0..offset).map(|_| ' ').collect();
     let mut is_first_row = true;
@@ -35,7 +36,10 @@ fn main() {
         }
     };
 
-    println!("\tRecommended size: {:?}", system.recommended_render_target_size());
+    println!(
+        "\tRecommended size: {:?}",
+        system.recommended_render_target_size()
+    );
     println!("\tVSync: {:?}", system.time_since_last_vsync());
 
     print!("\tProjection matrix left  ");
@@ -47,20 +51,19 @@ fn main() {
     print_matrix(25, system.eye_to_head_transform(openvr::Eye::Left));
 
     print!("\tPoses ");
-    let poses = system.device_to_absolute_tracking_pose(openvr::TrackingUniverseOrigin::RawAndUncalibrated, 0.0);
+    let poses = system
+        .device_to_absolute_tracking_pose(openvr::TrackingUniverseOrigin::RawAndUncalibrated, 0.0);
     for pose in poses.iter() {
-        print_matrix(8+6, pose.device_to_absolute_tracking());
+        print_matrix(8 + 6, pose.device_to_absolute_tracking());
         break;
     }
 
     println!("\tDistortion example");
     for u in 0..2 {
         for v in 0..2 {
-            let pos = system.compute_distortion(
-                openvr::Eye::Left,
-                u as f32 / 4.,
-                v as f32 / 4.,
-            ).unwrap();
+            let pos = system
+                .compute_distortion(openvr::Eye::Left, u as f32 / 4., v as f32 / 4.)
+                .unwrap();
             print!("\t\t({:7.4}, {:7.4}) ", pos.red[0], pos.red[1]);
         }
         println!();
@@ -91,7 +94,10 @@ fn main() {
             return;
         }
     };
-    println!("\tCalibration state: {:?}", chaperone.get_calibration_state());
+    println!(
+        "\tCalibration state: {:?}",
+        chaperone.get_calibration_state()
+    );
     println!("\tPlay area size: {:?}", chaperone.get_play_area_size());
     print!("\tPlay area rect: ");
     if let Some(play_area_rect) = chaperone.get_play_area_rect() {
@@ -99,7 +105,10 @@ fn main() {
     } else {
         println!("None");
     }
-    println!("\tAre bounds visible = {:?}", chaperone.are_bounds_visible());
+    println!(
+        "\tAre bounds visible = {:?}",
+        chaperone.are_bounds_visible()
+    );
     println!();
 
     println!("Done! \\o/");
