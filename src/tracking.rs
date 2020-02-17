@@ -12,9 +12,15 @@ pub enum TrackingUniverseOrigin {
 pub struct TrackedDevicePose(sys::TrackedDevicePose_t);
 
 impl TrackedDevicePose {
-    pub fn device_to_absolute_tracking(&self) -> &[[f32; 4]; 3] { &self.0.mDeviceToAbsoluteTracking.m }
-    pub fn velocity(&self) -> &[f32; 3] { &self.0.vVelocity.v }
-    pub fn angular_velocity(&self) -> &[f32; 3] { &self.0.vAngularVelocity.v }
+    pub fn device_to_absolute_tracking(&self) -> &[[f32; 4]; 3] {
+        &self.0.mDeviceToAbsoluteTracking.m
+    }
+    pub fn velocity(&self) -> &[f32; 3] {
+        &self.0.vVelocity.v
+    }
+    pub fn angular_velocity(&self) -> &[f32; 3] {
+        &self.0.vAngularVelocity.v
+    }
     pub fn tracking_result(&self) -> TrackingResult {
         use self::TrackingResult::*;
         match self.0.eTrackingResult {
@@ -23,15 +29,21 @@ impl TrackedDevicePose {
             sys::ETrackingResult_TrackingResult_Calibrating_OutOfRange => CalibratingOutOfRange,
             sys::ETrackingResult_TrackingResult_Running_OK => OK,
             sys::ETrackingResult_TrackingResult_Running_OutOfRange => RunningOutOfRange,
-            _ => panic!("unrecognized tracking result")
+            _ => panic!("unrecognized tracking result"),
         }
     }
-    pub fn pose_is_valid(&self) -> bool { self.0.bPoseIsValid }
-    pub fn device_is_connected(&self) -> bool { self.0.bDeviceIsConnected }
+    pub fn pose_is_valid(&self) -> bool {
+        self.0.bPoseIsValid
+    }
+    pub fn device_is_connected(&self) -> bool {
+        self.0.bDeviceIsConnected
+    }
 }
 
 impl From<sys::TrackedDevicePose_t> for TrackedDevicePose {
-    fn from(x: sys::TrackedDevicePose_t) -> Self { TrackedDevicePose(x) }
+    fn from(x: sys::TrackedDevicePose_t) -> Self {
+        TrackedDevicePose(x)
+    }
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
