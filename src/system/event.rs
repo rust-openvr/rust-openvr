@@ -1,7 +1,9 @@
-pub struct EventInfo {
-    /// The tracked device index of the event. For events that aren't connected to a tracked device this is
+use crate::{tracking::TrackedDevice, System};
+
+pub struct EventInfo<'a> {
+    /// The tracked device of the event. For events that aren't connected to a tracked device this is
     /// k_unTrackedDeviceIndexInvalid
-    pub tracked_device_index: TrackedDeviceIndex,
+    pub tracked_device: TrackedDevice<'a>,
 
     /// The age of the event in seconds.
     pub age: f32,
@@ -10,19 +12,19 @@ pub struct EventInfo {
     pub event: Event,
 }
 
-impl From<sys::VREvent_t> for EventInfo {
+impl<'a> From<(sys::VREvent_t, &'a System)> for EventInfo<'a> {
     #[allow(unused_unsafe)]
-    fn from(x: sys::VREvent_t) -> Self {
+    fn from(op: (sys::VREvent_t, &'a System)) -> Self {
         EventInfo {
-            tracked_device_index: x.trackedDeviceIndex,
-            age: x.eventAgeSeconds,
-            event: Event::from_sys(x.eventType as sys::EVREventType, unsafe { &x.data }),
+            tracked_device: TrackedDevice::from_system_and_index(op.1, op.0.trackedDeviceIndex),
+            age: op.0.eventAgeSeconds,
+            event: Event::from_sys(op.0.eventType as sys::EVREventType, unsafe { &op.0.data }),
         }
     }
 }
 
 trait FromEventData {
-    unsafe fn from_event_data(x: &sys::VREvent_Data_t) -> Self;
+    unsafe fn from_event_data(ed: &sys::VREvent_Data_t) -> Self;
 }
 
 use super::*;

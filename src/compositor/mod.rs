@@ -31,13 +31,17 @@ impl Compositor {
             .collect()
     }
 
-    /// Safety: physical_device must be a valid VkPhysicalDevice
+    /// Queries the Vulkan extensions required by OpenVR.
+    ///
+    /// # Safety
+    /// The specified physical device must be a valid `VkPhysicalDevice`.
+    #[cfg(feature = "vulkan")]
     pub unsafe fn vulkan_device_extensions_required(
         &self,
-        physical_device: *mut VkPhysicalDevice_T,
+        physical_device: vk_sys::PhysicalDevice,
     ) -> Vec<CString> {
         let temp = get_string(|ptr, n| {
-            self.0.GetVulkanDeviceExtensionsRequired.unwrap()(physical_device, ptr, n)
+            self.0.GetVulkanDeviceExtensionsRequired.unwrap()(physical_device as *mut _, ptr, n)
         })
         .unwrap();
         temp.as_bytes()
@@ -88,6 +92,7 @@ impl Compositor {
     ) -> Result<(), CompositorError> {
         use self::texture::Handle::*;
         let flags = match texture.handle {
+            #[cfg(feature = "vulkan")]
             Vulkan(_) => sys::EVRSubmitFlags_Submit_Default,
             OpenGLTexture(_) => sys::EVRSubmitFlags_Submit_Default,
             OpenGLRenderBuffer(_) => sys::EVRSubmitFlags_Submit_GlRenderBuffer,
@@ -98,11 +103,13 @@ impl Compositor {
         };
         let texture = sys::VRTextureWithPose_t_real {
             handle: match texture.handle {
+                #[cfg(feature = "vulkan")]
                 Vulkan(ref x) => x as *const _ as *mut _,
                 OpenGLTexture(x) => x as *mut _,
                 OpenGLRenderBuffer(x) => x as *mut _,
             },
             eType: match texture.handle {
+                #[cfg(feature = "vulkan")]
                 Vulkan(_) => sys::ETextureType_TextureType_Vulkan,
                 OpenGLTexture(_) => sys::ETextureType_TextureType_OpenGL,
                 OpenGLRenderBuffer(_) => sys::ETextureType_TextureType_OpenGL,
@@ -144,9 +151,9 @@ impl Compositor {
         unsafe { (self.0.IsFullscreen.unwrap())() }
     }
 
-    /// Clears the frame that was sent with the last call to `submit.
+    /// Clears the frame that was sent with the last call to `.submit`.
     ///
-    /// This will cause the compositor to show the grid until `submit` is called again.
+    /// This will cause the compositor to show the grid until `.submit` is called again.
     pub fn clear_last_submitted_frame(&self) {
         unsafe { self.0.ClearLastSubmittedFrame.unwrap()() }
     }
@@ -154,23 +161,23 @@ impl Compositor {
     /// Controls whether the application should flag the time at which the frame begins explicitly
     ///
     /// *Vulkan/D3D12 Only*
-    /// There are two purposes for SetExplicitTimingMode:
-    ///	1. To get a more accurate GPU timestamp for when the frame begins in Vulkan/D3D12 applications.
-    ///	2. (Optional) To avoid having WaitGetPoses access the Vulkan queue so that the queue can be accessed from
-    ///	another thread while WaitGetPoses is executing.
+    /// There are two purposes for `SetExplicitTimingMode`:
+    /// 1. To get a more accurate GPU timestamp for when the frame begins in Vulkan/D3D12 applications.
+    /// 2. (Optional) To avoid having `WaitGetPoses` access the Vulkan queue so that the queue can be accessed from
+    /// another thread while WaitGetPoses is executing.
     ///
     /// More accurate GPU timestamp for the start of the frame is achieved by the application calling
-    /// SubmitExplicitTimingData immediately before its first submission to the Vulkan/D3D12 queue.  This is more
-    /// accurate because normally this GPU timestamp is recorded during WaitGetPoses.  In D3D11, WaitGetPoses queues a
-    /// GPU timestamp write, but it does not actually get submitted to the GPU until the application flushes.  By using
-    /// SubmitExplicitTimingData, the timestamp is recorded at the same place for Vulkan/D3D12 as it is for D3D11,
+    /// SubmitExplicitTimingData immediately before its first submission to the Vulkan/D3D12 queue. This is more
+    /// accurate because normally this GPU timestamp is recorded during `WaitGetPoses`. In D3D11, `WaitGetPoses` queues a
+    /// GPU timestamp write, but it does not actually get submitted to the GPU until the application flushes. By using
+    /// `SubmitExplicitTimingData`, the timestamp is recorded at the same place for Vulkan/D3D12 as it is for D3D11,
     /// resulting in a more accurate GPU time measurement for the frame.
     ///
-    /// Avoiding WaitGetPoses accessing the Vulkan queue can be achieved using SetExplicitTimingMode as well.  If this
-    /// is desired, the application *MUST* call PostPresentHandoff itself prior to WaitGetPoses.  If
-    /// SetExplicitTimingMode is true and the application calls PostPresentHandoff, then WaitGetPoses is guaranteed not
-    /// to access the queue.  Note that PostPresentHandoff and SubmitExplicitTimingData will access the queue, so only
-    /// WaitGetPoses becomes safe for accessing the queue from another thread.
+    /// Avoiding `WaitGetPoses` accessing the Vulkan queue can be achieved using SetExplicitTimingMode as well. If this
+    /// is desired, the application **must** call `PostPresentHandoff` itself prior to `WaitGetPoses`. If
+    /// `SetExplicitTimingMode` is true and the application calls PostPresentHandoff, then WaitGetPoses is guaranteed not
+    /// to access the queue. Note that `PostPresentHandoff` and `SubmitExplicitTimingData` will access the queue, so only
+    /// `WaitGetPoses` becomes safe for accessing the queue from another thread.
     pub fn set_explicit_timing_mode(&self, mode: bool) {
         unsafe { self.0.SetExplicitTimingMode.unwrap()(mode as sys::EVRCompositorTimingMode) }
     }

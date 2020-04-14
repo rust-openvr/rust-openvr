@@ -1,4 +1,4 @@
-use super::{sys, VkDevice_T, VkInstance_T, VkPhysicalDevice_T, VkQueue_T};
+use super::sys;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Texture {
@@ -12,28 +12,31 @@ pub struct Bounds {
     pub max: (f32, f32),
 }
 
+/// Support types specifically for interactions between the compositor and Vulkan.
+#[cfg(feature = "vulkan")]
 pub mod vulkan {
-    use super::*;
     #[repr(C)]
     #[derive(Debug, Copy, Clone)]
     pub struct Texture {
         pub image: u64,
-        pub device: *mut VkDevice_T,
-        pub physical_device: *mut VkPhysicalDevice_T,
-        pub instance: *mut VkInstance_T,
-        pub queue: *mut VkQueue_T,
+        pub device: vk_sys::Device,
+        pub physical_device: vk_sys::PhysicalDevice,
+        pub instance: vk_sys::Instance,
+        pub queue: vk_sys::Queue,
         pub queue_family_index: u32,
         pub width: u32,
         pub height: u32,
         pub format: u32,
         pub sample_count: u32,
     }
-    unsafe impl Send for Texture{}
-    unsafe impl Sync for Texture{}
+    // These two are no longer needed
+    //unsafe impl Send for Texture {}
+    //unsafe impl Sync for Texture {}
 }
 
 #[derive(Debug, Copy, Clone)]
 pub enum Handle {
+    #[cfg(feature = "vulkan")]
     Vulkan(vulkan::Texture),
     OpenGLTexture(usize),
     OpenGLRenderBuffer(usize),

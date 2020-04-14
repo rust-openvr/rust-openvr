@@ -53,7 +53,7 @@ fn main() {
     print!("\tPoses ");
     let poses = system
         .device_to_absolute_tracking_pose(openvr::TrackingUniverseOrigin::RawAndUncalibrated, 0.0);
-    for pose in poses.iter() {
+    for pose in poses.iter() { // FIXME: Clippy is yelling at this. Why is this a loop?
         print_matrix(8 + 6, pose.device_to_absolute_tracking());
         break;
     }

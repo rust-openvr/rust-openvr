@@ -1,4 +1,5 @@
 use openvr_sys as sys;
+use super::{System, property::{Property, PropertyValue, TrackedDevicePropertyResult}};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum TrackingUniverseOrigin {
@@ -84,3 +85,74 @@ pub enum TrackedControllerRole {
 pub const MAX_TRACKED_DEVICE_COUNT: usize = sys::k_unMaxTrackedDeviceCount as usize;
 
 pub type TrackedDevicePoses = [TrackedDevicePose; MAX_TRACKED_DEVICE_COUNT];
+
+/// A tracked device.
+#[derive(Copy, Clone)]
+pub struct TrackedDevice<'a> {
+    index: u32,
+    system: &'a System
+}
+impl<'a> TrackedDevice<'a> {
+    /// Constructs a `TrackedDevice` belonging to the specified `System` with the specified index.
+    #[inline(always)]
+    pub fn from_system_and_index(system: &'a System, index: u32) -> Self {
+        Self {system, index}
+    }
+    /// Returns the `System` this tracked device belongs to.
+    #[inline(always)]
+    pub fn system(&self) -> &System {
+        self.system
+    }
+    /// Returns the tracked device index for this device.
+    #[inline(always)]
+    pub fn index(self) -> u32 {
+        self.index
+    }
+
+    /// Returns the tracked device class for this device.
+    #[inline]
+    pub fn class(self) -> TrackedDeviceClass {
+        use self::TrackedDeviceClass::*;
+        match unsafe { self.system.0.GetTrackedDeviceClass.unwrap()(self.index) } {
+            sys::ETrackedDeviceClass_TrackedDeviceClass_Invalid => Invalid,
+            sys::ETrackedDeviceClass_TrackedDeviceClass_HMD => HMD,
+            sys::ETrackedDeviceClass_TrackedDeviceClass_Controller => Controller,
+            sys::ETrackedDeviceClass_TrackedDeviceClass_GenericTracker => GenericTracker,
+            sys::ETrackedDeviceClass_TrackedDeviceClass_TrackingReference => TrackingReference,
+            sys::ETrackedDeviceClass_TrackedDeviceClass_DisplayRedirect => DisplayRedirect,
+            _ => Invalid,
+        }
+    }
+    /// Returns the controller role associated with this tracked device, or `None` if it's not a tracked controller or another problem with fetching the role ocurred.
+    #[inline]
+    pub fn role(self) -> Option<TrackedControllerRole> {
+        let x = unsafe { self.system().0.GetControllerRoleForTrackedDeviceIndex.unwrap()(self.index) };
+        match x {
+            sys::ETrackedControllerRole_TrackedControllerRole_LeftHand => {
+                Some(TrackedControllerRole::LeftHand)
+            }
+            sys::ETrackedControllerRole_TrackedControllerRole_RightHand => {
+                Some(TrackedControllerRole::RightHand)
+            }
+            _ => None,
+        }
+    }
+    /// Returns `true` if the tracked device is connected, i.e. corresponds to a real tracked device which is ready to use; `false` otherwise.
+    #[inline]
+    pub fn is_connected(self) -> bool {
+        unsafe { self.system().0.IsTrackedDeviceConnected.unwrap()(self.index) }
+    }
+    /// Returns the specified property, or `TrackedDevicePropertyError` if something went wrong.
+    ///
+    /// Consult the `TrackedDevicePropertyResult` for more on what could fail here.
+    ///
+    /// *This method is intended to be used with the turbofish syntax:*
+    /// ```rust,no-run
+    /// let my_string_property = tracked_device.get_property::<String>(Property::AnInterestingStringProperty);
+    /// ```
+    /// Alternatively, you can annotate the type of the variable you're binding to.
+    #[inline(always)]
+    pub fn get_property<T: PropertyValue>(self, property: Property) -> TrackedDevicePropertyResult<T> {
+        T::get_property(self, property)
+    }
+}
