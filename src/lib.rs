@@ -1,8 +1,6 @@
 extern crate openvr_sys;
 #[macro_use]
 extern crate lazy_static;
-#[cfg(feature = "vulkan")]
-extern crate vk_sys;
 
 use std::cell::Cell;
 use std::ffi::{CStr, CString};
@@ -18,6 +16,7 @@ pub mod compositor;
 pub mod property;
 pub mod render_models;
 pub mod system;
+pub mod interop;
 
 pub use tracking::*;
 

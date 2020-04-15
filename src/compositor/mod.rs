@@ -35,13 +35,12 @@ impl Compositor {
     ///
     /// # Safety
     /// The specified physical device must be a valid `VkPhysicalDevice`.
-    #[cfg(feature = "vulkan")]
     pub unsafe fn vulkan_device_extensions_required(
         &self,
-        physical_device: vk_sys::PhysicalDevice,
+        physical_device: interop::vulkan::PhysicalDevice,
     ) -> Vec<CString> {
         let temp = get_string(|ptr, n| {
-            self.0.GetVulkanDeviceExtensionsRequired.unwrap()(physical_device as *mut _, ptr, n)
+            self.0.GetVulkanDeviceExtensionsRequired.unwrap()(physical_device as _, ptr, n)
         })
         .unwrap();
         temp.as_bytes()
@@ -81,7 +80,6 @@ impl Compositor {
     /// If `bounds` is None, the entire texture will be used. Lens distortion is handled by the OpenVR implementation.
     ///
     /// # Safety
-    ///
     /// The handles you supply must be valid and comply with the graphics API's synchronization requirements.
     pub unsafe fn submit(
         &self,
@@ -92,7 +90,6 @@ impl Compositor {
     ) -> Result<(), CompositorError> {
         use self::texture::Handle::*;
         let flags = match texture.handle {
-            #[cfg(feature = "vulkan")]
             Vulkan(_) => sys::EVRSubmitFlags_Submit_Default,
             OpenGLTexture(_) => sys::EVRSubmitFlags_Submit_Default,
             OpenGLRenderBuffer(_) => sys::EVRSubmitFlags_Submit_GlRenderBuffer,
@@ -103,13 +100,11 @@ impl Compositor {
         };
         let texture = sys::VRTextureWithPose_t_real {
             handle: match texture.handle {
-                #[cfg(feature = "vulkan")]
                 Vulkan(ref x) => x as *const _ as *mut _,
                 OpenGLTexture(x) => x as *mut _,
                 OpenGLRenderBuffer(x) => x as *mut _,
             },
             eType: match texture.handle {
-                #[cfg(feature = "vulkan")]
                 Vulkan(_) => sys::ETextureType_TextureType_Vulkan,
                 OpenGLTexture(_) => sys::ETextureType_TextureType_OpenGL,
                 OpenGLRenderBuffer(_) => sys::ETextureType_TextureType_OpenGL,

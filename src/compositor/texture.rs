@@ -1,4 +1,4 @@
-use super::sys;
+use crate::{sys, interop};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Texture {
@@ -12,32 +12,10 @@ pub struct Bounds {
     pub max: (f32, f32),
 }
 
-/// Support types specifically for interactions between the compositor and Vulkan.
-#[cfg(feature = "vulkan")]
-pub mod vulkan {
-    #[repr(C)]
-    #[derive(Debug, Copy, Clone)]
-    pub struct Texture {
-        pub image: u64,
-        pub device: vk_sys::Device,
-        pub physical_device: vk_sys::PhysicalDevice,
-        pub instance: vk_sys::Instance,
-        pub queue: vk_sys::Queue,
-        pub queue_family_index: u32,
-        pub width: u32,
-        pub height: u32,
-        pub format: u32,
-        pub sample_count: u32,
-    }
-    // These two are no longer needed
-    //unsafe impl Send for Texture {}
-    //unsafe impl Sync for Texture {}
-}
 
 #[derive(Debug, Copy, Clone)]
 pub enum Handle {
-    #[cfg(feature = "vulkan")]
-    Vulkan(vulkan::Texture),
+    Vulkan(interop::vulkan::Texture),
     OpenGLTexture(usize),
     OpenGLRenderBuffer(usize),
 }

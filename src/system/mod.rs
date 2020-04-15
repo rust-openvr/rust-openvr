@@ -1,15 +1,13 @@
 //! The `System` interface provides access to display configuration information, tracking data, controller state,
 //! events, and device properties. It is the main interface of OpenVR.
 
-use std::marker::PhantomData;
-use std::{mem, ptr, slice};
+use std::{mem, ptr, slice, marker::PhantomData};
 
 use openvr_sys as sys;
 
 pub mod event;
 
 use super::*;
-
 pub use self::event::{Event, EventInfo};
 
 impl System {
@@ -160,22 +158,21 @@ impl System {
     ///
     /// # Safety
     /// The instance handle must be valid.
-    #[cfg(feature = "vulkan")]
     pub unsafe fn vulkan_output_device(
         &self,
-        instance: vk_sys::Instance,
-    ) -> Option<vk_sys::PhysicalDevice> {
+        instance: interop::vulkan::Instance,
+    ) -> Option<interop::vulkan::PhysicalDevice> {
         unsafe {
             let mut device = mem::uninitialized();
             self.0.GetOutputDevice.unwrap()(
                 &mut device,
                 sys::ETextureType_TextureType_Vulkan,
-                std::mem::transmute(instance), // FIXME: The syscrate for OpenVR should use vk-sys too, then we'd be able to remove this
+                instance as _,
             );
             if device == 0 {
                 None
             } else {
-                Some(std::convert::TryInto::<usize>::try_into(device).unwrap())
+                Some(device as _)
             }
         }
     }
