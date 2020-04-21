@@ -21,10 +21,12 @@ use super::*;
 
 impl Compositor {
     pub fn vulkan_instance_extensions_required(&self) -> Vec<CString> {
-        let temp = unsafe {
+        let temp = match unsafe {
             get_string(|ptr, n| self.0.GetVulkanInstanceExtensionsRequired.unwrap()(ptr, n))
-        }
-        .unwrap();
+        } {
+            Some(x) => x,
+            None => return Vec::new(),
+        };
         temp.as_bytes()
             .split(|&x| x == b' ')
             .map(|x| CString::new(x.to_vec()).expect("extension name contained null byte"))
@@ -36,10 +38,12 @@ impl Compositor {
         &self,
         physical_device: *mut VkPhysicalDevice_T,
     ) -> Vec<CString> {
-        let temp = get_string(|ptr, n| {
+        let temp = match get_string(|ptr, n| {
             self.0.GetVulkanDeviceExtensionsRequired.unwrap()(physical_device, ptr, n)
-        })
-        .unwrap();
+        }) {
+            Some(x) => x,
+            None => return Vec::new(),
+        };
         temp.as_bytes()
             .split(|&x| x == b' ')
             .map(|x| CString::new(x.to_vec()).expect("extension name contained null byte"))
