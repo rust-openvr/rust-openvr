@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["A",""],["APPLICATION_MENU",""],["AXIS0",""],["AXIS1",""],["AXIS2",""],["AXIS3",""],["AXIS4",""],["DASHBOARD_BACK",""],["DPAD_DOWN",""],["DPAD_LEFT",""],["DPAD_RIGHT",""],["DPAD_UP",""],["GRIP",""],["MAX",""],["PROXIMITY_SENSOR",""],["STEAM_VR_TOUCHPAD",""],["STEAM_VR_TRIGGER",""],["SYSTEM",""]]});

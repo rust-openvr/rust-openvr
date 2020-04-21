@@ -1,0 +1,1305 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `src/system/event.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>event.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css"><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../openvr/index.html'><div class='logo-container'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<span id="2">  2</span>
+<span id="3">  3</span>
+<span id="4">  4</span>
+<span id="5">  5</span>
+<span id="6">  6</span>
+<span id="7">  7</span>
+<span id="8">  8</span>
+<span id="9">  9</span>
+<span id="10"> 10</span>
+<span id="11"> 11</span>
+<span id="12"> 12</span>
+<span id="13"> 13</span>
+<span id="14"> 14</span>
+<span id="15"> 15</span>
+<span id="16"> 16</span>
+<span id="17"> 17</span>
+<span id="18"> 18</span>
+<span id="19"> 19</span>
+<span id="20"> 20</span>
+<span id="21"> 21</span>
+<span id="22"> 22</span>
+<span id="23"> 23</span>
+<span id="24"> 24</span>
+<span id="25"> 25</span>
+<span id="26"> 26</span>
+<span id="27"> 27</span>
+<span id="28"> 28</span>
+<span id="29"> 29</span>
+<span id="30"> 30</span>
+<span id="31"> 31</span>
+<span id="32"> 32</span>
+<span id="33"> 33</span>
+<span id="34"> 34</span>
+<span id="35"> 35</span>
+<span id="36"> 36</span>
+<span id="37"> 37</span>
+<span id="38"> 38</span>
+<span id="39"> 39</span>
+<span id="40"> 40</span>
+<span id="41"> 41</span>
+<span id="42"> 42</span>
+<span id="43"> 43</span>
+<span id="44"> 44</span>
+<span id="45"> 45</span>
+<span id="46"> 46</span>
+<span id="47"> 47</span>
+<span id="48"> 48</span>
+<span id="49"> 49</span>
+<span id="50"> 50</span>
+<span id="51"> 51</span>
+<span id="52"> 52</span>
+<span id="53"> 53</span>
+<span id="54"> 54</span>
+<span id="55"> 55</span>
+<span id="56"> 56</span>
+<span id="57"> 57</span>
+<span id="58"> 58</span>
+<span id="59"> 59</span>
+<span id="60"> 60</span>
+<span id="61"> 61</span>
+<span id="62"> 62</span>
+<span id="63"> 63</span>
+<span id="64"> 64</span>
+<span id="65"> 65</span>
+<span id="66"> 66</span>
+<span id="67"> 67</span>
+<span id="68"> 68</span>
+<span id="69"> 69</span>
+<span id="70"> 70</span>
+<span id="71"> 71</span>
+<span id="72"> 72</span>
+<span id="73"> 73</span>
+<span id="74"> 74</span>
+<span id="75"> 75</span>
+<span id="76"> 76</span>
+<span id="77"> 77</span>
+<span id="78"> 78</span>
+<span id="79"> 79</span>
+<span id="80"> 80</span>
+<span id="81"> 81</span>
+<span id="82"> 82</span>
+<span id="83"> 83</span>
+<span id="84"> 84</span>
+<span id="85"> 85</span>
+<span id="86"> 86</span>
+<span id="87"> 87</span>
+<span id="88"> 88</span>
+<span id="89"> 89</span>
+<span id="90"> 90</span>
+<span id="91"> 91</span>
+<span id="92"> 92</span>
+<span id="93"> 93</span>
+<span id="94"> 94</span>
+<span id="95"> 95</span>
+<span id="96"> 96</span>
+<span id="97"> 97</span>
+<span id="98"> 98</span>
+<span id="99"> 99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
+<span id="396">396</span>
+<span id="397">397</span>
+<span id="398">398</span>
+<span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
+<span id="411">411</span>
+<span id="412">412</span>
+<span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
+<span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
+<span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
+<span id="611">611</span>
+<span id="612">612</span>
+<span id="613">613</span>
+<span id="614">614</span>
+<span id="615">615</span>
+<span id="616">616</span>
+<span id="617">617</span>
+<span id="618">618</span>
+<span id="619">619</span>
+<span id="620">620</span>
+<span id="621">621</span>
+<span id="622">622</span>
+<span id="623">623</span>
+<span id="624">624</span>
+<span id="625">625</span>
+<span id="626">626</span>
+<span id="627">627</span>
+<span id="628">628</span>
+<span id="629">629</span>
+<span id="630">630</span>
+<span id="631">631</span>
+<span id="632">632</span>
+<span id="633">633</span>
+<span id="634">634</span>
+<span id="635">635</span>
+<span id="636">636</span>
+<span id="637">637</span>
+<span id="638">638</span>
+<span id="639">639</span>
+<span id="640">640</span>
+<span id="641">641</span>
+<span id="642">642</span>
+<span id="643">643</span>
+<span id="644">644</span>
+<span id="645">645</span>
+<span id="646">646</span>
+<span id="647">647</span>
+<span id="648">648</span>
+<span id="649">649</span>
+<span id="650">650</span>
+<span id="651">651</span>
+</pre><div class="example-wrap"><pre class="rust ">
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">EventInfo</span> {
+    <span class="doccomment">/// The tracked device index of the event. For events that aren&#39;t connected to a tracked device this is</span>
+    <span class="doccomment">/// k_unTrackedDeviceIndexInvalid</span>
+    <span class="kw">pub</span> <span class="ident">tracked_device_index</span>: <span class="ident">TrackedDeviceIndex</span>,
+
+    <span class="doccomment">/// The age of the event in seconds.</span>
+    <span class="kw">pub</span> <span class="ident">age</span>: <span class="ident">f32</span>,
+
+    <span class="doccomment">/// More information about the event.</span>
+    <span class="kw">pub</span> <span class="ident">event</span>: <span class="ident">Event</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">sys</span>::<span class="ident">VREvent_t</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">EventInfo</span> {
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_unsafe</span>)]</span>
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">x</span>: <span class="ident">sys</span>::<span class="ident">VREvent_t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="ident">EventInfo</span> {
+            <span class="ident">tracked_device_index</span>: <span class="ident">x</span>.<span class="ident">trackedDeviceIndex</span>,
+            <span class="ident">age</span>: <span class="ident">x</span>.<span class="ident">eventAgeSeconds</span>,
+            <span class="ident">event</span>: <span class="ident">Event</span>::<span class="ident">from_sys</span>(<span class="ident">x</span>.<span class="ident">eventType</span> <span class="kw">as</span> <span class="ident">sys</span>::<span class="ident">EVREventType</span>, <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="ident">x</span>.<span class="ident">data</span> }),
+        }
+    }
+}
+
+<span class="kw">trait</span> <span class="ident">FromEventData</span> {
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_event_data</span>(<span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">sys</span>::<span class="ident">VREvent_Data_t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>;
+}
+
+<span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
+<span class="doccomment">/// Controller button events</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Controller</span> {
+    <span class="kw">pub</span> <span class="ident">button</span>: <span class="ident">u32</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">FromEventData</span> <span class="kw">for</span> <span class="ident">Controller</span> {
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_event_data</span>(<span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">sys</span>::<span class="ident">VREvent_Data_t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="ident">Controller</span> {
+            <span class="ident">button</span>: <span class="ident">x</span>.<span class="ident">controller</span>.<span class="ident">button</span>,
+        }
+    }
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
+<span class="doccomment">/// Simulated mouse events in overlay space</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Mouse</span> {
+    <span class="doccomment">/// Absolute position in texcoords, with the origin at the bottom left.</span>
+    <span class="kw">pub</span> <span class="ident">position</span>: (<span class="ident">f32</span>, <span class="ident">f32</span>),
+    <span class="doccomment">/// Bitfield</span>
+    <span class="kw">pub</span> <span class="ident">button</span>: <span class="ident">u32</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">FromEventData</span> <span class="kw">for</span> <span class="ident">Mouse</span> {
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_event_data</span>(<span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">sys</span>::<span class="ident">VREvent_Data_t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="ident">Mouse</span> {
+            <span class="ident">position</span>: (<span class="ident">x</span>.<span class="ident">mouse</span>.<span class="ident">x</span>, <span class="ident">x</span>.<span class="ident">mouse</span>.<span class="ident">y</span>),
+            <span class="ident">button</span>: <span class="ident">x</span>.<span class="ident">mouse</span>.<span class="ident">button</span>,
+        }
+    }
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
+<span class="doccomment">/// Simulated mouse wheel scroll in overlay space</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Coordinates are fraction of the touchpad traversed since last scroll event.</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Scroll</span> {
+    <span class="kw">pub</span> <span class="ident">delta</span>: (<span class="ident">f32</span>, <span class="ident">f32</span>),
+    <span class="kw">pub</span> <span class="ident">viewportscale</span>: <span class="ident">f32</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">FromEventData</span> <span class="kw">for</span> <span class="ident">Scroll</span> {
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_event_data</span>(<span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">sys</span>::<span class="ident">VREvent_Data_t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="ident">Scroll</span> {
+            <span class="ident">delta</span>: (<span class="ident">x</span>.<span class="ident">scroll</span>.<span class="ident">xdelta</span>, <span class="ident">x</span>.<span class="ident">scroll</span>.<span class="ident">ydelta</span>),
+            <span class="ident">viewportscale</span>: <span class="ident">x</span>.<span class="ident">scroll</span>.<span class="ident">viewportscale</span>,
+        }
+    }
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
+<span class="doccomment">/// When in mouse input mode you can receive data from the touchpad, these events are only sent if the user&#39;s finger</span>
+<span class="doccomment">/// is on the touchpad (or just released from it)</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TouchPadMove</span> {
+    <span class="doccomment">/// if the user&#39;s finger is detected on the touch pad</span>
+    <span class="kw">pub</span> <span class="ident">finger_down</span>: <span class="ident">bool</span>,
+    <span class="doccomment">/// How long the finger has been down in seconds</span>
+    <span class="kw">pub</span> <span class="ident">seconds_finger_down</span>: <span class="ident">f32</span>,
+    <span class="doccomment">/// Starting finger position (so you can do some basic swipe stuff)</span>
+    <span class="kw">pub</span> <span class="ident">first</span>: (<span class="ident">f32</span>, <span class="ident">f32</span>),
+    <span class="doccomment">/// This is the raw sampled coordinate without deadzoning</span>
+    <span class="kw">pub</span> <span class="ident">raw</span>: (<span class="ident">f32</span>, <span class="ident">f32</span>),
+}
+
+<span class="kw">impl</span> <span class="ident">FromEventData</span> <span class="kw">for</span> <span class="ident">TouchPadMove</span> {
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_event_data</span>(<span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">sys</span>::<span class="ident">VREvent_Data_t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="ident">TouchPadMove</span> {
+            <span class="ident">finger_down</span>: <span class="ident">x</span>.<span class="ident">touchPadMove</span>.<span class="ident">bFingerDown</span>,
+            <span class="ident">seconds_finger_down</span>: <span class="ident">x</span>.<span class="ident">touchPadMove</span>.<span class="ident">flSecondsFingerDown</span>,
+            <span class="ident">first</span>: (<span class="ident">x</span>.<span class="ident">touchPadMove</span>.<span class="ident">fValueXFirst</span>, <span class="ident">x</span>.<span class="ident">touchPadMove</span>.<span class="ident">fValueYFirst</span>),
+            <span class="ident">raw</span>: (<span class="ident">x</span>.<span class="ident">touchPadMove</span>.<span class="ident">fValueXRaw</span>, <span class="ident">x</span>.<span class="ident">touchPadMove</span>.<span class="ident">fValueYRaw</span>),
+        }
+    }
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
+<span class="doccomment">/// notification related events. Details will still change at this point</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Notification</span> {
+    <span class="kw">pub</span> <span class="ident">user_value</span>: <span class="ident">u64</span>,
+    <span class="kw">pub</span> <span class="ident">notification_id</span>: <span class="ident">u32</span>,
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Process</span> {
+    <span class="kw">pub</span> <span class="ident">pid</span>: <span class="ident">u32</span>,
+    <span class="kw">pub</span> <span class="ident">old_pid</span>: <span class="ident">u32</span>,
+    <span class="kw">pub</span> <span class="ident">forced</span>: <span class="ident">bool</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">FromEventData</span> <span class="kw">for</span> <span class="ident">Process</span> {
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_event_data</span>(<span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">sys</span>::<span class="ident">VREvent_Data_t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="ident">Process</span> {
+            <span class="ident">pid</span>: <span class="ident">x</span>.<span class="ident">process</span>.<span class="ident">pid</span>,
+            <span class="ident">old_pid</span>: <span class="ident">x</span>.<span class="ident">process</span>.<span class="ident">oldPid</span>,
+            <span class="ident">forced</span>: <span class="ident">x</span>.<span class="ident">process</span>.<span class="ident">bForced</span>,
+        }
+    }
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Overlay</span> {
+    <span class="kw">pub</span> <span class="ident">overlay_handle</span>: <span class="ident">u64</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">FromEventData</span> <span class="kw">for</span> <span class="ident">Overlay</span> {
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_event_data</span>(<span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">sys</span>::<span class="ident">VREvent_Data_t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="ident">Overlay</span> {
+            <span class="ident">overlay_handle</span>: <span class="ident">x</span>.<span class="ident">overlay</span>.<span class="ident">overlayHandle</span>,
+        }
+    }
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Status</span> {
+    <span class="kw">pub</span> <span class="ident">status_state</span>: <span class="ident">u32</span>,
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Keyboard</span> {
+    <span class="kw">pub</span> <span class="ident">new_input</span>: [<span class="ident">u8</span>; <span class="number">8</span>],
+    <span class="kw">pub</span> <span class="ident">user_value</span>: <span class="ident">u64</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">FromEventData</span> <span class="kw">for</span> <span class="ident">Keyboard</span> {
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_event_data</span>(<span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">sys</span>::<span class="ident">VREvent_Data_t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="kw-2">&amp;</span><span class="ident">x</span>.<span class="ident">keyboard</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">sys</span>::<span class="ident">VREvent_Keyboard_t_real</span>);
+        <span class="ident">Keyboard</span> {
+            <span class="ident">new_input</span>: <span class="kw-2">*</span>(<span class="ident">x</span>.<span class="ident">cNewInput</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span>),
+            <span class="ident">user_value</span>: <span class="ident">x</span>.<span class="ident">uUserValue</span>,
+        }
+    }
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Ipd</span> {
+    <span class="kw">pub</span> <span class="ident">ipd_meters</span>: <span class="ident">f32</span>,
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Chaperone</span> {
+    <span class="kw">pub</span> <span class="ident">previous_universe</span>: <span class="ident">u64</span>,
+    <span class="kw">pub</span> <span class="ident">current_universe</span>: <span class="ident">u64</span>,
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Property</span> {
+    <span class="kw">pub</span> <span class="ident">container</span>: <span class="ident">PropertyContainerHandle</span>,
+    <span class="kw">pub</span> <span class="ident">property</span>: <span class="ident">TrackedDeviceProperty</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">FromEventData</span> <span class="kw">for</span> <span class="ident">Property</span> {
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_event_data</span>(<span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">sys</span>::<span class="ident">VREvent_Data_t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">sys</span>::<span class="ident">VREvent_Property_t</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="ident">x</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span>); <span class="comment">// Field is missing from union</span>
+        <span class="ident">Property</span> {
+            <span class="ident">container</span>: <span class="ident">x</span>.<span class="ident">container</span>,
+            <span class="ident">property</span>: <span class="ident">x</span>.<span class="ident">prop</span>,
+        }
+    }
+}
+
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_camel_case_types</span>, <span class="ident">deprecated</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Event</span> {
+    <span class="ident">TrackedDeviceActivated</span>,
+    <span class="ident">TrackedDeviceDeactivated</span>,
+    <span class="ident">TrackedDeviceUpdated</span>,
+    <span class="ident">TrackedDeviceUserInteractionStarted</span>,
+    <span class="ident">TrackedDeviceUserInteractionEnded</span>,
+    <span class="ident">IpdChanged</span>,
+    <span class="ident">EnterStandbyMode</span>,
+    <span class="ident">LeaveStandbyMode</span>,
+    <span class="ident">TrackedDeviceRoleChanged</span>,
+    <span class="ident">WatchdogWakeUpRequested</span>,
+    <span class="ident">LensDistortionChanged</span>,
+    <span class="ident">PropertyChanged</span>(<span class="ident">Property</span>),
+    <span class="ident">WirelessDisconnect</span>,
+    <span class="ident">WirelessReconnect</span>,
+    <span class="ident">ButtonPress</span>(<span class="ident">Controller</span>),
+    <span class="ident">ButtonUnpress</span>(<span class="ident">Controller</span>),
+    <span class="ident">ButtonTouch</span>(<span class="ident">Controller</span>),
+    <span class="ident">ButtonUntouch</span>(<span class="ident">Controller</span>),
+    <span class="ident">DualAnalog_Press</span>,
+    <span class="ident">DualAnalog_Unpress</span>,
+    <span class="ident">DualAnalog_Touch</span>,
+    <span class="ident">DualAnalog_Untouch</span>,
+    <span class="ident">DualAnalog_Move</span>,
+    <span class="ident">DualAnalog_ModeSwitch1</span>,
+    <span class="ident">DualAnalog_ModeSwitch2</span>,
+    <span class="ident">DualAnalog_Cancel</span>,
+    <span class="ident">MouseMove</span>(<span class="ident">Mouse</span>),
+    <span class="ident">MouseButtonDown</span>(<span class="ident">Mouse</span>),
+    <span class="ident">MouseButtonUp</span>(<span class="ident">Mouse</span>),
+    <span class="ident">FocusEnter</span>(<span class="ident">Overlay</span>),
+    <span class="ident">FocusLeave</span>(<span class="ident">Overlay</span>),
+    <span class="ident">ScrollDiscrete</span>(<span class="ident">Scroll</span>),
+    <span class="ident">TouchPadMove</span>(<span class="ident">TouchPadMove</span>),
+    <span class="doccomment">/// global event</span>
+    <span class="ident">OverlayFocusChanged</span>(<span class="ident">Overlay</span>),
+    <span class="ident">ReloadOverlays</span>,
+    <span class="ident">ScrollSmooth</span>(<span class="ident">Scroll</span>),
+    <span class="attribute">#[<span class="ident">deprecated</span>]</span>
+    <span class="ident">InputFocusCaptured</span>(<span class="ident">Process</span>),
+    <span class="attribute">#[<span class="ident">deprecated</span>]</span>
+    <span class="ident">InputFocusReleased</span>(<span class="ident">Process</span>),
+    <span class="ident">SceneFocusLost</span>(<span class="ident">Process</span>),
+    <span class="ident">SceneFocusGained</span>(<span class="ident">Process</span>),
+    <span class="doccomment">/// The app actually drawing the scene changed (usually to or from the compositor)</span>
+    <span class="ident">SceneApplicationChanged</span>(<span class="ident">Process</span>),
+    <span class="doccomment">/// New app got access to draw the scene</span>
+    <span class="ident">SceneFocusChanged</span>(<span class="ident">Process</span>),
+    <span class="ident">InputFocusChanged</span>(<span class="ident">Process</span>),
+    <span class="ident">SceneApplicationSecondaryRenderingStarted</span>(<span class="ident">Process</span>),
+    <span class="ident">SceneApplicationUsingWrongGraphicsAdapter</span>,
+    <span class="ident">ActionBindingReloaded</span>,
+    <span class="doccomment">/// Sent to the scene application to request hiding render models temporarily</span>
+    <span class="ident">HideRenderModels</span>,
+    <span class="doccomment">/// Sent to the scene application to request restoring render model visibility</span>
+    <span class="ident">ShowRenderModels</span>,
+    <span class="ident">ConsoleOpened</span>,
+    <span class="ident">ConsoleClosed</span>,
+    <span class="ident">OverlayShown</span>,
+    <span class="ident">OverlayHidden</span>,
+    <span class="ident">DashboardActivated</span>,
+    <span class="ident">DashboardDeactivated</span>,
+    <span class="doccomment">/// Sent to the overlay manager - data is overlay</span>
+    <span class="ident">DashboardRequested</span>,
+    <span class="doccomment">/// Send to the overlay manager</span>
+    <span class="ident">ResetDashboard</span>,
+    <span class="doccomment">/// Send to the dashboard to render a toast - data is the notification ID</span>
+    <span class="ident">RenderToast</span>,
+    <span class="doccomment">/// Sent to overlays when a SetOverlayRaw or SetOverlayFromFile call finishes loading</span>
+    <span class="ident">ImageLoaded</span>,
+    <span class="doccomment">/// Sent to keyboard renderer in the dashboard to invoke it</span>
+    <span class="ident">ShowKeyboard</span>,
+    <span class="doccomment">/// Sent to keyboard renderer in the dashboard to hide it</span>
+    <span class="ident">HideKeyboard</span>,
+    <span class="doccomment">/// Sent to an overlay when IVROverlay::SetFocusOverlay is called on it</span>
+    <span class="ident">OverlayGamepadFocusGained</span>,
+    <span class="doccomment">/// Send to an overlay when it previously had focus and IVROverlay::SetFocusOverlay is called on something else</span>
+    <span class="ident">OverlayGamepadFocusLost</span>,
+    <span class="ident">OverlaySharedTextureChanged</span>,
+    <span class="doccomment">/// Screenshot button combo was pressed, Dashboard should request a screenshot</span>
+    <span class="ident">ScreenshotTriggered</span>,
+    <span class="doccomment">/// Sent to overlays when a SetOverlayRaw or SetOverlayfromFail fails to load</span>
+    <span class="ident">ImageFailed</span>,
+    <span class="ident">DashboardOverlayCreated</span>,
+    <span class="ident">SwitchGamepadFocus</span>,
+    <span class="doccomment">/// Sent by vrclient application to compositor to take a screenshot</span>
+    <span class="ident">RequestScreenshot</span>,
+    <span class="doccomment">/// Sent by compositor to the application that the screenshot has been taken</span>
+    <span class="ident">ScreenshotTaken</span>,
+    <span class="doccomment">/// Sent by compositor to the application that the screenshot failed to be taken</span>
+    <span class="ident">ScreenshotFailed</span>,
+    <span class="doccomment">/// Sent by compositor to the dashboard that a completed screenshot was submitted</span>
+    <span class="ident">SubmitScreenshotToDashboard</span>,
+    <span class="doccomment">/// Sent by compositor to the dashboard that a completed screenshot was submitted</span>
+    <span class="ident">ScreenshotProgressToDashboard</span>,
+    <span class="ident">PrimaryDashboardDeviceChanged</span>,
+    <span class="ident">RoomViewShown</span>,
+    <span class="ident">RoomViewHidden</span>,
+    <span class="ident">ShowUI</span>,
+    <span class="ident">ShowDevTools</span>,
+    <span class="ident">Notification_Shown</span>,
+    <span class="ident">Notification_Hidden</span>,
+    <span class="ident">Notification_BeginInteraction</span>,
+    <span class="ident">Notification_Destroyed</span>,
+    <span class="doccomment">/// The application has been asked to quit</span>
+    <span class="ident">Quit</span>(<span class="ident">Process</span>),
+    <span class="ident">ProcessQuit</span>(<span class="ident">Process</span>),
+    <span class="ident">QuitAborted_UserPrompt</span>(<span class="ident">Process</span>),
+    <span class="ident">QuitAcknowledged</span>(<span class="ident">Process</span>),
+    <span class="doccomment">/// The driver has requested that SteamVR shut down</span>
+    <span class="ident">DriverRequestedQuit</span>,
+    <span class="ident">RestartRequested</span>,
+    <span class="ident">ChaperoneDataHasChanged</span>,
+    <span class="ident">ChaperoneUniverseHasChanged</span>,
+    <span class="ident">ChaperoneTempDataHasChanged</span>,
+    <span class="ident">ChaperoneSettingsHaveChanged</span>,
+    <span class="ident">SeatedZeroPoseReset</span>,
+    <span class="ident">ChaperoneFlushCache</span>,
+    <span class="ident">ChaperoneRoomSetupStarting</span>,
+    <span class="ident">ChaperoneRoomSetupFinished</span>,
+    <span class="ident">AudioSettingsHaveChanged</span>,
+    <span class="ident">BackgroundSettingHasChanged</span>,
+    <span class="ident">CameraSettingsHaveChanged</span>,
+    <span class="ident">ReprojectionSettingHasChanged</span>,
+    <span class="ident">ModelSkinSettingsHaveChanged</span>,
+    <span class="ident">EnvironmentSettingsHaveChanged</span>,
+    <span class="ident">EnableHomeAppSettingsHaveChanged</span>,
+    <span class="ident">PowerSettingsHaveChanged</span>,
+    <span class="ident">SteamVRSectionSettingChanged</span>,
+    <span class="ident">LighthouseSectionSettingChanged</span>,
+    <span class="ident">NullSectionSettingChanged</span>,
+    <span class="ident">UserInterfaceSectionSettingChanged</span>,
+    <span class="ident">NotificationsSectionSettingChanged</span>,
+    <span class="ident">KeyboardSectionSettingChanged</span>,
+    <span class="ident">PerfSectionSettingChanged</span>,
+    <span class="ident">DashboardSectionSettingChanged</span>,
+    <span class="ident">WebInterfaceSectionSettingChanged</span>,
+    <span class="ident">TrackersSectionSettingChanged</span>,
+    <span class="ident">LastKnownSectionSettingChanged</span>,
+    <span class="ident">DismissedWarningsSectionSettingChanged</span>,
+    <span class="ident">StatusUpdate</span>,
+    <span class="ident">WebInterface_InstallDriverCompleted</span>,
+    <span class="ident">MCImageUpdated</span>,
+    <span class="ident">FirmwareUpdateStarted</span>,
+    <span class="ident">FirmwareUpdateFinished</span>,
+    <span class="ident">KeyboardClosed</span>,
+    <span class="ident">KeyboardCharInput</span>(<span class="ident">Keyboard</span>),
+    <span class="doccomment">/// Sent when DONE button clicked on keyboard</span>
+    <span class="ident">KeyboardDone</span>,
+    <span class="ident">ApplicationTransitionStarted</span>,
+    <span class="ident">ApplicationTransitionAborted</span>,
+    <span class="ident">ApplicationTransitionNewAppStarted</span>,
+    <span class="ident">ApplicationListUpdated</span>,
+    <span class="ident">ApplicationMimeTypeLoad</span>,
+    <span class="ident">ApplicationTransitionNewAppLaunchComplete</span>,
+    <span class="ident">ProcessConnected</span>,
+    <span class="ident">ProcessDisconnected</span>,
+    <span class="ident">Compositor_MirrorWindowShown</span>,
+    <span class="ident">Compositor_MirrorWindowHidden</span>,
+    <span class="ident">Compositor_ChaperoneBoundsShown</span>,
+    <span class="ident">Compositor_ChaperoneBoundsHidden</span>,
+    <span class="ident">Compositor_DisplayDisconnected</span>,
+    <span class="ident">Compositor_DisplayReconnected</span>,
+    <span class="ident">Compositor_HDCPError</span>,
+    <span class="ident">Compositor_ApplicationNotResponding</span>,
+    <span class="ident">Compositor_ApplicationResumed</span>,
+    <span class="ident">Compositor_OutOfVideoMemory</span>,
+    <span class="ident">TrackedCamera_StartVideoStream</span>,
+    <span class="ident">TrackedCamera_StopVideoStream</span>,
+    <span class="ident">TrackedCamera_PauseVideoStream</span>,
+    <span class="ident">TrackedCamera_ResumeVideoStream</span>,
+    <span class="ident">TrackedCamera_EditingSurface</span>,
+    <span class="ident">PerformanceTest_EnableCapture</span>,
+    <span class="ident">PerformanceTest_DisableCapture</span>,
+    <span class="ident">PerformanceTest_FidelityLevel</span>,
+    <span class="ident">MessageOverlay_Closed</span>,
+    <span class="ident">MessageOverlayCloseRequested</span>,
+    <span class="ident">Input_HapticVibration</span>,
+    <span class="ident">Input_BindingLoadFailed</span>,
+    <span class="ident">Input_BindingLoadSuccessful</span>,
+    <span class="ident">Input_ActionManifestReloaded</span>,
+    <span class="ident">Input_ActionManifestLoadFailed</span>,
+    <span class="ident">Input_ProgressUpdate</span>,
+    <span class="ident">Input_TrackerActivated</span>,
+    <span class="ident">Input_BindingsUpdated</span>,
+    <span class="ident">SpatialAnchors_PoseUpdated</span>,
+    <span class="ident">SpatialAnchors_DescriptorUpdated</span>,
+    <span class="ident">SpatialAnchors_RequestPoseUpdate</span>,
+    <span class="ident">SpatialAnchors_RequestDescriptorUpdate</span>,
+    <span class="ident">SystemReport_Started</span>,
+
+    <span class="ident">VendorSpecific</span>(<span class="ident">sys</span>::<span class="ident">EVREventType</span>),
+    <span class="ident">Unknown</span>(<span class="ident">sys</span>::<span class="ident">EVREventType</span>),
+}
+
+<span class="kw">impl</span> <span class="ident">Event</span> {
+    <span class="kw">fn</span> <span class="ident">from_sys</span>(<span class="ident">ty</span>: <span class="ident">sys</span>::<span class="ident">EVREventType</span>, <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">sys</span>::<span class="ident">VREvent_Data_t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">use</span> <span class="self">self</span>::<span class="ident">Event</span>::<span class="kw-2">*</span>;
+
+        <span class="kw">fn</span> <span class="ident">get</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">FromEventData</span><span class="op">&gt;</span>(<span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">sys</span>::<span class="ident">VREvent_Data_t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> {
+            <span class="kw">unsafe</span> { <span class="ident">T</span>::<span class="ident">from_event_data</span>(<span class="ident">x</span>) }
+        }
+
+        <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">deprecated</span>)]</span>
+        <span class="kw">match</span> <span class="ident">ty</span> {
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_TrackedDeviceActivated</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">TrackedDeviceActivated</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_TrackedDeviceDeactivated</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">TrackedDeviceDeactivated</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_TrackedDeviceUpdated</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">TrackedDeviceUpdated</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_TrackedDeviceUserInteractionStarted</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">TrackedDeviceUserInteractionStarted</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_TrackedDeviceUserInteractionEnded</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">TrackedDeviceUserInteractionEnded</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_IpdChanged</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IpdChanged</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_EnterStandbyMode</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">EnterStandbyMode</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_LeaveStandbyMode</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">LeaveStandbyMode</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_TrackedDeviceRoleChanged</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">TrackedDeviceRoleChanged</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_WatchdogWakeUpRequested</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">WatchdogWakeUpRequested</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_LensDistortionChanged</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">LensDistortionChanged</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_PropertyChanged</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PropertyChanged</span>(<span class="ident">get</span>(<span class="ident">data</span>)),
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_WirelessDisconnect</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">WirelessDisconnect</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_WirelessReconnect</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">WirelessReconnect</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ButtonPress</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ButtonPress</span>(<span class="ident">get</span>(<span class="ident">data</span>)),
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ButtonUnpress</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ButtonUnpress</span>(<span class="ident">get</span>(<span class="ident">data</span>)),
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ButtonTouch</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ButtonTouch</span>(<span class="ident">get</span>(<span class="ident">data</span>)),
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ButtonUntouch</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ButtonUntouch</span>(<span class="ident">get</span>(<span class="ident">data</span>)),
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_DualAnalog_Press</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">DualAnalog_Press</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_DualAnalog_Unpress</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">DualAnalog_Unpress</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_DualAnalog_Touch</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">DualAnalog_Touch</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_DualAnalog_Untouch</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">DualAnalog_Untouch</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_DualAnalog_Move</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">DualAnalog_Move</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_DualAnalog_ModeSwitch1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">DualAnalog_ModeSwitch1</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_DualAnalog_ModeSwitch2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">DualAnalog_ModeSwitch2</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_DualAnalog_Cancel</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">DualAnalog_Cancel</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_MouseMove</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MouseMove</span>(<span class="ident">get</span>(<span class="ident">data</span>)),
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_MouseButtonDown</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MouseButtonDown</span>(<span class="ident">get</span>(<span class="ident">data</span>)),
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_MouseButtonUp</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MouseButtonUp</span>(<span class="ident">get</span>(<span class="ident">data</span>)),
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_FocusEnter</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FocusEnter</span>(<span class="ident">get</span>(<span class="ident">data</span>)),
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_FocusLeave</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FocusLeave</span>(<span class="ident">get</span>(<span class="ident">data</span>)),
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ScrollDiscrete</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ScrollDiscrete</span>(<span class="ident">get</span>(<span class="ident">data</span>)),
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_TouchPadMove</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">TouchPadMove</span>(<span class="ident">get</span>(<span class="ident">data</span>)),
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_OverlayFocusChanged</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">OverlayFocusChanged</span>(<span class="ident">get</span>(<span class="ident">data</span>)),
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ReloadOverlays</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ReloadOverlays</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ScrollSmooth</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ScrollSmooth</span>(<span class="ident">get</span>(<span class="ident">data</span>)),
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_InputFocusCaptured</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">InputFocusCaptured</span>(<span class="ident">get</span>(<span class="ident">data</span>)),
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_InputFocusReleased</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">InputFocusReleased</span>(<span class="ident">get</span>(<span class="ident">data</span>)),
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_SceneFocusLost</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SceneFocusLost</span>(<span class="ident">get</span>(<span class="ident">data</span>)),
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_SceneFocusGained</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SceneFocusGained</span>(<span class="ident">get</span>(<span class="ident">data</span>)),
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_SceneApplicationChanged</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SceneApplicationChanged</span>(<span class="ident">get</span>(<span class="ident">data</span>)),
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_SceneFocusChanged</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SceneFocusChanged</span>(<span class="ident">get</span>(<span class="ident">data</span>)),
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_InputFocusChanged</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">InputFocusChanged</span>(<span class="ident">get</span>(<span class="ident">data</span>)),
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_SceneApplicationSecondaryRenderingStarted</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">SceneApplicationSecondaryRenderingStarted</span>(<span class="ident">get</span>(<span class="ident">data</span>))
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_SceneApplicationUsingWrongGraphicsAdapter</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">SceneApplicationUsingWrongGraphicsAdapter</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ActionBindingReloaded</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ActionBindingReloaded</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_HideRenderModels</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">HideRenderModels</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ShowRenderModels</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ShowRenderModels</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ConsoleOpened</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ConsoleOpened</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ConsoleClosed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ConsoleClosed</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_OverlayShown</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">OverlayShown</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_OverlayHidden</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">OverlayHidden</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_DashboardActivated</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">DashboardActivated</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_DashboardDeactivated</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">DashboardDeactivated</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_DashboardRequested</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">DashboardRequested</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ResetDashboard</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ResetDashboard</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_RenderToast</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">RenderToast</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ImageLoaded</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageLoaded</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ShowKeyboard</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ShowKeyboard</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_HideKeyboard</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">HideKeyboard</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_OverlayGamepadFocusGained</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">OverlayGamepadFocusGained</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_OverlayGamepadFocusLost</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">OverlayGamepadFocusLost</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_OverlaySharedTextureChanged</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">OverlaySharedTextureChanged</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ScreenshotTriggered</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ScreenshotTriggered</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ImageFailed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFailed</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_DashboardOverlayCreated</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">DashboardOverlayCreated</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_SwitchGamepadFocus</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SwitchGamepadFocus</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_RequestScreenshot</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">RequestScreenshot</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ScreenshotTaken</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ScreenshotTaken</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ScreenshotFailed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ScreenshotFailed</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_SubmitScreenshotToDashboard</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SubmitScreenshotToDashboard</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ScreenshotProgressToDashboard</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">ScreenshotProgressToDashboard</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_PrimaryDashboardDeviceChanged</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">PrimaryDashboardDeviceChanged</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_RoomViewShown</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">RoomViewShown</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_RoomViewHidden</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">RoomViewHidden</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ShowUI</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ShowUI</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ShowDevTools</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ShowDevTools</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_Notification_Shown</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Notification_Shown</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_Notification_Hidden</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Notification_Hidden</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_Notification_BeginInteraction</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Notification_BeginInteraction</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_Notification_Destroyed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Notification_Destroyed</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_Quit</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Quit</span>(<span class="ident">get</span>(<span class="ident">data</span>)),
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ProcessQuit</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ProcessQuit</span>(<span class="ident">get</span>(<span class="ident">data</span>)),
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_QuitAborted_UserPrompt</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">QuitAborted_UserPrompt</span>(<span class="ident">get</span>(<span class="ident">data</span>)),
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_QuitAcknowledged</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">QuitAcknowledged</span>(<span class="ident">get</span>(<span class="ident">data</span>)),
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_DriverRequestedQuit</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">DriverRequestedQuit</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_RestartRequested</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">RestartRequested</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ChaperoneDataHasChanged</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ChaperoneDataHasChanged</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ChaperoneUniverseHasChanged</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ChaperoneUniverseHasChanged</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ChaperoneTempDataHasChanged</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ChaperoneTempDataHasChanged</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ChaperoneSettingsHaveChanged</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ChaperoneSettingsHaveChanged</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_SeatedZeroPoseReset</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SeatedZeroPoseReset</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ChaperoneFlushCache</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ChaperoneFlushCache</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ChaperoneRoomSetupStarting</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ChaperoneRoomSetupStarting</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ChaperoneRoomSetupFinished</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ChaperoneRoomSetupFinished</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_AudioSettingsHaveChanged</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">AudioSettingsHaveChanged</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_BackgroundSettingHasChanged</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">BackgroundSettingHasChanged</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_CameraSettingsHaveChanged</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">CameraSettingsHaveChanged</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ReprojectionSettingHasChanged</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">ReprojectionSettingHasChanged</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ModelSkinSettingsHaveChanged</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ModelSkinSettingsHaveChanged</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_EnvironmentSettingsHaveChanged</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">EnvironmentSettingsHaveChanged</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_PowerSettingsHaveChanged</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PowerSettingsHaveChanged</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_EnableHomeAppSettingsHaveChanged</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">EnableHomeAppSettingsHaveChanged</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_SteamVRSectionSettingChanged</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SteamVRSectionSettingChanged</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_LighthouseSectionSettingChanged</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">LighthouseSectionSettingChanged</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_NullSectionSettingChanged</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">NullSectionSettingChanged</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_UserInterfaceSectionSettingChanged</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">UserInterfaceSectionSettingChanged</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_NotificationsSectionSettingChanged</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">NotificationsSectionSettingChanged</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_KeyboardSectionSettingChanged</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">KeyboardSectionSettingChanged</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_PerfSectionSettingChanged</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PerfSectionSettingChanged</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_DashboardSectionSettingChanged</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">DashboardSectionSettingChanged</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_WebInterfaceSectionSettingChanged</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">WebInterfaceSectionSettingChanged</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_TrackersSectionSettingChanged</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">TrackersSectionSettingChanged</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_LastKnownSectionSettingChanged</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">LastKnownSectionSettingChanged</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_DismissedWarningsSectionSettingChanged</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">DismissedWarningsSectionSettingChanged</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_StatusUpdate</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">StatusUpdate</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_WebInterface_InstallDriverCompleted</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">WebInterface_InstallDriverCompleted</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_MCImageUpdated</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MCImageUpdated</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_FirmwareUpdateStarted</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FirmwareUpdateStarted</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_FirmwareUpdateFinished</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FirmwareUpdateFinished</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_KeyboardClosed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">KeyboardClosed</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_KeyboardCharInput</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">KeyboardCharInput</span>(<span class="ident">get</span>(<span class="ident">data</span>)),
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_KeyboardDone</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">KeyboardDone</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ApplicationTransitionStarted</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ApplicationTransitionStarted</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ApplicationTransitionAborted</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ApplicationTransitionAborted</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ApplicationTransitionNewAppStarted</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">ApplicationTransitionNewAppStarted</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ApplicationListUpdated</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ApplicationListUpdated</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ApplicationMimeTypeLoad</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ApplicationMimeTypeLoad</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ApplicationTransitionNewAppLaunchComplete</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">ApplicationTransitionNewAppLaunchComplete</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ProcessConnected</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ProcessConnected</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_ProcessDisconnected</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ProcessDisconnected</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_Compositor_MirrorWindowShown</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Compositor_MirrorWindowShown</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_Compositor_MirrorWindowHidden</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Compositor_MirrorWindowHidden</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_Compositor_ChaperoneBoundsShown</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Compositor_ChaperoneBoundsShown</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_Compositor_ChaperoneBoundsHidden</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Compositor_ChaperoneBoundsHidden</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_Compositor_DisplayDisconnected</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Compositor_DisplayDisconnected</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_Compositor_DisplayReconnected</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Compositor_DisplayReconnected</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_Compositor_HDCPError</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Compositor_HDCPError</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_Compositor_ApplicationNotResponding</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Compositor_ApplicationNotResponding</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_Compositor_ApplicationResumed</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Compositor_ApplicationResumed</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_Compositor_OutOfVideoMemory</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Compositor_OutOfVideoMemory</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_TrackedCamera_StartVideoStream</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">TrackedCamera_StartVideoStream</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_TrackedCamera_StopVideoStream</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">TrackedCamera_StopVideoStream</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_TrackedCamera_PauseVideoStream</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">TrackedCamera_PauseVideoStream</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_TrackedCamera_ResumeVideoStream</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">TrackedCamera_ResumeVideoStream</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_TrackedCamera_EditingSurface</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">TrackedCamera_EditingSurface</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_PerformanceTest_EnableCapture</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">PerformanceTest_EnableCapture</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_PerformanceTest_DisableCapture</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">PerformanceTest_DisableCapture</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_PerformanceTest_FidelityLevel</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">PerformanceTest_FidelityLevel</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_MessageOverlay_Closed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MessageOverlay_Closed</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_MessageOverlayCloseRequested</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MessageOverlayCloseRequested</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_Input_HapticVibration</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Input_HapticVibration</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_Input_BindingLoadFailed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Input_BindingLoadFailed</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_Input_BindingLoadSuccessful</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Input_BindingLoadSuccessful</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_Input_ActionManifestReloaded</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Input_ActionManifestReloaded</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_Input_ActionManifestLoadFailed</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Input_ActionManifestLoadFailed</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_Input_ProgressUpdate</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Input_ProgressUpdate</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_Input_TrackerActivated</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Input_TrackerActivated</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_Input_BindingsUpdated</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Input_BindingsUpdated</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_SpatialAnchors_PoseUpdated</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SpatialAnchors_PoseUpdated</span>,
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_SpatialAnchors_DescriptorUpdated</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">SpatialAnchors_DescriptorUpdated</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_SpatialAnchors_RequestPoseUpdate</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">SpatialAnchors_RequestPoseUpdate</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_SpatialAnchors_RequestDescriptorUpdate</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">SpatialAnchors_RequestDescriptorUpdate</span>
+            }
+            <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_SystemReport_Started</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SystemReport_Started</span>,
+            <span class="ident">x</span> <span class="kw">if</span> <span class="ident">x</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_VendorSpecific_Reserved_Start</span>
+                <span class="kw-2">&amp;</span><span class="op">&amp;</span> <span class="ident">x</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">sys</span>::<span class="ident">EVREventType_VREvent_VendorSpecific_Reserved_End</span> <span class="op">=</span><span class="op">&gt;</span>
+            {
+                <span class="ident">VendorSpecific</span>(<span class="ident">x</span>)
+            }
+            <span class="ident">x</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Unknown</span>(<span class="ident">x</span>),
+        }
+    }
+}
+
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">sys</span>::<span class="ident">PropertyContainerHandle_t</span> <span class="kw">as</span> <span class="ident">PropertyContainerHandle</span>;
+</pre></div>
+</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../../";window.currentCrate = "openvr";</script><script src="../../../aliases.js"></script><script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script><script defer src="../../../search-index.js"></script></body></html>

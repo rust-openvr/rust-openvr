@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["ChaperoneCalibrationErrorState","Chaperone error states"],["ChaperoneCalibrationState","State of Chaperone calibration."],["ChaperoneCalibrationWarningState","Chaperone warning states"]]});

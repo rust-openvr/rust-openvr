@@ -1,0 +1,471 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `src/property.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>property.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css"><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../openvr/index.html'><div class='logo-container'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<span id="2">  2</span>
+<span id="3">  3</span>
+<span id="4">  4</span>
+<span id="5">  5</span>
+<span id="6">  6</span>
+<span id="7">  7</span>
+<span id="8">  8</span>
+<span id="9">  9</span>
+<span id="10"> 10</span>
+<span id="11"> 11</span>
+<span id="12"> 12</span>
+<span id="13"> 13</span>
+<span id="14"> 14</span>
+<span id="15"> 15</span>
+<span id="16"> 16</span>
+<span id="17"> 17</span>
+<span id="18"> 18</span>
+<span id="19"> 19</span>
+<span id="20"> 20</span>
+<span id="21"> 21</span>
+<span id="22"> 22</span>
+<span id="23"> 23</span>
+<span id="24"> 24</span>
+<span id="25"> 25</span>
+<span id="26"> 26</span>
+<span id="27"> 27</span>
+<span id="28"> 28</span>
+<span id="29"> 29</span>
+<span id="30"> 30</span>
+<span id="31"> 31</span>
+<span id="32"> 32</span>
+<span id="33"> 33</span>
+<span id="34"> 34</span>
+<span id="35"> 35</span>
+<span id="36"> 36</span>
+<span id="37"> 37</span>
+<span id="38"> 38</span>
+<span id="39"> 39</span>
+<span id="40"> 40</span>
+<span id="41"> 41</span>
+<span id="42"> 42</span>
+<span id="43"> 43</span>
+<span id="44"> 44</span>
+<span id="45"> 45</span>
+<span id="46"> 46</span>
+<span id="47"> 47</span>
+<span id="48"> 48</span>
+<span id="49"> 49</span>
+<span id="50"> 50</span>
+<span id="51"> 51</span>
+<span id="52"> 52</span>
+<span id="53"> 53</span>
+<span id="54"> 54</span>
+<span id="55"> 55</span>
+<span id="56"> 56</span>
+<span id="57"> 57</span>
+<span id="58"> 58</span>
+<span id="59"> 59</span>
+<span id="60"> 60</span>
+<span id="61"> 61</span>
+<span id="62"> 62</span>
+<span id="63"> 63</span>
+<span id="64"> 64</span>
+<span id="65"> 65</span>
+<span id="66"> 66</span>
+<span id="67"> 67</span>
+<span id="68"> 68</span>
+<span id="69"> 69</span>
+<span id="70"> 70</span>
+<span id="71"> 71</span>
+<span id="72"> 72</span>
+<span id="73"> 73</span>
+<span id="74"> 74</span>
+<span id="75"> 75</span>
+<span id="76"> 76</span>
+<span id="77"> 77</span>
+<span id="78"> 78</span>
+<span id="79"> 79</span>
+<span id="80"> 80</span>
+<span id="81"> 81</span>
+<span id="82"> 82</span>
+<span id="83"> 83</span>
+<span id="84"> 84</span>
+<span id="85"> 85</span>
+<span id="86"> 86</span>
+<span id="87"> 87</span>
+<span id="88"> 88</span>
+<span id="89"> 89</span>
+<span id="90"> 90</span>
+<span id="91"> 91</span>
+<span id="92"> 92</span>
+<span id="93"> 93</span>
+<span id="94"> 94</span>
+<span id="95"> 95</span>
+<span id="96"> 96</span>
+<span id="97"> 97</span>
+<span id="98"> 98</span>
+<span id="99"> 99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+</pre><div class="example-wrap"><pre class="rust ">
+<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">non_upper_case_globals</span>)]</span>
+
+<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">TrackedDeviceProperty</span>;
+<span class="kw">use</span> <span class="ident">openvr_sys</span> <span class="kw">as</span> <span class="ident">sys</span>;
+
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">Invalid</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span> <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_Invalid</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TrackingSystemName_String</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_TrackingSystemName_String</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ModelNumber_String</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_ModelNumber_String</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SerialNumber_String</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_SerialNumber_String</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">RenderModelName_String</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_RenderModelName_String</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">WillDriftInYaw_Bool</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_WillDriftInYaw_Bool</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ManufacturerName_String</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_ManufacturerName_String</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TrackingFirmwareVersion_String</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_TrackingFirmwareVersion_String</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">HardwareRevision_String</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_HardwareRevision_String</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">AllWirelessDongleDescriptions_String</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_AllWirelessDongleDescriptions_String</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ConnectedWirelessDongle_String</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_ConnectedWirelessDongle_String</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DeviceIsWireless_Bool</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_DeviceIsWireless_Bool</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DeviceIsCharging_Bool</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_DeviceIsCharging_Bool</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DeviceBatteryPercentage_Float</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_DeviceBatteryPercentage_Float</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">StatusDisplayTransform_Matrix34</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_StatusDisplayTransform_Matrix34</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">Firmware_UpdateAvailable_Bool</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_Firmware_UpdateAvailable_Bool</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">Firmware_ManualUpdate_Bool</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_Firmware_ManualUpdate_Bool</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">Firmware_ManualUpdateURL_String</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_Firmware_ManualUpdateURL_String</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">HardwareRevision_Uint64</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_HardwareRevision_Uint64</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FirmwareVersion_Uint64</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_FirmwareVersion_Uint64</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FPGAVersion_Uint64</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_FPGAVersion_Uint64</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">VRCVersion_Uint64</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_VRCVersion_Uint64</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">RadioVersion_Uint64</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_RadioVersion_Uint64</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DongleVersion_Uint64</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_DongleVersion_Uint64</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">BlockServerShutdown_Bool</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_BlockServerShutdown_Bool</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">CanUnifyCoordinateSystemWithHmd_Bool</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_CanUnifyCoordinateSystemWithHmd_Bool</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ContainsProximitySensor_Bool</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_ContainsProximitySensor_Bool</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DeviceProvidesBatteryStatus_Bool</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_DeviceProvidesBatteryStatus_Bool</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DeviceCanPowerOff_Bool</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_DeviceCanPowerOff_Bool</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">Firmware_ProgrammingTarget_String</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_Firmware_ProgrammingTarget_String</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DeviceClass_Int32</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_DeviceClass_Int32</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">HasCamera_Bool</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span> <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_HasCamera_Bool</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DriverVersion_String</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_DriverVersion_String</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">Firmware_ForceUpdateRequired_Bool</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_Firmware_ForceUpdateRequired_Bool</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ViveSystemButtonFixRequired_Bool</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_ViveSystemButtonFixRequired_Bool</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ParentDriver_Uint64</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_ParentDriver_Uint64</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ResourceRoot_String</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_ResourceRoot_String</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ReportsTimeSinceVSync_Bool</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_ReportsTimeSinceVSync_Bool</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SecondsFromVsyncToPhotons_Float</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_SecondsFromVsyncToPhotons_Float</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DisplayFrequency_Float</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_DisplayFrequency_Float</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">UserIpdMeters_Float</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_UserIpdMeters_Float</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">CurrentUniverseId_Uint64</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_CurrentUniverseId_Uint64</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PreviousUniverseId_Uint64</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_PreviousUniverseId_Uint64</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DisplayFirmwareVersion_Uint64</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_DisplayFirmwareVersion_Uint64</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IsOnDesktop_Bool</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_IsOnDesktop_Bool</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DisplayMCType_Int32</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_DisplayMCType_Int32</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DisplayMCOffset_Float</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_DisplayMCOffset_Float</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DisplayMCScale_Float</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_DisplayMCScale_Float</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">EdidVendorID_Int32</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_EdidVendorID_Int32</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DisplayMCImageLeft_String</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_DisplayMCImageLeft_String</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DisplayMCImageRight_String</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_DisplayMCImageRight_String</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DisplayGCBlackClamp_Float</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_DisplayGCBlackClamp_Float</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">EdidProductID_Int32</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_EdidProductID_Int32</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">CameraToHeadTransform_Matrix34</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_CameraToHeadTransform_Matrix34</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DisplayGCType_Int32</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_DisplayGCType_Int32</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DisplayGCOffset_Float</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_DisplayGCOffset_Float</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DisplayGCScale_Float</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_DisplayGCScale_Float</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DisplayGCPrescale_Float</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_DisplayGCPrescale_Float</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DisplayGCImage_String</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_DisplayGCImage_String</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LensCenterLeftU_Float</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_LensCenterLeftU_Float</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LensCenterLeftV_Float</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_LensCenterLeftV_Float</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LensCenterRightU_Float</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_LensCenterRightU_Float</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LensCenterRightV_Float</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_LensCenterRightV_Float</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">UserHeadToEyeDepthMeters_Float</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_UserHeadToEyeDepthMeters_Float</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">CameraFirmwareVersion_Uint64</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_CameraFirmwareVersion_Uint64</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">CameraFirmwareDescription_String</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_CameraFirmwareDescription_String</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DisplayFPGAVersion_Uint64</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_DisplayFPGAVersion_Uint64</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DisplayBootloaderVersion_Uint64</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_DisplayBootloaderVersion_Uint64</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DisplayHardwareVersion_Uint64</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_DisplayHardwareVersion_Uint64</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">AudioFirmwareVersion_Uint64</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_AudioFirmwareVersion_Uint64</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">CameraCompatibilityMode_Int32</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_CameraCompatibilityMode_Int32</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ScreenshotHorizontalFieldOfViewDegrees_Float</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_ScreenshotHorizontalFieldOfViewDegrees_Float</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ScreenshotVerticalFieldOfViewDegrees_Float</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_ScreenshotVerticalFieldOfViewDegrees_Float</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DisplaySuppressed_Bool</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_DisplaySuppressed_Bool</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DisplayAllowNightMode_Bool</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_DisplayAllowNightMode_Bool</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DisplayMCImageWidth_Int32</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_DisplayMCImageWidth_Int32</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DisplayMCImageHeight_Int32</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_DisplayMCImageHeight_Int32</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DisplayMCImageNumChannels_Int32</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_DisplayMCImageNumChannels_Int32</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DisplayMCImageData_Binary</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_DisplayMCImageData_Binary</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SecondsFromPhotonsToVblank_Float</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_SecondsFromPhotonsToVblank_Float</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DriverDirectModeSendsVsyncEvents_Bool</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_DriverDirectModeSendsVsyncEvents_Bool</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DisplayDebugMode_Bool</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_DisplayDebugMode_Bool</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">GraphicsAdapterLuid_Uint64</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_GraphicsAdapterLuid_Uint64</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">AttachedDeviceId_String</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_AttachedDeviceId_String</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SupportedButtons_Uint64</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_SupportedButtons_Uint64</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">Axis0Type_Int32</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span> <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_Axis0Type_Int32</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">Axis1Type_Int32</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span> <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_Axis1Type_Int32</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">Axis2Type_Int32</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span> <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_Axis2Type_Int32</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">Axis3Type_Int32</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span> <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_Axis3Type_Int32</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">Axis4Type_Int32</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span> <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_Axis4Type_Int32</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ControllerRoleHint_Int32</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_ControllerRoleHint_Int32</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FieldOfViewLeftDegrees_Float</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_FieldOfViewLeftDegrees_Float</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FieldOfViewRightDegrees_Float</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_FieldOfViewRightDegrees_Float</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FieldOfViewTopDegrees_Float</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_FieldOfViewTopDegrees_Float</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FieldOfViewBottomDegrees_Float</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_FieldOfViewBottomDegrees_Float</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TrackingRangeMinimumMeters_Float</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_TrackingRangeMinimumMeters_Float</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TrackingRangeMaximumMeters_Float</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_TrackingRangeMaximumMeters_Float</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ModeLabel_String</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_ModeLabel_String</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IconPathName_String</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_IconPathName_String</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">NamedIconPathDeviceOff_String</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_NamedIconPathDeviceOff_String</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">NamedIconPathDeviceSearching_String</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_NamedIconPathDeviceSearching_String</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">NamedIconPathDeviceSearchingAlert_String</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_NamedIconPathDeviceSearchingAlert_String</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">NamedIconPathDeviceReady_String</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_NamedIconPathDeviceReady_String</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">NamedIconPathDeviceReadyAlert_String</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_NamedIconPathDeviceReadyAlert_String</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">NamedIconPathDeviceNotReady_String</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_NamedIconPathDeviceNotReady_String</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">NamedIconPathDeviceStandby_String</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_NamedIconPathDeviceStandby_String</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">NamedIconPathDeviceAlertLow_String</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_NamedIconPathDeviceAlertLow_String</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DisplayHiddenArea_Binary_Start</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_DisplayHiddenArea_Binary_Start</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DisplayHiddenArea_Binary_End</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_DisplayHiddenArea_Binary_End</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">UserConfigPath_String</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_UserConfigPath_String</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">InstallPath_String</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_InstallPath_String</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">HasDisplayComponent_Bool</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_HasDisplayComponent_Bool</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">HasControllerComponent_Bool</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_HasControllerComponent_Bool</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">HasCameraComponent_Bool</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_HasCameraComponent_Bool</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">HasDriverDirectModeComponent_Bool</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_HasDriverDirectModeComponent_Bool</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">HasVirtualDisplayComponent_Bool</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_HasVirtualDisplayComponent_Bool</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">VendorSpecific_Reserved_Start</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_VendorSpecific_Reserved_Start</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">VendorSpecific_Reserved_End</span>: <span class="ident">TrackedDeviceProperty</span> <span class="op">=</span>
+    <span class="ident">sys</span>::<span class="ident">ETrackedDeviceProperty_Prop_VendorSpecific_Reserved_End</span>;
+</pre></div>
+</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "openvr";</script><script src="../../aliases.js"></script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>

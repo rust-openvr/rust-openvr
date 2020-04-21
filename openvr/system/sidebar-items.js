@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["HiddenAreaMeshType",""]],"mod":[["event",""],["tracked_property_error",""]],"struct":[["DistortionCoordinates",""],["HiddenAreaMesh","A triangle mesh containing geometry determined by `HiddenAreaMeshType`."],["RawProjection","Values represent the tangents of the half-angles from the center view axis"],["TrackedPropertyError",""]]});
