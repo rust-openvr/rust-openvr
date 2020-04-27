@@ -69,8 +69,8 @@ impl From<sys::ChaperoneCalibrationState> for ChaperoneCalibrationState {
         use self::ChaperoneCalibrationState::*;
         match state {
             1 => Ok,
-            100...199 => Warning(ChaperoneCalibrationWarningState::from(state)),
-            200...299 => Error(ChaperoneCalibrationErrorState::from(state)),
+            100..=199 => Warning(ChaperoneCalibrationWarningState::from(state)),
+            200..=299 => Error(ChaperoneCalibrationErrorState::from(state)),
             _ => Unknown(state as u32),
         }
     }

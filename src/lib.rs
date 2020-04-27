@@ -2,7 +2,6 @@ extern crate openvr_sys;
 #[macro_use]
 extern crate lazy_static;
 
-use std::cell::Cell;
 use std::ffi::{CStr, CString};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::{error, fmt, mem, ptr};

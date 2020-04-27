@@ -1,5 +1,5 @@
 use std::ffi::{CStr, CString};
-use std::{fmt, mem, ptr, slice};
+use std::{fmt, mem::MaybeUninit, ptr, slice};
 
 use openvr_sys as sys;
 
@@ -95,15 +95,15 @@ impl RenderModels {
         mode: &ControllerMode,
     ) -> Option<ComponentState> {
         unsafe {
-            let mut out = mem::uninitialized();
+            let mut out: MaybeUninit<ComponentState> = MaybeUninit::uninit();
             if self.0.GetComponentState.unwrap()(
                 model.as_ptr() as *mut _,
                 component.as_ptr() as *mut _,
                 state as *const _ as *mut _,
                 mode as *const _ as *mut _,
-                &mut out as *mut _ as *mut _,
+                out.as_mut_ptr() as *mut _ as *mut _,
             ) {
-                Some(out)
+                Some(out.assume_init())
             } else {
                 None
             }

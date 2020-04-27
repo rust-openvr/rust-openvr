@@ -9,7 +9,7 @@
 //! camera render target to draw a single quad (perhaps cropped to a lower fov to hide the hidden area mask).
 
 use std::ffi::CString;
-use std::{error, fmt, mem, ptr};
+use std::{error, fmt, mem::MaybeUninit, ptr};
 
 use openvr_sys as sys;
 
@@ -61,15 +61,16 @@ impl Compositor {
     /// Poses are relative to the origin set by `set_tracking_space`.
     pub fn wait_get_poses(&self) -> Result<WaitPoses, CompositorError> {
         unsafe {
-            let mut result: WaitPoses = mem::uninitialized();
+            let mut render: MaybeUninit<TrackedDevicePoses> = MaybeUninit::uninit();
+            let mut game: MaybeUninit<TrackedDevicePoses> = MaybeUninit::uninit();
             let e = self.0.WaitGetPoses.unwrap()(
-                result.render.as_mut().as_mut_ptr() as *mut _,
-                result.render.len() as u32,
-                result.game.as_mut().as_mut_ptr() as *mut _,
-                result.game.len() as u32,
+                render.as_mut_ptr() as *mut _,
+                MAX_TRACKED_DEVICE_COUNT as u32,
+                game.as_mut_ptr() as *mut _,
+                MAX_TRACKED_DEVICE_COUNT as u32,
             );
             if e == sys::EVRCompositorError_VRCompositorError_None {
-                Ok(result)
+                Ok(WaitPoses{render: render.assume_init(), game: game.assume_init()})
             } else {
                 Err(CompositorError(e))
             }
