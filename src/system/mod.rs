@@ -123,8 +123,8 @@ impl System {
         &self,
         origin: TrackingUniverseOrigin,
     ) -> Option<(EventInfo, TrackedDevicePose)> {
-        let mut event = unsafe { mem::MaybeUninit::uninit() };
-        let mut pose = unsafe { mem::MaybeUninit::uninit() };
+        let mut event = mem::MaybeUninit::uninit();
+        let mut pose = mem::MaybeUninit::uninit();
         if unsafe {
             self.0.PollNextEventWithPose.unwrap()(
                 origin as sys::ETrackingUniverseOrigin,
