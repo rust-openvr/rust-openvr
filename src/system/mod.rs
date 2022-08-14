@@ -123,17 +123,17 @@ impl System {
         &self,
         origin: TrackingUniverseOrigin,
     ) -> Option<(EventInfo, TrackedDevicePose)> {
-        let mut event = unsafe { mem::uninitialized() };
-        let mut pose = unsafe { mem::uninitialized() };
+        let mut event = mem::MaybeUninit::uninit();
+        let mut pose = mem::MaybeUninit::uninit();
         if unsafe {
             self.0.PollNextEventWithPose.unwrap()(
                 origin as sys::ETrackingUniverseOrigin,
-                &mut event,
+                event.as_mut_ptr(),
                 mem::size_of_val(&event) as u32,
-                &mut pose as *mut _ as *mut _,
+                pose.as_mut_ptr() as *mut _,
             )
         } {
-            Some((event.into(), pose))
+            unsafe { Some((event.assume_init().into(), pose.assume_init())) }
         } else {
             None
         }
