@@ -55,10 +55,10 @@ pub unsafe fn init(ty: ApplicationType) -> Result<Context, InitError> {
     Ok(Context { live: AtomicBool::new(true) })
 }
 
-pub struct System(&'static sys::VR_IVRSystem_FnTable);
-pub struct Compositor(&'static sys::VR_IVRCompositor_FnTable);
-pub struct RenderModels(&'static sys::VR_IVRRenderModels_FnTable);
-pub struct Chaperone(&'static sys::VR_IVRChaperone_FnTable);
+pub struct System<'a>(&'a sys::VR_IVRSystem_FnTable);
+pub struct Compositor<'a>(&'a sys::VR_IVRCompositor_FnTable);
+pub struct RenderModels<'a>(&'a sys::VR_IVRRenderModels_FnTable);
+pub struct Chaperone<'a>(&'a sys::VR_IVRChaperone_FnTable);
 
 /// Entry points into OpenVR.
 ///

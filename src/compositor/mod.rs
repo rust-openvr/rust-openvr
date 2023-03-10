@@ -19,7 +19,7 @@ pub use self::texture::Texture;
 
 use super::*;
 
-impl Compositor {
+impl<'a> Compositor<'a> {
     pub fn vulkan_instance_extensions_required(&self) -> Vec<CString> {
         let temp = match unsafe {
             get_string(|ptr, n| self.0.GetVulkanInstanceExtensionsRequired.unwrap()(ptr, n))
