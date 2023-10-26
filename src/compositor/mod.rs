@@ -95,6 +95,8 @@ impl Compositor {
             Vulkan(_) => sys::EVRSubmitFlags_Submit_Default,
             OpenGLTexture(_) => sys::EVRSubmitFlags_Submit_Default,
             OpenGLRenderBuffer(_) => sys::EVRSubmitFlags_Submit_GlRenderBuffer,
+            #[cfg(feature = "submit_d3d11")]
+            DirectX(_) => sys::EVRSubmitFlags_Submit_Default,
         } | if pose.is_some() {
             sys::EVRSubmitFlags_Submit_TextureWithPose
         } else {
@@ -105,11 +107,18 @@ impl Compositor {
                 Vulkan(ref x) => x as *const _ as *mut _,
                 OpenGLTexture(x) => x as *mut _,
                 OpenGLRenderBuffer(x) => x as *mut _,
+                #[cfg(feature = "submit_d3d11")]
+                DirectX(x) => {
+                    use windows::core::Interface;
+                    x.as_ref().expect("COM pointer must be valid").as_raw()
+                }
             },
             eType: match texture.handle {
                 Vulkan(_) => sys::ETextureType_TextureType_Vulkan,
                 OpenGLTexture(_) => sys::ETextureType_TextureType_OpenGL,
                 OpenGLRenderBuffer(_) => sys::ETextureType_TextureType_OpenGL,
+                #[cfg(feature = "submit_d3d11")]
+                DirectX(_) => sys::ETextureType_TextureType_DirectX,
             },
             eColorSpace: texture.color_space as sys::EColorSpace,
             mDeviceToAbsoluteTracking: sys::HmdMatrix34_t {
