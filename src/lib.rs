@@ -1,3 +1,4 @@
+#[cfg(feature = "submit_d3d11")]
 extern crate windows;
 
 extern crate openvr_sys;

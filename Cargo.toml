@@ -27,5 +27,5 @@ lazy_static = "1.3.0"
 windows = {version = "0.51.1", optional = true, features = ["Win32_Graphics_Direct3D11"]}
 
 [features]
-default = ["submit_d3d11"]
+default = []
 submit_d3d11 = ["dep:windows"]
