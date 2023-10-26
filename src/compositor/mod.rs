@@ -95,6 +95,8 @@ impl Compositor {
             Vulkan(_) => sys::EVRSubmitFlags_Submit_Default,
             OpenGLTexture(_) => sys::EVRSubmitFlags_Submit_Default,
             OpenGLRenderBuffer(_) => sys::EVRSubmitFlags_Submit_GlRenderBuffer,
+            #[cfg(feature = "submit_d3d11")]
+            DirectX(_) => sys::EVRSubmitFlags_Submit_Default,
         } | if pose.is_some() {
             sys::EVRSubmitFlags_Submit_TextureWithPose
         } else {
@@ -105,11 +107,21 @@ impl Compositor {
                 Vulkan(ref x) => x as *const _ as *mut _,
                 OpenGLTexture(x) => x as *mut _,
                 OpenGLRenderBuffer(x) => x as *mut _,
+                #[cfg(feature = "submit_d3d11")]
+                DirectX(x) => {
+                    ///Extra unsafe operation that takes a d3d11 texture wrapped in the windows crate abstraction for it, and return the internal pointer to the vtable of the COM object
+                    use windows::Win32::Graphics::Direct3D11::ID3D11Texture2D;
+                    //Access the private pointer to the vtable in IUknown
+                    let ptr = x as *mut ID3D11Texture2D as *mut std::ptr::NonNull<std::ffi::c_void>;
+                    (*ptr).as_ptr() //dereferene and get address
+                }
             },
             eType: match texture.handle {
                 Vulkan(_) => sys::ETextureType_TextureType_Vulkan,
                 OpenGLTexture(_) => sys::ETextureType_TextureType_OpenGL,
                 OpenGLRenderBuffer(_) => sys::ETextureType_TextureType_OpenGL,
+                #[cfg(feature = "submit_d3d11")]
+                DirectX(_) => sys::ETextureType_TextureType_DirectX,
             },
             eColorSpace: texture.color_space as sys::EColorSpace,
             mDeviceToAbsoluteTracking: sys::HmdMatrix34_t {
