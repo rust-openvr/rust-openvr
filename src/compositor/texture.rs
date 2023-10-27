@@ -1,3 +1,7 @@
+use std::ffi::c_void;
+
+use windows::Win32::Graphics::Direct3D11::ID3D11Texture2D;
+
 use super::{sys, VkDevice_T, VkInstance_T, VkPhysicalDevice_T, VkQueue_T};
 
 #[derive(Debug, Copy, Clone)]
@@ -37,6 +41,8 @@ pub enum Handle {
     Vulkan(vulkan::Texture),
     OpenGLTexture(usize),
     OpenGLRenderBuffer(usize),
+    #[cfg(feature = "submit_d3d11")]
+    DirectX(*mut ID3D11Texture2D),
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
