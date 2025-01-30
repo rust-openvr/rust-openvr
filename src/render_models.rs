@@ -3,7 +3,7 @@ use std::{fmt, mem, ptr, slice};
 
 use openvr_sys as sys;
 
-use {get_string, ControllerState, RenderModels};
+use crate::{get_string, ControllerState, RenderModels};
 
 impl RenderModels {
     /// Loads and returns a render model for use in the application. `name` should be a render model name from the
@@ -95,15 +95,15 @@ impl RenderModels {
         mode: &ControllerMode,
     ) -> Option<ComponentState> {
         unsafe {
-            let mut out = mem::uninitialized();
+            let mut out = mem::MaybeUninit::uninit();
             if self.0.GetComponentState.unwrap()(
                 model.as_ptr() as *mut _,
                 component.as_ptr() as *mut _,
                 state as *const _ as *mut _,
                 mode as *const _ as *mut _,
-                &mut out as *mut _ as *mut _,
+                out.as_mut_ptr() as *mut _,
             ) {
-                Some(out)
+                Some(out.assume_init())
             } else {
                 None
             }
@@ -161,14 +161,17 @@ pub mod error {
 
 impl fmt::Debug for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.pad(::std::error::Error::description(self))
+        write!(f, "{}", self) 
     }
 }
 
 impl ::std::error::Error for Error {
-    fn description(&self) -> &str {
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use self::error::*;
-        match *self {
+        let description = match *self {
             NONE => "NONE",
             LOADING => "LOADING",
             NOT_SUPPORTED => "NOT_SUPPORTED",
@@ -183,13 +186,8 @@ impl ::std::error::Error for Error {
             NOT_ENOUGH_TEX_COORDS => "NOT_ENOUGH_TEX_COORDS",
             INVALID_TEXTURE => "INVALID_TEXTURE",
             _ => "UNKNOWN",
-        }
-    }
-}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.pad(::std::error::Error::description(self))
+        };
+        f.pad(description)
     }
 }
 

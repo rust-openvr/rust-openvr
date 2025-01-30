@@ -1,11 +1,13 @@
+#[cfg(feature = "submit_d3d11")]
+extern crate windows;
+
 extern crate openvr_sys;
 #[macro_use]
 extern crate lazy_static;
 
-use std::cell::Cell;
 use std::ffi::{CStr, CString};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::{error, fmt, mem, ptr};
+use std::{error, fmt, ptr};
 
 use openvr_sys as sys;
 
@@ -158,16 +160,16 @@ impl fmt::Debug for InitError {
 }
 
 impl error::Error for InitError {
-    fn description(&self) -> &str {
-        let msg = unsafe { CStr::from_ptr(sys::VR_GetVRInitErrorAsEnglishDescription(self.0)) };
-        msg.to_str()
-            .expect("OpenVR init error description was not valid UTF-8")
-    }
+
 }
 
 impl fmt::Display for InitError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.pad(error::Error::description(self))
+        let msg = unsafe { CStr::from_ptr(sys::VR_GetVRInitErrorAsEnglishDescription(self.0)) };
+        let description = msg
+            .to_str()
+            .expect("OpenVR init error description was not valid UTF-8");
+        f.pad(description)
     }
 }
 
@@ -183,9 +185,7 @@ unsafe fn get_string<F: FnMut(*mut std::os::raw::c_char, u32) -> u32>(mut f: F) 
     if n == 0 {
         return None;
     }
-    let mut storage = Vec::new();
-    storage.reserve_exact(n as usize);
-    storage.resize(n as usize, mem::uninitialized());
+    let mut storage = Vec::with_capacity(n as usize);
     let n_ = f(storage.as_mut_ptr() as *mut _, n);
     assert!(n == n_);
     storage.truncate((n - 1) as usize); // Strip trailing null
