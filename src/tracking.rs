@@ -69,8 +69,8 @@ pub type TrackedDeviceIndex = sys::TrackedDeviceIndex_t;
 
 pub mod tracked_device_index {
     use super::*;
-    pub const HMD: TrackedDeviceIndex = sys::k_unTrackedDeviceIndex_Hmd;
-    pub const INVALID: TrackedDeviceIndex = sys::k_unTrackedDeviceIndexInvalid;
+    pub const HMD: TrackedDeviceIndex = sys::k_unTrackedDeviceIndex_Hmd as TrackedDeviceIndex;
+    pub const INVALID: TrackedDeviceIndex = sys::k_unTrackedDeviceIndexInvalid as TrackedDeviceIndex;
 }
 
 pub type TrackedDeviceProperty = sys::ETrackedDeviceProperty;

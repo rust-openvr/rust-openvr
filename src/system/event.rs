@@ -13,10 +13,13 @@ pub struct EventInfo {
 impl From<sys::VREvent_t> for EventInfo {
     #[allow(unused_unsafe)]
     fn from(x: sys::VREvent_t) -> Self {
+        // workaround unaligned reference to a field of a packed struct (E0793) on linux/mac 
+        // https://doc.rust-lang.org/error_codes/E0793.html
+        let data = x.data; 
         EventInfo {
             tracked_device_index: x.trackedDeviceIndex,
             age: x.eventAgeSeconds,
-            event: Event::from_sys(x.eventType as sys::EVREventType, unsafe { &x.data }),
+            event: Event::from_sys(x.eventType as sys::EVREventType, &data),
         }
     }
 }
@@ -208,14 +211,6 @@ pub enum Event {
     ButtonUnpress(Controller),
     ButtonTouch(Controller),
     ButtonUntouch(Controller),
-    DualAnalog_Press,
-    DualAnalog_Unpress,
-    DualAnalog_Touch,
-    DualAnalog_Untouch,
-    DualAnalog_Move,
-    DualAnalog_ModeSwitch1,
-    DualAnalog_ModeSwitch2,
-    DualAnalog_Cancel,
     MouseMove(Mouse),
     MouseButtonDown(Mouse),
     MouseButtonUp(Mouse),
@@ -231,8 +226,6 @@ pub enum Event {
     InputFocusCaptured(Process),
     #[deprecated]
     InputFocusReleased(Process),
-    SceneFocusLost(Process),
-    SceneFocusGained(Process),
     /// The app actually drawing the scene changed (usually to or from the compositor)
     SceneApplicationChanged(Process),
     /// New app got access to draw the scene
@@ -255,8 +248,6 @@ pub enum Event {
     DashboardRequested,
     /// Send to the overlay manager
     ResetDashboard,
-    /// Send to the dashboard to render a toast - data is the notification ID
-    RenderToast,
     /// Sent to overlays when a SetOverlayRaw or SetOverlayFromFile call finishes loading
     ImageLoaded,
     /// Sent to keyboard renderer in the dashboard to invoke it
@@ -296,7 +287,6 @@ pub enum Event {
     /// The application has been asked to quit
     Quit(Process),
     ProcessQuit(Process),
-    QuitAborted_UserPrompt(Process),
     QuitAcknowledged(Process),
     /// The driver has requested that SteamVR shut down
     DriverRequestedQuit,
@@ -338,16 +328,10 @@ pub enum Event {
     KeyboardCharInput(Keyboard),
     /// Sent when DONE button clicked on keyboard
     KeyboardDone,
-    ApplicationTransitionStarted,
-    ApplicationTransitionAborted,
-    ApplicationTransitionNewAppStarted,
     ApplicationListUpdated,
     ApplicationMimeTypeLoad,
-    ApplicationTransitionNewAppLaunchComplete,
     ProcessConnected,
     ProcessDisconnected,
-    Compositor_MirrorWindowShown,
-    Compositor_MirrorWindowHidden,
     Compositor_ChaperoneBoundsShown,
     Compositor_ChaperoneBoundsHidden,
     Compositor_DisplayDisconnected,
@@ -416,14 +400,6 @@ impl Event {
             sys::EVREventType_VREvent_ButtonUnpress => ButtonUnpress(get(data)),
             sys::EVREventType_VREvent_ButtonTouch => ButtonTouch(get(data)),
             sys::EVREventType_VREvent_ButtonUntouch => ButtonUntouch(get(data)),
-            sys::EVREventType_VREvent_DualAnalog_Press => DualAnalog_Press,
-            sys::EVREventType_VREvent_DualAnalog_Unpress => DualAnalog_Unpress,
-            sys::EVREventType_VREvent_DualAnalog_Touch => DualAnalog_Touch,
-            sys::EVREventType_VREvent_DualAnalog_Untouch => DualAnalog_Untouch,
-            sys::EVREventType_VREvent_DualAnalog_Move => DualAnalog_Move,
-            sys::EVREventType_VREvent_DualAnalog_ModeSwitch1 => DualAnalog_ModeSwitch1,
-            sys::EVREventType_VREvent_DualAnalog_ModeSwitch2 => DualAnalog_ModeSwitch2,
-            sys::EVREventType_VREvent_DualAnalog_Cancel => DualAnalog_Cancel,
             sys::EVREventType_VREvent_MouseMove => MouseMove(get(data)),
             sys::EVREventType_VREvent_MouseButtonDown => MouseButtonDown(get(data)),
             sys::EVREventType_VREvent_MouseButtonUp => MouseButtonUp(get(data)),
@@ -436,14 +412,8 @@ impl Event {
             sys::EVREventType_VREvent_ScrollSmooth => ScrollSmooth(get(data)),
             sys::EVREventType_VREvent_InputFocusCaptured => InputFocusCaptured(get(data)),
             sys::EVREventType_VREvent_InputFocusReleased => InputFocusReleased(get(data)),
-            sys::EVREventType_VREvent_SceneFocusLost => SceneFocusLost(get(data)),
-            sys::EVREventType_VREvent_SceneFocusGained => SceneFocusGained(get(data)),
             sys::EVREventType_VREvent_SceneApplicationChanged => SceneApplicationChanged(get(data)),
-            sys::EVREventType_VREvent_SceneFocusChanged => SceneFocusChanged(get(data)),
             sys::EVREventType_VREvent_InputFocusChanged => InputFocusChanged(get(data)),
-            sys::EVREventType_VREvent_SceneApplicationSecondaryRenderingStarted => {
-                SceneApplicationSecondaryRenderingStarted(get(data))
-            }
             sys::EVREventType_VREvent_SceneApplicationUsingWrongGraphicsAdapter => {
                 SceneApplicationUsingWrongGraphicsAdapter
             }
@@ -458,7 +428,6 @@ impl Event {
             sys::EVREventType_VREvent_DashboardDeactivated => DashboardDeactivated,
             sys::EVREventType_VREvent_DashboardRequested => DashboardRequested,
             sys::EVREventType_VREvent_ResetDashboard => ResetDashboard,
-            sys::EVREventType_VREvent_RenderToast => RenderToast,
             sys::EVREventType_VREvent_ImageLoaded => ImageLoaded,
             sys::EVREventType_VREvent_ShowKeyboard => ShowKeyboard,
             sys::EVREventType_VREvent_HideKeyboard => HideKeyboard,
@@ -491,7 +460,6 @@ impl Event {
             sys::EVREventType_VREvent_Notification_Destroyed => Notification_Destroyed,
             sys::EVREventType_VREvent_Quit => Quit(get(data)),
             sys::EVREventType_VREvent_ProcessQuit => ProcessQuit(get(data)),
-            sys::EVREventType_VREvent_QuitAborted_UserPrompt => QuitAborted_UserPrompt(get(data)),
             sys::EVREventType_VREvent_QuitAcknowledged => QuitAcknowledged(get(data)),
             sys::EVREventType_VREvent_DriverRequestedQuit => DriverRequestedQuit,
             sys::EVREventType_VREvent_RestartRequested => RestartRequested,
@@ -557,22 +525,10 @@ impl Event {
             sys::EVREventType_VREvent_KeyboardClosed => KeyboardClosed,
             sys::EVREventType_VREvent_KeyboardCharInput => KeyboardCharInput(get(data)),
             sys::EVREventType_VREvent_KeyboardDone => KeyboardDone,
-            sys::EVREventType_VREvent_ApplicationTransitionStarted => ApplicationTransitionStarted,
-            sys::EVREventType_VREvent_ApplicationTransitionAborted => ApplicationTransitionAborted,
-            sys::EVREventType_VREvent_ApplicationTransitionNewAppStarted => {
-                ApplicationTransitionNewAppStarted
-            }
             sys::EVREventType_VREvent_ApplicationListUpdated => ApplicationListUpdated,
             sys::EVREventType_VREvent_ApplicationMimeTypeLoad => ApplicationMimeTypeLoad,
-            sys::EVREventType_VREvent_ApplicationTransitionNewAppLaunchComplete => {
-                ApplicationTransitionNewAppLaunchComplete
-            }
             sys::EVREventType_VREvent_ProcessConnected => ProcessConnected,
             sys::EVREventType_VREvent_ProcessDisconnected => ProcessDisconnected,
-            sys::EVREventType_VREvent_Compositor_MirrorWindowShown => Compositor_MirrorWindowShown,
-            sys::EVREventType_VREvent_Compositor_MirrorWindowHidden => {
-                Compositor_MirrorWindowHidden
-            }
             sys::EVREventType_VREvent_Compositor_ChaperoneBoundsShown => {
                 Compositor_ChaperoneBoundsShown
             }

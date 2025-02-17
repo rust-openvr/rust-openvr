@@ -1,0 +1,33 @@
+name: Rust
+
+on:
+  push:
+    branches: [ "*" ]
+  pull_request:
+    branches: [ "*" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: "Build and test ${{ matrix.os }} with Rust ${{ matrix.rustc-version }}"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macOS-latest]
+        rustc-version: [1.82.0, 1.83.0, 1.84.0]
+      fail-fast: false
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+    - name: Install Rust ${{ matrix.rustc-version }}
+      run: |
+        rustup install ${{ matrix.rustc-version }}
+        rustup default ${{ matrix.rustc-version }}
+    - name: Build
+      run: cargo build --verbose
+    - name: Run tests
+      run: cargo test --verbose

@@ -61,15 +61,19 @@ impl Compositor {
     /// Poses are relative to the origin set by `set_tracking_space`.
     pub fn wait_get_poses(&self) -> Result<WaitPoses, CompositorError> {
         unsafe {
-            let mut result: WaitPoses = mem::uninitialized();
+            let mut render: mem::MaybeUninit<TrackedDevicePoses> = mem::MaybeUninit::uninit();
+            let mut game: mem::MaybeUninit<TrackedDevicePoses> = mem::MaybeUninit::uninit();
             let e = self.0.WaitGetPoses.unwrap()(
-                result.render.as_mut().as_mut_ptr() as *mut _,
-                result.render.len() as u32,
-                result.game.as_mut().as_mut_ptr() as *mut _,
-                result.game.len() as u32,
+                render.as_mut_ptr() as *mut _,
+                MAX_TRACKED_DEVICE_COUNT  as u32,
+                game.as_mut_ptr() as *mut _,
+                MAX_TRACKED_DEVICE_COUNT  as u32,
             );
             if e == sys::EVRCompositorError_VRCompositorError_None {
-                Ok(result)
+                Ok(WaitPoses {
+                    render: render.assume_init(),
+                    game: game.assume_init(),
+                })
             } else {
                 Err(CompositorError(e))
             }
@@ -95,6 +99,8 @@ impl Compositor {
             Vulkan(_) => sys::EVRSubmitFlags_Submit_Default,
             OpenGLTexture(_) => sys::EVRSubmitFlags_Submit_Default,
             OpenGLRenderBuffer(_) => sys::EVRSubmitFlags_Submit_GlRenderBuffer,
+            #[cfg(feature = "submit_d3d11")]
+            DirectX(_) => sys::EVRSubmitFlags_Submit_Default,
         } | if pose.is_some() {
             sys::EVRSubmitFlags_Submit_TextureWithPose
         } else {
@@ -105,11 +111,18 @@ impl Compositor {
                 Vulkan(ref x) => x as *const _ as *mut _,
                 OpenGLTexture(x) => x as *mut _,
                 OpenGLRenderBuffer(x) => x as *mut _,
+                #[cfg(feature = "submit_d3d11")]
+                DirectX(x) => {
+                    use windows::core::Interface;
+                    x.as_ref().expect("COM pointer must be valid").as_raw()
+                }
             },
             eType: match texture.handle {
                 Vulkan(_) => sys::ETextureType_TextureType_Vulkan,
                 OpenGLTexture(_) => sys::ETextureType_TextureType_OpenGL,
                 OpenGLRenderBuffer(_) => sys::ETextureType_TextureType_OpenGL,
+                #[cfg(feature = "submit_d3d11")]
+                DirectX(_) => sys::ETextureType_TextureType_DirectX,
             },
             eColorSpace: texture.color_space as sys::EColorSpace,
             mDeviceToAbsoluteTracking: sys::HmdMatrix34_t {
@@ -227,16 +240,20 @@ pub mod compositor_error {
         CompositorError(sys::EVRCompositorError_VRCompositorError_InvalidBounds);
 }
 
+
 impl fmt::Debug for CompositorError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.pad(error::Error::description(self))
+        write!(f, "{}", self) 
     }
 }
 
 impl error::Error for CompositorError {
-    fn description(&self) -> &str {
+}
+
+impl fmt::Display for CompositorError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use self::compositor_error::*;
-        match *self {
+        let description = match *self {
             REQUEST_FAILED => "REQUEST_FAILED",
             INCOMPATIBLE_VERSION => "INCOMPATIBLE_VERSION",
             DO_NOT_HAVE_FOCUS => "DO_NOT_HAVE_FOCUS",
@@ -249,12 +266,7 @@ impl error::Error for CompositorError {
             ALREADY_SUBMITTED => "ALREADY_SUBMITTED",
             INVALID_BOUNDS => "INVALID_BOUNDS",
             _ => "UNKNOWN",
-        }
-    }
-}
-
-impl fmt::Display for CompositorError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.pad(error::Error::description(self))
+        };
+        f.pad(description)
     }
 }
