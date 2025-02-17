@@ -13,7 +13,9 @@ pub struct EventInfo {
 impl From<sys::VREvent_t> for EventInfo {
     #[allow(unused_unsafe)]
     fn from(x: sys::VREvent_t) -> Self {
-        let data = x.data; // workaround E0793 on linux/mac 
+        // workaround unaligned reference to a field of a packed struct (E0793) on linux/mac 
+        // https://doc.rust-lang.org/error_codes/E0793.html
+        let data = x.data; 
         EventInfo {
             tracked_device_index: x.trackedDeviceIndex,
             age: x.eventAgeSeconds,

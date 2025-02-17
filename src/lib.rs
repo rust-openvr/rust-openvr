@@ -154,7 +154,7 @@ impl fmt::Debug for InitError {
         let msg = unsafe { CStr::from_ptr(sys::VR_GetVRInitErrorAsSymbol(self.0)) };
         f.pad(
             msg.to_str()
-                .expect("OpenVR init error symbol was not valid UTF-8"),
+                .unwrap_or("OpenVR init error description was not valid UTF-8, error description is unavailable."),
         )
     }
 }
@@ -168,7 +168,7 @@ impl fmt::Display for InitError {
         let msg = unsafe { CStr::from_ptr(sys::VR_GetVRInitErrorAsEnglishDescription(self.0)) };
         let description = msg
             .to_str()
-            .expect("OpenVR init error description was not valid UTF-8");
+            .unwrap_or("OpenVR init error description was not valid UTF-8, error description is unavailable.");
         f.pad(description)
     }
 }
@@ -185,9 +185,13 @@ unsafe fn get_string<F: FnMut(*mut std::os::raw::c_char, u32) -> u32>(mut f: F) 
     if n == 0 {
         return None;
     }
+
     let mut storage = Vec::with_capacity(n as usize);
+    storage.set_len(n as usize); // SAFETY: We're ensuring it will be written into properly
+
     let n_ = f(storage.as_mut_ptr() as *mut _, n);
     assert!(n == n_);
+
     storage.truncate((n - 1) as usize); // Strip trailing null
     Some(CString::from_vec_unchecked(storage))
 }
@@ -228,4 +232,79 @@ pub mod button_id {
     pub const STEAM_VR_TRIGGER: sys::EVRButtonId = sys::EVRButtonId_k_EButton_SteamVR_Trigger;
     pub const DASHBOARD_BACK: sys::EVRButtonId = sys::EVRButtonId_k_EButton_Dashboard_Back;
     pub const MAX: sys::EVRButtonId = sys::EVRButtonId_k_EButton_Max;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::ffi::CString;
+    use std::ptr;
+
+    /// Mock function that simulates an OpenVR function returning a string.
+    fn mock_success(output: *mut std::os::raw::c_char, size: u32) -> u32 {
+        let text = "OpenVR Test";
+        let c_str = CString::new(text).unwrap();
+        let bytes = c_str.as_bytes_with_nul();
+
+        if size == 0 {
+            return bytes.len() as u32; // First call, return required size
+        }
+
+        unsafe {
+            ptr::copy_nonoverlapping(bytes.as_ptr(), output as *mut u8, bytes.len());
+        }
+
+        bytes.len() as u32
+    }
+
+    /// Mock function that simulates an OpenVR function returning an empty string (no data).
+    fn mock_empty(_: *mut std::os::raw::c_char, _: u32) -> u32 {
+        0
+    }
+
+    #[test]
+    fn test_get_string_success() {
+        let result = unsafe { get_string(mock_success) };
+        assert!(result.is_some());
+        assert_eq!(result.unwrap().to_str().unwrap(), "OpenVR Test");
+    }
+
+    #[test]
+    fn test_get_string_empty() {
+        let result = unsafe { get_string(mock_empty) };
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_get_string_function_called_twice() {
+
+        // Get string should call once for the size and second time to copy
+        // https://github.com/ValveSoftware/openvr/wiki/IVRSystem::GetTrackedDeviceProperty
+
+        let mut call_count = 0;
+
+        let mock_resizing = |output: *mut std::os::raw::c_char, size: u32| -> u32 {
+            call_count += 1;
+            let text = "Resize Test";
+            let c_str = CString::new(text).unwrap();
+            let bytes = c_str.as_bytes_with_nul();
+
+            if size == 0 {
+                return bytes.len() as u32;
+            }
+
+            unsafe {
+                ptr::copy_nonoverlapping(bytes.as_ptr(), output as *mut u8, bytes.len());
+            }
+
+            bytes.len() as u32
+        };
+
+        let result = unsafe { get_string(mock_resizing) };
+
+        assert!(result.is_some());
+        assert_eq!(result.unwrap().to_str().unwrap(), "Resize Test");
+        // Ensure it was called twice (first to get size, second to write)
+        assert_eq!(call_count, 2); 
+    }
 }
