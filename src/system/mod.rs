@@ -13,7 +13,7 @@ use super::*;
 
 pub use self::event::{Event, EventInfo};
 
-impl System {
+impl<'a> System<'a> {
     /// Provides the game with the minimum size that it should use for its offscreen render target to minimize pixel
     /// stretching. This size is matched with the projection matrix and distortion function and will change from display
     /// to display depending on resolution, distortion, and field of view.
