@@ -8,7 +8,7 @@ pub enum TrackingUniverseOrigin {
 }
 
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Default, Debug, Copy, Clone)]
 pub struct TrackedDevicePose(sys::TrackedDevicePose_t);
 
 impl TrackedDevicePose {

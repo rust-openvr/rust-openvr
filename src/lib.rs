@@ -307,4 +307,19 @@ mod tests {
         // Ensure it was called twice (first to get size, second to write)
         assert_eq!(call_count, 2); 
     }
+
+    #[test]
+    fn test_defaultable_pose() { 
+
+        /* we expect this type to be default initialized */
+        let pose = TrackedDevicePose::default();
+
+        for x in 0..3 { 
+            for y in 0..4 {
+                assert_eq!(pose.device_to_absolute_tracking()[x][y], 0f32);
+            }
+        }
+        
+    }
+
 }
