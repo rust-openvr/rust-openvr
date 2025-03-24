@@ -426,6 +426,13 @@ impl System {
             self.0.AcknowledgeQuit_Exiting.unwrap()();
         }
     }
+
+    pub fn raw_zero_pose_to_standing_absolute_tracking_pose(&self) -> [[f32; 4]; 3] {
+        unsafe {
+            let matrix = self.0.GetRawZeroPoseToStandingAbsoluteTrackingPose.unwrap()();
+            matrix.m
+        }
+    }
 }
 
 /// Values represent the tangents of the half-angles from the center view axis
