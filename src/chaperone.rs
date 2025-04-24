@@ -76,7 +76,7 @@ impl From<sys::ChaperoneCalibrationState> for ChaperoneCalibrationState {
     }
 }
 
-impl Chaperone {
+impl<'a> Chaperone<'a> {
     /// Get the current state of Chaperone calibration.
     /// This state can change at any time during a session due to physical base station changes.
     /// (NOTE: Some of these error codes are never returned as implementation for the error states
