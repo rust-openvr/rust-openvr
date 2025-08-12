@@ -39,10 +39,6 @@ static INITIALIZED: AtomicBool = AtomicBool::new(false);
 /// The `Context` MUST be dropped or shut down with `Context::shutdown` before shutting down the graphics API. No OpenVR
 /// calls may be made on object derived from a `Context` after the `Context` has been dropped or explicitly shut down.
 pub unsafe fn init(ty: ApplicationType) -> Result<Context, InitError> {
-    if INITIALIZED.swap(true, Ordering::Acquire) {
-        panic!("OpenVR has already been initialized!");
-    }
-
     let mut error = sys::EVRInitError_VRInitError_None;
     sys::VR_InitInternal(&mut error, ty as sys::EVRApplicationType);
     if error != sys::EVRInitError_VRInitError_None {
@@ -54,6 +50,11 @@ pub unsafe fn init(ty: ApplicationType) -> Result<Context, InitError> {
             sys::EVRInitError_VRInitError_Init_InterfaceNotFound,
         ));
     }
+    
+    if INITIALIZED.swap(true, Ordering::Acquire) {
+        panic!("OpenVR has already been initialized!");
+    }
+
     Ok(Context { live: AtomicBool::new(true) })
 }
 
