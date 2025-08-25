@@ -11,7 +11,7 @@
 use std::ffi::CString;
 use std::{error, fmt, mem, ptr};
 
-use openvr_sys as sys;
+use openvr_sys::{self as sys, Compositor_FrameTiming};
 
 pub mod texture;
 
@@ -65,9 +65,9 @@ impl Compositor {
             let mut game: mem::MaybeUninit<TrackedDevicePoses> = mem::MaybeUninit::uninit();
             let e = self.0.WaitGetPoses.unwrap()(
                 render.as_mut_ptr() as *mut _,
-                MAX_TRACKED_DEVICE_COUNT  as u32,
+                MAX_TRACKED_DEVICE_COUNT as u32,
                 game.as_mut_ptr() as *mut _,
-                MAX_TRACKED_DEVICE_COUNT  as u32,
+                MAX_TRACKED_DEVICE_COUNT as u32,
             );
             if e == sys::EVRCompositorError_VRCompositorError_None {
                 Ok(WaitPoses {
@@ -78,6 +78,21 @@ impl Compositor {
                 Err(CompositorError(e))
             }
         }
+    }
+
+    ///Returns Some if timing data is filled it. Sets oldest timing info if nFramesAgo is larger than the stored history.
+    ///History buffer currently stores last 128 frames of data.
+    pub fn get_frame_timing(&self, frames_ago: u32) -> Option<Compositor_FrameTiming> {
+        unsafe {
+            //A requirement for calling this API is that this struct is zeroed and contains the actual size of the type as the first argument.
+            let mut frame_timing = Compositor_FrameTiming::default(); //bindgen with derive default means this zeroed.
+            frame_timing.m_nSize = std::mem::size_of::<Compositor_FrameTiming>() as u32;
+            if self.0.GetFrameTiming.unwrap()(&mut frame_timing, frames_ago) {
+                return Some(frame_timing);
+            }
+        }
+
+        None
     }
 
     /// Display the supplied texture for the next frame.
@@ -240,15 +255,13 @@ pub mod compositor_error {
         CompositorError(sys::EVRCompositorError_VRCompositorError_InvalidBounds);
 }
 
-
 impl fmt::Debug for CompositorError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self) 
+        write!(f, "{}", self)
     }
 }
 
-impl error::Error for CompositorError {
-}
+impl error::Error for CompositorError {}
 
 impl fmt::Display for CompositorError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
