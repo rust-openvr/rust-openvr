@@ -13,9 +13,9 @@ pub struct EventInfo {
 impl From<sys::VREvent_t> for EventInfo {
     #[allow(unused_unsafe)]
     fn from(x: sys::VREvent_t) -> Self {
-        // workaround unaligned reference to a field of a packed struct (E0793) on linux/mac 
+        // workaround unaligned reference to a field of a packed struct (E0793) on linux/mac
         // https://doc.rust-lang.org/error_codes/E0793.html
-        let data = x.data; 
+        let data = x.data;
         EventInfo {
             tracked_device_index: x.trackedDeviceIndex,
             age: x.eventAgeSeconds,
@@ -298,7 +298,7 @@ pub enum Event {
     SeatedZeroPoseReset,
     ChaperoneFlushCache,
     ChaperoneRoomSetupStarting,
-    ChaperoneRoomSetupFinished,
+    ChaperoneRoomSetupCommitted,
     AudioSettingsHaveChanged,
     BackgroundSettingHasChanged,
     CameraSettingsHaveChanged,
@@ -426,7 +426,6 @@ impl Event {
             sys::EVREventType_VREvent_OverlayHidden => OverlayHidden,
             sys::EVREventType_VREvent_DashboardActivated => DashboardActivated,
             sys::EVREventType_VREvent_DashboardDeactivated => DashboardDeactivated,
-            sys::EVREventType_VREvent_DashboardRequested => DashboardRequested,
             sys::EVREventType_VREvent_ResetDashboard => ResetDashboard,
             sys::EVREventType_VREvent_ImageLoaded => ImageLoaded,
             sys::EVREventType_VREvent_ShowKeyboard => ShowKeyboard,
@@ -470,7 +469,7 @@ impl Event {
             sys::EVREventType_VREvent_SeatedZeroPoseReset => SeatedZeroPoseReset,
             sys::EVREventType_VREvent_ChaperoneFlushCache => ChaperoneFlushCache,
             sys::EVREventType_VREvent_ChaperoneRoomSetupStarting => ChaperoneRoomSetupStarting,
-            sys::EVREventType_VREvent_ChaperoneRoomSetupFinished => ChaperoneRoomSetupFinished,
+            sys::EVREventType_VREvent_ChaperoneRoomSetupCommitted => ChaperoneRoomSetupCommitted,
             sys::EVREventType_VREvent_AudioSettingsHaveChanged => AudioSettingsHaveChanged,
             sys::EVREventType_VREvent_BackgroundSettingHasChanged => BackgroundSettingHasChanged,
             sys::EVREventType_VREvent_CameraSettingsHaveChanged => CameraSettingsHaveChanged,
