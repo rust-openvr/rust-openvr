@@ -84,7 +84,7 @@ impl Compositor {
     ///History buffer currently stores last 128 frames of data.
     pub fn get_frame_timing(&self, frames_ago: u32) -> Option<Compositor_FrameTiming> {
         unsafe {
-            //A requirement for calling this API is that this struct is zeroed and contains the actual size of the type as the first argument.
+            //A requirement for calling this API is that this struct is zeroed and contains the actual size of the type as the first field.
             let mut frame_timing = Compositor_FrameTiming::default(); //bindgen with derive default means this zeroed.
             frame_timing.m_nSize = std::mem::size_of::<Compositor_FrameTiming>() as u32;
             if self.0.GetFrameTiming.unwrap()(&mut frame_timing, frames_ago) {
