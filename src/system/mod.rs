@@ -151,6 +151,21 @@ impl System {
             None
         }
     }
+    pub fn poll_next_event(
+        &self,
+    ) -> Option<EventInfo> {
+        let mut event = mem::MaybeUninit::uninit();
+        if unsafe {
+            self.0.PollNextEvent.unwrap()(
+                event.as_mut_ptr(),
+                mem::size_of_val(&event) as u32,
+            )
+        } {
+            unsafe { Some(event.assume_init().into()) }
+        } else {
+            None
+        }
+    }
 
     /// Computes the distortion caused by the optics
     /// Gets the result of a single distortion value for use in a distortion map. Input UVs are in a single eye's viewport, and output UVs are for the source render target in the distortion shader.
