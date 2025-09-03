@@ -399,6 +399,9 @@ impl System {
         }
     }
 
+    pub fn get_tracked_device_activity_level(&self,device: TrackedDeviceIndex)->DeviceActivityLevel{
+        unsafe {self.0.GetTrackedDeviceActivityLevel.unwrap()(device).into()}
+    }
     /// See `controller_state`
     pub fn controller_state_with_pose(
         &self,
@@ -563,6 +566,29 @@ impl<'a> ::std::ops::Deref for HiddenAreaMesh<'a> {
                 &(*self.mesh.pVertexData).v,
                 self.mesh.unTriangleCount as usize * 3,
             )
+        }
+    }
+}
+#[derive(Debug,PartialEq, Eq, PartialOrd, Ord,Clone, Copy)]
+pub enum DeviceActivityLevel {
+    Unknown = openvr_sys::EDeviceActivityLevel_k_EDeviceActivityLevel_Unknown as isize,
+    Idle = openvr_sys::EDeviceActivityLevel_k_EDeviceActivityLevel_Idle as isize,
+    UserInteraction = openvr_sys::EDeviceActivityLevel_k_EDeviceActivityLevel_UserInteraction as isize,
+    UserInteractionTimeout =
+        openvr_sys::EDeviceActivityLevel_k_EDeviceActivityLevel_UserInteraction_Timeout as isize,
+    Standby = openvr_sys::EDeviceActivityLevel_k_EDeviceActivityLevel_Standby as isize,
+    IdleTimeout = openvr_sys::EDeviceActivityLevel_k_EDeviceActivityLevel_Idle_Timeout as isize,
+}
+impl From<core::ffi::c_int> for DeviceActivityLevel{
+    fn from(value: core::ffi::c_int) -> Self {
+        match value{
+            -1=>Self::Unknown,
+            0=>Self::Idle,
+            1=>Self::UserInteraction,
+            2=>Self::UserInteractionTimeout,
+            3=>Self::Standby,
+            4=>Self::IdleTimeout,
+            _=>unreachable!("out of range")
         }
     }
 }
