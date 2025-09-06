@@ -10,7 +10,6 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::{error, fmt, ptr};
 
 use openvr_sys as sys;
-
 mod tracking;
 
 pub mod chaperone;
@@ -25,6 +24,7 @@ pub use sys::VkDevice_T;
 pub use sys::VkInstance_T;
 pub use sys::VkPhysicalDevice_T;
 pub use sys::VkQueue_T;
+
 
 static INITIALIZED: AtomicBool = AtomicBool::new(false);
 
@@ -54,8 +54,8 @@ pub unsafe fn init(ty: ApplicationType) -> Result<Context, InitError> {
     if INITIALIZED.swap(true, Ordering::Acquire) {
         panic!("OpenVR has already been initialized!");
     }
-
-    Ok(Context { live: AtomicBool::new(true) })
+    INITIALIZED.store(true,Ordering::Release);
+    Ok(Context { })
 }
 pub fn is_hmd_present()->bool{
     unsafe {sys::VR_IsHmdPresent()}
@@ -74,7 +74,8 @@ pub struct Chaperone(&'static sys::VR_IVRChaperone_FnTable);
 /// At most one of this object may exist at a time.
 ///
 /// See safety notes in `init`.
-pub struct Context { live: AtomicBool }
+#[derive(Clone)]
+pub struct Context { }
 
 fn load<T>(suffix: &[u8]) -> Result<*const T, InitError> {
     let mut magic = Vec::from(b"FnTable:".as_ref());
@@ -124,7 +125,7 @@ impl Context {
    
     /// constructed.
     pub unsafe fn shutdown(&self) {
-        if self.live.swap(false, Ordering::Acquire) {
+        if INITIALIZED.load(Ordering::Acquire) {
             sys::VR_ShutdownInternal();
             INITIALIZED.store(false, Ordering::Release);
         }
