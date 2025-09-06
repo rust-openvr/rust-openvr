@@ -6,6 +6,7 @@ extern crate openvr_sys;
 extern crate lazy_static;
 
 use std::ffi::{CStr, CString};
+use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::{fmt, ptr};
 
@@ -27,6 +28,8 @@ pub use sys::VkQueue_T;
 pub mod input;
 pub mod errors;
 pub mod settings;
+pub mod overlay;
+pub mod pose;
 
 static INITIALIZED: AtomicBool = AtomicBool::new(false);
 
@@ -73,6 +76,7 @@ pub struct RenderModels(&'static sys::VR_IVRRenderModels_FnTable);
 pub struct Chaperone(&'static sys::VR_IVRChaperone_FnTable);
 pub struct Input(&'static sys::VR_IVRInput_FnTable);
 pub struct Settings(&'static sys::VR_IVRSettings_FnTable);
+pub struct Overlay(&'static sys::VR_IVROverlay_FnTable);
 
 /// Entry points into OpenVR.
 ///
@@ -116,6 +120,9 @@ impl Context {
     }
     pub fn settings(&self) -> Result<Settings, InitError> {
         load(sys::IVRSettings_Version).map(|x| unsafe { Settings(&*x) })
+    }
+    pub fn overlay(&self) -> Result<Overlay, InitError> {
+        load(sys::IVROverlay_Version).map(|x| unsafe { Overlay(&*x) })
     }
 }
 
@@ -255,7 +262,45 @@ pub mod button_id {
     pub const DASHBOARD_BACK: sys::EVRButtonId = sys::EVRButtonId_k_EButton_Dashboard_Back;
     pub const MAX: sys::EVRButtonId = sys::EVRButtonId_k_EButton_Max;
 }
-
+pub struct TextureBounds(pub sys::VRTextureBounds_t);
+impl Clone for TextureBounds {
+    fn clone(&self) -> Self {
+        Self(sys::VRTextureBounds_t {
+            uMin: self.0.uMin,
+            vMin: self.0.vMin,
+            uMax: self.0.uMax,
+            vMax: self.0.vMax,
+        })
+    }
+}
+impl Debug for TextureBounds {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("TextureBounds")
+            .field("uMin", &self.0.uMin)
+            .field("vMin", &self.0.vMin)
+            .field("uMax", &self.0.uMax)
+            .field("vMax", &self.0.vMax)
+            .finish()
+    }
+}
+/// Tints each color channel by multiplying it with the given f32
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub struct ColorTint {
+    pub r: f32,
+    pub g: f32,
+    pub b: f32,
+    pub a: f32,
+}
+impl Default for ColorTint {
+    fn default() -> Self {
+        Self {
+            r: 1.,
+            g: 1.,
+            b: 1.,
+            a: 1.,
+        }
+    }
+}
 #[cfg(test)]
 mod tests {
     use super::*;

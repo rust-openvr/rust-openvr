@@ -110,3 +110,70 @@ impl VRSettingsError {
         }
     }
 }
+// pub const EVROverlayError_VROverlayError_None = 0 as isize,
+// pub const EVROverlayError_VROverlayError_UnknownOverlay = 10 as isize,
+// pub const EVROverlayError_VROverlayError_InvalidHandle = 11 as isize,
+// pub const EVROverlayError_VROverlayError_PermissionDenied = 12 as isize,
+// pub const EVROverlayError_VROverlayError_OverlayLimitExceeded = 13 as isize,
+// pub const EVROverlayError_VROverlayError_WrongVisibilityType = 14 as isize,
+// pub const EVROverlayError_VROverlayError_KeyTooLong = 15 as isize,
+// pub const EVROverlayError_VROverlayError_NameTooLong = 16 as isize,
+// pub const EVROverlayError_VROverlayError_KeyInUse = 17 as isize,
+// pub const EVROverlayError_VROverlayError_WrongTransformType = 18 as isize,
+// pub const EVROverlayError_VROverlayError_InvalidTrackedDevice = 19 as isize,
+// pub const EVROverlayError_VROverlayError_InvalidParameter = 20 as isize,
+// pub const EVROverlayError_VROverlayError_ThumbnailCantBeDestroyed = 21 as isize,
+// pub const EVROverlayError_VROverlayError_ArrayTooSmall = 22 as isize,
+// pub const EVROverlayError_VROverlayError_RequestFailed = 23 as isize,
+// pub const EVROverlayError_VROverlayError_InvalidTexture = 24 as isize,
+// pub const EVROverlayError_VROverlayError_UnableToLoadFile = 25 as isize,
+// pub const EVROverlayError_VROverlayError_KeyboardAlreadyInUse = 26 as isize,
+// pub const EVROverlayError_VROverlayError_NoNeighbor = 27 as isize,
+// pub const EVROverlayError_VROverlayError_TooManyMaskPrimitives = 29 as isize,
+// pub const EVROverlayError_VROverlayError_BadMaskPrimitive = 30 as isize,
+// pub const EVROverlayError_VROverlayError_TextureAlreadyLocked = 31 as isize,
+// pub const EVROverlayError_VROverlayError_TextureLockCapacityReached = 32 as isize,
+// pub const EVROverlayError_VROverlayError_TextureNotLocked = 33 as isize,
+// pub const EVROverlayError_VROverlayError_TimedOut = 34 as isize,
+pub enum VROverlayError {
+    None=openvr_sys::EVROverlayError_VROverlayError_None as isize,
+    UnknownOverlay = 10 as isize,
+    InvalidHandle = 11 as isize,
+    PermissionDenied = 12 as isize,
+    OverlayLimitExceeded = 13 as isize,
+    WrongVisibilityType = 14 as isize,
+    KeyTooLong = 15 as isize,
+    NameTooLong = 16 as isize,
+    KeyInUse = 17 as isize,
+    WrongTransformType = 18 as isize,
+    InvalidTrackedDevice = 19 as isize,
+    InvalidParameter = 20 as isize,
+    ThumbnailCantBeDestroyed = 21 as isize,
+    ArrayTooSmall = 22 as isize,
+    RequestFailed = 23 as isize,
+    InvalidTexture = 24 as isize,
+    UnableToLoadFile = 25 as isize,
+    KeyboardAlreadyInUse = 26 as isize,
+    NoNeighbor = 27 as isize,
+    TooManyMaskPrimitives = 29 as isize,
+    BadMaskPrimitive = 30 as isize,
+    TextureAlreadyLocked = 31 as isize,
+    TextureLockCapacityReached = 32 as isize,
+    TextureNotLocked = 33 as isize,
+    TimedOut = 34 as isize,
+    
+}
+impl From<openvr_sys::EVROverlayError> for VROverlayError {
+    fn from(value: openvr_sys::EVROverlayError) -> Self {
+        unsafe { core::mem::transmute(value as i8) }
+    }
+}
+impl VROverlayError {
+    pub fn new(value: openvr_sys::EVROverlayError) -> Result<(), Self> {
+        let err = Self::from(value);
+        match err {
+            VROverlayError::None => return Ok(()),
+            _ => return Err(err),
+        }
+    }
+}

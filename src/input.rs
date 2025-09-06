@@ -1,11 +1,10 @@
 use enumset::{EnumSet, EnumSetType};
 
-use crate::{errors::VRInputError, Input};
+use crate::{errors::VRInputError, pose, Input};
 
 use std::{
     ffi::{CStr, CString}, mem::MaybeUninit, path::Path, time::Duration
 };
-pub mod pose;
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 pub enum TrackedControllerRole {
     Invalid = openvr_sys::ETrackedControllerRole_TrackedControllerRole_Invalid as isize,

@@ -6,7 +6,17 @@ pub enum TrackingUniverseOrigin {
     Standing = sys::ETrackingUniverseOrigin_TrackingUniverseStanding as isize,
     RawAndUncalibrated = sys::ETrackingUniverseOrigin_TrackingUniverseRawAndUncalibrated as isize,
 }
-
+impl From<TrackingUniverseOrigin> for isize{
+    fn from(value: TrackingUniverseOrigin) -> Self {
+        unsafe {core::mem::transmute::<TrackingUniverseOrigin,i8>(value) as isize}
+    }
+}
+impl From<TrackingUniverseOrigin> for i32{
+    fn from(value: TrackingUniverseOrigin) -> Self {
+        unsafe {core::mem::transmute::<TrackingUniverseOrigin,i8>(value) as i32}
+    }
+}
+ 
 #[repr(C)]
 #[derive(Default, Debug, Copy, Clone)]
 pub struct TrackedDevicePose(sys::TrackedDevicePose_t);
