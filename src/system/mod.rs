@@ -204,11 +204,15 @@ impl System {
         match x {
             sys::ETrackedControllerRole_TrackedControllerRole_LeftHand => {
                 Some(TrackedControllerRole::LeftHand)
-            }
+            },
             sys::ETrackedControllerRole_TrackedControllerRole_RightHand => {
                 Some(TrackedControllerRole::RightHand)
-            }
-            _ => None,
+            },
+            sys::ETrackedControllerRole_TrackedControllerRole_Invalid=>{Some(TrackedControllerRole::Invalid)},
+            sys::ETrackedControllerRole_TrackedControllerRole_OptOut=>{Some(TrackedControllerRole::OptOut)},
+            sys::ETrackedControllerRole_TrackedControllerRole_Treadmill=>{Some(TrackedControllerRole::Treadmill)},
+            sys::ETrackedControllerRole_TrackedControllerRole_Stylus=>{Some(TrackedControllerRole::Stylus)},
+            _=>unreachable!()
         }
     }
 

@@ -19,21 +19,29 @@ impl From<openvr_sys::ETrackedControllerRole> for TrackedControllerRole {
         unsafe {core::mem::transmute(item as i8)}
     }
 }
+#[derive(Clone, Copy)]
 #[repr(transparent)]
-pub struct VRActionHandle(openvr_sys::VRActionHandle_t);
+pub struct VRActionHandle(pub openvr_sys::VRActionHandle_t);
 #[repr(transparent)]
-pub struct VRActionSetHandle(openvr_sys::VRActionHandle_t);
+#[derive(Clone, Copy)]
+pub struct VRActionSetHandle(pub openvr_sys::VRActionHandle_t);
 #[repr(transparent)]
-pub struct VRInputValueHandle(openvr_sys::VRInputValueHandle_t);
+#[derive(Clone, Copy)]
+pub struct VRInputValueHandle(pub openvr_sys::VRInputValueHandle_t);
 #[repr(transparent)]
-pub struct VRActiveActionSet(openvr_sys::VRActiveActionSet_t);
+#[derive(Clone, Copy)]
+pub struct VRActiveActionSet(pub openvr_sys::VRActiveActionSet_t);
 #[repr(transparent)]
-pub struct VRDigitalActionData(openvr_sys::InputDigitalActionData_t);
+#[derive(Clone, Copy)]
+pub struct VRDigitalActionData(pub openvr_sys::InputDigitalActionData_t);
 #[repr(transparent)]
-pub struct VRAnalogActionData(openvr_sys::InputAnalogActionData_t);
+#[derive(Clone, Copy)]
+pub struct VRAnalogActionData(pub openvr_sys::InputAnalogActionData_t);
 #[repr(transparent)]
-pub struct VRPoseActionData(openvr_sys::InputPoseActionData_t);
+#[derive(Clone, Copy)]
+pub struct VRPoseActionData(pub openvr_sys::InputPoseActionData_t);
 #[repr(transparent)]
+#[derive(Clone, Copy)]
 pub struct VROriginInfo(pub openvr_sys::InputOriginInfo_t);
 type Result<T> = std::result::Result<T, VRInputError>;
 #[derive(EnumSetType, Debug)]
