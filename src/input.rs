@@ -19,14 +19,14 @@ impl From<openvr_sys::ETrackedControllerRole> for TrackedControllerRole {
         unsafe {core::mem::transmute(item as i8)}
     }
 }
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy,PartialEq, Eq, PartialOrd, Ord)]
 #[repr(transparent)]
 pub struct VRActionHandle(pub openvr_sys::VRActionHandle_t);
 #[repr(transparent)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy,PartialEq, Eq, PartialOrd, Ord)]
 pub struct VRActionSetHandle(pub openvr_sys::VRActionHandle_t);
 #[repr(transparent)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy,PartialEq, Eq, PartialOrd, Ord)]
 pub struct VRInputValueHandle(pub openvr_sys::VRInputValueHandle_t);
 #[repr(transparent)]
 #[derive(Clone, Copy)]

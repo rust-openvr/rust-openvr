@@ -236,6 +236,12 @@ impl Overlay {
         origin_to_overlay: &Matrix3x4,
     ) -> Result<(), VROverlayError> {
         let origin_to_overlay: &sys::HmdMatrix34_t = origin_to_overlay.into();
+        #[cfg(target_os="linux")]
+        let err = unsafe {
+            self.0
+                .SetOverlayTransformAbsolute.unwrap()(overlay.0, (origin as u32).into(), (&raw const *origin_to_overlay).cast_mut()) 
+        };
+        #[cfg(target_os="windows")]
         let err = unsafe {
             self.0
                 .SetOverlayTransformAbsolute.unwrap()(overlay.0, origin.into(), (&raw const *origin_to_overlay).cast_mut()) 
@@ -297,7 +303,7 @@ impl Overlay {
         };
         VROverlayError::new(err)?;
         // TODO: is the error ever really going to be delayed to here? (Can we successfully return an invalid handle?)
-        if index==sys::k_unTrackedDeviceIndexInvalid{
+        if index==sys::k_unTrackedDeviceIndexInvalid as u32{
             return Err(VROverlayError::RequestFailed);
         }
         Ok(index)
