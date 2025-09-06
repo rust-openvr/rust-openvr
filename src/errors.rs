@@ -85,7 +85,7 @@ impl VRInputError {
         }
     }
 }
-
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 pub enum VRSettingsError {
     None = openvr_sys::EVRSettingsError_VRSettingsError_None as isize,
     IPCFailed = openvr_sys::EVRSettingsError_VRSettingsError_IPCFailed as isize,
@@ -135,6 +135,7 @@ impl VRSettingsError {
 // pub const EVROverlayError_VROverlayError_TextureLockCapacityReached = 32 as isize,
 // pub const EVROverlayError_VROverlayError_TextureNotLocked = 33 as isize,
 // pub const EVROverlayError_VROverlayError_TimedOut = 34 as isize,
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 pub enum VROverlayError {
     None=openvr_sys::EVROverlayError_VROverlayError_None as isize,
     UnknownOverlay = 10 as isize,

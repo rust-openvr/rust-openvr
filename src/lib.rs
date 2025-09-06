@@ -83,7 +83,6 @@ pub struct Overlay(&'static sys::VR_IVROverlay_FnTable);
 /// At most one of this object may exist at a time.
 ///
 /// See safety notes in `init`.
-#[derive(Clone)]
 pub struct Context { }
 
 fn load<T>(suffix: &[u8]) -> Result<*const T, InitError> {
