@@ -18,21 +18,16 @@ impl System {
     /// stretching. This size is matched with the projection matrix and distortion function and will change from display
     /// to display depending on resolution, distortion, and field of view.
     pub fn recommended_render_target_size(&self) -> (u32, u32) {
-        let mut result: (mem::MaybeUninit<u32>, mem::MaybeUninit<u32>) = (
-            mem::MaybeUninit::uninit(),
-            mem::MaybeUninit::uninit(),
-        );
-    
+        let mut result: (mem::MaybeUninit<u32>, mem::MaybeUninit<u32>) =
+            (mem::MaybeUninit::uninit(), mem::MaybeUninit::uninit());
+
         unsafe {
             self.0.GetRecommendedRenderTargetSize.unwrap()(
                 result.0.as_mut_ptr(),
                 result.1.as_mut_ptr(),
             );
-    
-            (
-                result.0.assume_init(),
-                result.1.assume_init(),
-            )
+
+            (result.0.assume_init(), result.1.assume_init())
         }
     }
 
@@ -48,7 +43,7 @@ impl System {
     /// compute its own matrix.
     pub fn projection_raw(&self, eye: Eye) -> RawProjection {
         let mut result = mem::MaybeUninit::<RawProjection>::uninit();
-    
+
         unsafe {
             self.0.GetProjectionRaw.unwrap()(
                 eye as sys::EVREye,
@@ -57,7 +52,7 @@ impl System {
                 &mut (*result.as_mut_ptr()).top,
                 &mut (*result.as_mut_ptr()).bottom,
             );
-            
+
             result.assume_init()
         }
     }
@@ -151,15 +146,10 @@ impl System {
             None
         }
     }
-    pub fn poll_next_event(
-        &self,
-    ) -> Option<EventInfo> {
+    pub fn poll_next_event(&self) -> Option<EventInfo> {
         let mut event = mem::MaybeUninit::uninit();
         if unsafe {
-            self.0.PollNextEvent.unwrap()(
-                event.as_mut_ptr(),
-                mem::size_of_val(&event) as u32,
-            )
+            self.0.PollNextEvent.unwrap()(event.as_mut_ptr(), mem::size_of_val(&event) as u32)
         } {
             unsafe { Some(event.assume_init().into()) }
         } else {
@@ -171,8 +161,9 @@ impl System {
     /// Gets the result of a single distortion value for use in a distortion map. Input UVs are in a single eye's viewport, and output UVs are for the source render target in the distortion shader.
     pub fn compute_distortion(&self, eye: Eye, u: f32, v: f32) -> Option<DistortionCoordinates> {
         let mut coord = mem::MaybeUninit::uninit();
-        let success =
-            unsafe { self.0.ComputeDistortion.unwrap()(eye as sys::EVREye, u, v, coord.as_mut_ptr()) };
+        let success = unsafe {
+            self.0.ComputeDistortion.unwrap()(eye as sys::EVREye, u, v, coord.as_mut_ptr())
+        };
 
         if !success {
             return None;
@@ -248,8 +239,14 @@ impl System {
         property: TrackedDeviceProperty,
     ) -> Result<bool, TrackedPropertyError> {
         let mut error: mem::MaybeUninit<TrackedPropertyError> = mem::MaybeUninit::uninit();
-        let r = unsafe { self.0.GetBoolTrackedDeviceProperty.unwrap()(device, property, error.as_mut_ptr() as *mut sys::TrackedPropertyError) };
-        
+        let r = unsafe {
+            self.0.GetBoolTrackedDeviceProperty.unwrap()(
+                device,
+                property,
+                error.as_mut_ptr() as *mut sys::TrackedPropertyError,
+            )
+        };
+
         let error = unsafe { error.assume_init() };
 
         if error == tracked_property_error::SUCCESS {
@@ -265,7 +262,13 @@ impl System {
         property: TrackedDeviceProperty,
     ) -> Result<f32, TrackedPropertyError> {
         let mut error: mem::MaybeUninit<TrackedPropertyError> = mem::MaybeUninit::uninit();
-        let r = unsafe { self.0.GetFloatTrackedDeviceProperty.unwrap()(device, property, error.as_mut_ptr() as *mut sys::TrackedPropertyError) };
+        let r = unsafe {
+            self.0.GetFloatTrackedDeviceProperty.unwrap()(
+                device,
+                property,
+                error.as_mut_ptr() as *mut sys::TrackedPropertyError,
+            )
+        };
 
         let error = unsafe { error.assume_init() };
 
@@ -283,7 +286,13 @@ impl System {
     ) -> Result<i32, TrackedPropertyError> {
         let mut error: mem::MaybeUninit<TrackedPropertyError> = mem::MaybeUninit::uninit();
 
-        let r = unsafe { self.0.GetInt32TrackedDeviceProperty.unwrap()(device, property, error.as_mut_ptr() as *mut sys::TrackedPropertyError) };
+        let r = unsafe {
+            self.0.GetInt32TrackedDeviceProperty.unwrap()(
+                device,
+                property,
+                error.as_mut_ptr() as *mut sys::TrackedPropertyError,
+            )
+        };
 
         let error = unsafe { error.assume_init() };
 
@@ -301,8 +310,14 @@ impl System {
     ) -> Result<u64, TrackedPropertyError> {
         let mut error: mem::MaybeUninit<TrackedPropertyError> = mem::MaybeUninit::uninit();
 
-        let r = unsafe {self.0.GetUint64TrackedDeviceProperty.unwrap()(device, property, error.as_mut_ptr() as *mut sys::TrackedPropertyError)};
-        
+        let r = unsafe {
+            self.0.GetUint64TrackedDeviceProperty.unwrap()(
+                device,
+                property,
+                error.as_mut_ptr() as *mut sys::TrackedPropertyError,
+            )
+        };
+
         let error = unsafe { error.assume_init() };
 
         if error == tracked_property_error::SUCCESS {
@@ -318,7 +333,7 @@ impl System {
         property: TrackedDeviceProperty,
     ) -> Result<[[f32; 4]; 3], TrackedPropertyError> {
         let mut error: mem::MaybeUninit<TrackedPropertyError> = mem::MaybeUninit::uninit();
-    
+
         let r = unsafe {
             self.0.GetMatrix34TrackedDeviceProperty.unwrap()(
                 device,
@@ -326,9 +341,9 @@ impl System {
                 error.as_mut_ptr() as *mut sys::TrackedPropertyError,
             )
         };
-    
+
         let error = unsafe { error.assume_init() };
-    
+
         if error == tracked_property_error::SUCCESS {
             Ok(r.m)
         } else {
@@ -344,7 +359,13 @@ impl System {
         unsafe {
             let mut error = mem::MaybeUninit::uninit();
             let res = get_string(|ptr, n| {
-                self.0.GetStringTrackedDeviceProperty.unwrap()(device, property, ptr, n, error.as_mut_ptr())
+                self.0.GetStringTrackedDeviceProperty.unwrap()(
+                    device,
+                    property,
+                    ptr,
+                    n,
+                    error.as_mut_ptr(),
+                )
             });
             res.map_or(Err(TrackedPropertyError(error.assume_init())), Ok)
         }
@@ -399,8 +420,11 @@ impl System {
         }
     }
 
-    pub fn get_tracked_device_activity_level(&self,device: TrackedDeviceIndex)->DeviceActivityLevel{
-        unsafe {self.0.GetTrackedDeviceActivityLevel.unwrap()(device).into()}
+    pub fn get_tracked_device_activity_level(
+        &self,
+        device: TrackedDeviceIndex,
+    ) -> DeviceActivityLevel {
+        unsafe { self.0.GetTrackedDeviceActivityLevel.unwrap()(device).into() }
     }
     /// See `controller_state`
     pub fn controller_state_with_pose(
@@ -410,7 +434,7 @@ impl System {
     ) -> Option<(ControllerState, TrackedDevicePose)> {
         let mut state: mem::MaybeUninit<ControllerState> = mem::MaybeUninit::uninit();
         let mut pose = mem::MaybeUninit::uninit();
-    
+
         unsafe {
             if self.0.GetControllerStateWithPose.unwrap()(
                 origin as sys::ETrackingUniverseOrigin,
@@ -449,6 +473,88 @@ impl System {
         unsafe {
             let matrix = self.0.GetRawZeroPoseToStandingAbsoluteTrackingPose.unwrap()();
             matrix.m
+        }
+    }
+    pub fn get_tracked_device_property_string(
+        &self,
+        index: TrackedDeviceIndex,
+        prop: sys::ETrackedDeviceProperty,
+    ) -> Result<String, TrackedPropertyError> {
+        let mut vec: Vec<u8> = Vec::with_capacity(512);
+        let mut err = TrackedPropertyError(0);
+        unsafe {
+            let read = self.0.GetStringTrackedDeviceProperty.unwrap()(
+                index,
+                prop,
+                vec.as_mut_ptr().cast(),
+                vec.capacity() as u32,
+                (&raw mut err).cast(),
+            );
+            if err != system::TrackedPropertyError(0) {
+                return Err(err);
+            }
+            vec.set_len(read as usize);
+            Ok(String::from_utf8(vec).unwrap())
+        }
+    }
+    pub fn get_tracked_device_property_bool(
+        &self,
+        index: TrackedDeviceIndex,
+        prop: sys::ETrackedDeviceProperty,
+    ) -> Result<bool, TrackedPropertyError> {
+        let mut err = TrackedPropertyError(0);
+        unsafe {
+            let ret =
+                self.0.GetBoolTrackedDeviceProperty.unwrap()(index, prop, (&raw mut err).cast());
+            if err != system::TrackedPropertyError(0) {
+                return Err(err);
+            }
+            Ok(ret)
+        }
+    }
+    pub fn get_tracked_device_property_f32(
+        &self,
+        index: TrackedDeviceIndex,
+        prop: sys::ETrackedDeviceProperty,
+    ) -> Result<f32, TrackedPropertyError> {
+        let mut err = TrackedPropertyError(0);
+        unsafe {
+            let ret =
+                self.0.GetFloatTrackedDeviceProperty.unwrap()(index, prop, (&raw mut err).cast());
+            if err != system::TrackedPropertyError(0) {
+                return Err(err);
+            }
+            Ok(ret)
+        }
+    }
+    pub fn get_tracked_device_property_i32(
+        &self,
+        index: TrackedDeviceIndex,
+        prop: sys::ETrackedDeviceProperty,
+    ) -> Result<i32, TrackedPropertyError> {
+        let mut err = TrackedPropertyError(0);
+        unsafe {
+            let ret =
+                self.0.GetInt32TrackedDeviceProperty.unwrap()(index, prop, (&raw mut err).cast());
+            if err != system::TrackedPropertyError(0) {
+                return Err(err);
+            }
+            Ok(ret)
+        }
+    }
+    pub fn get_tracked_device_property_u64(
+        &self,
+        index: TrackedDeviceIndex,
+        prop: sys::ETrackedDeviceProperty,
+    ) -> Result<u64, TrackedPropertyError> {
+        let mut err = TrackedPropertyError(0);
+        unsafe {
+            let ret =
+                self.0.GetUint64TrackedDeviceProperty.unwrap()(index, prop, (&raw mut err).cast());
+            if err != system::TrackedPropertyError(0) {
+                return Err(err);
+            }
+            Ok(ret)
         }
     }
 }
@@ -511,8 +617,7 @@ impl fmt::Debug for TrackedPropertyError {
     }
 }
 
-impl ::std::error::Error for TrackedPropertyError {
-}
+impl ::std::error::Error for TrackedPropertyError {}
 
 impl fmt::Display for TrackedPropertyError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -569,26 +674,27 @@ impl<'a> ::std::ops::Deref for HiddenAreaMesh<'a> {
         }
     }
 }
-#[derive(Debug,PartialEq, Eq, PartialOrd, Ord,Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 pub enum DeviceActivityLevel {
     Unknown = openvr_sys::EDeviceActivityLevel_k_EDeviceActivityLevel_Unknown as isize,
     Idle = openvr_sys::EDeviceActivityLevel_k_EDeviceActivityLevel_Idle as isize,
-    UserInteraction = openvr_sys::EDeviceActivityLevel_k_EDeviceActivityLevel_UserInteraction as isize,
+    UserInteraction =
+        openvr_sys::EDeviceActivityLevel_k_EDeviceActivityLevel_UserInteraction as isize,
     UserInteractionTimeout =
         openvr_sys::EDeviceActivityLevel_k_EDeviceActivityLevel_UserInteraction_Timeout as isize,
     Standby = openvr_sys::EDeviceActivityLevel_k_EDeviceActivityLevel_Standby as isize,
     IdleTimeout = openvr_sys::EDeviceActivityLevel_k_EDeviceActivityLevel_Idle_Timeout as isize,
 }
-impl From<core::ffi::c_int> for DeviceActivityLevel{
+impl From<core::ffi::c_int> for DeviceActivityLevel {
     fn from(value: core::ffi::c_int) -> Self {
-        match value{
-            -1=>Self::Unknown,
-            0=>Self::Idle,
-            1=>Self::UserInteraction,
-            2=>Self::UserInteractionTimeout,
-            3=>Self::Standby,
-            4=>Self::IdleTimeout,
-            _=>unreachable!("out of range")
+        match value {
+            -1 => Self::Unknown,
+            0 => Self::Idle,
+            1 => Self::UserInteraction,
+            2 => Self::UserInteractionTimeout,
+            3 => Self::Standby,
+            4 => Self::IdleTimeout,
+            _ => unreachable!("out of range"),
         }
     }
 }

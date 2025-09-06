@@ -34,7 +34,7 @@ pub struct VRAnalogActionData(openvr_sys::InputAnalogActionData_t);
 #[repr(transparent)]
 pub struct VRPoseActionData(openvr_sys::InputPoseActionData_t);
 #[repr(transparent)]
-pub struct VROriginInfo(openvr_sys::InputOriginInfo_t);
+pub struct VROriginInfo(pub openvr_sys::InputOriginInfo_t);
 type Result<T> = std::result::Result<T, VRInputError>;
 #[derive(EnumSetType, Debug)]
 #[enumset(repr = "u32")]
