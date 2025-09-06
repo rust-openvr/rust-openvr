@@ -4,7 +4,7 @@ use crate::pose::Matrix3x4;
 use crate::Overlay;
 use crate::TextureBounds;
 use crate::TrackingUniverseOrigin;
-use crate::{sys, ColorTint, Context, TrackedDeviceIndex};
+use crate::{sys, ColorTint, TrackedDeviceIndex};
 
 
 

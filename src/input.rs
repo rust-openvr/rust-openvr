@@ -144,7 +144,7 @@ impl Input {
 
     pub fn update_actions(&mut self, sets: &mut [VRActiveActionSet]) -> Result<()> {
         let err = unsafe {
-            self.0.UpdateActionState.unwrap()(sets.as_mut_ptr().cast(),size_of::<VRActionSetHandle>() as u32,sets.len() as u32)
+            self.0.UpdateActionState.unwrap()(sets.as_mut_ptr().cast(),size_of::<VRActiveActionSet>() as u32,sets.len() as u32)
         };
 
         VRInputError::new(err)
