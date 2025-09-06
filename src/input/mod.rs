@@ -3,9 +3,9 @@ use enumset::{EnumSet, EnumSetType};
 use crate::{errors::VRInputError, Input};
 
 use std::{
-    ffi::{CStr, CString}, mem::{self, MaybeUninit}, path::Path, time::Duration
+    ffi::{CStr, CString}, mem::MaybeUninit, path::Path, time::Duration
 };
-
+pub mod pose;
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 pub enum TrackedControllerRole {
     Invalid = openvr_sys::ETrackedControllerRole_TrackedControllerRole_Invalid as isize,
@@ -63,7 +63,7 @@ impl Input {
         let err=unsafe {
             self.0.SetActionManifestPath.unwrap()(path.as_ptr().cast_mut().cast())
         };
-        Err(VRInputError::from(err))
+        VRInputError::new(err)
     }
 
     pub fn get_action_set_handle(&mut self, name: &str) -> Result<VRActionSetHandle> {
@@ -83,7 +83,7 @@ impl Input {
             self.0.GetActionSetHandle.unwrap()(name.as_ptr().cast_mut().cast(),&mut handle.0)
         };
 
-        VRInputError::from(err);
+        VRInputError::new(err)?;
         Ok(handle)
     }
 
@@ -92,7 +92,7 @@ impl Input {
             s
         } else {
             unreachable!()
-            // return VRInputError::from(sys::VRInputError::VRInputError_InvalidParam)
+            // return VRInputError::new(sys::VRInputError::VRInputError_InvalidParam)
             //     .map(|_| unreachable!());
         };
 
@@ -106,7 +106,7 @@ impl Input {
             self.0.GetActionHandle.unwrap()(name.as_ptr().cast_mut().cast(),&mut handle.0)
         };
 
-        VRInputError::from(err);
+        VRInputError::new(err)?;
         Ok(handle)
     }
 
@@ -115,7 +115,7 @@ impl Input {
             s
         } else {
             unreachable!()
-            // return VRInputError::from(sys::VRInputError::VRInputError_InvalidParam)
+            // return VRInputError::new(sys::VRInputError::VRInputError_InvalidParam)
             //     .map(|_| unreachable!());
         };
 
@@ -129,7 +129,7 @@ impl Input {
             self.0.GetInputSourceHandle.unwrap()(name.as_ptr().cast_mut().cast(),&mut handle.0)
         };
 
-        VRInputError::from(err);
+        VRInputError::new(err)?;
         Ok(handle)
     }
 
@@ -140,7 +140,7 @@ impl Input {
             self.0.UpdateActionState.unwrap()(sets.as_mut_ptr().cast(),size_of::<VRActionSetHandle>() as u32,sets.len() as u32)
         };
 
-        Err(VRInputError::from(err))
+        VRInputError::new(err)
     }
 
     pub fn get_digital_action_data(
@@ -152,7 +152,7 @@ impl Input {
         let err = unsafe {
             self.0.GetDigitalActionData.unwrap()(action.0,data.as_mut_ptr().cast(),size_of::<VRDigitalActionData>() as u32 ,restrict.0)
         };
-        VRInputError::from(err);
+        VRInputError::new(err)?;
         Ok(VRDigitalActionData(unsafe { data.assume_init().0 }))
     }
 
@@ -165,7 +165,7 @@ impl Input {
         let err = unsafe {
             self.0.GetAnalogActionData.unwrap()(action.0,data.as_mut_ptr().cast(),size_of::<VRAnalogActionData>() as u32,restrict.0)
         };
-        VRInputError::from(err);
+        VRInputError::new(err)?;
         Ok(VRAnalogActionData(unsafe { data.assume_init().0 }))
     }
 
@@ -181,7 +181,7 @@ impl Input {
             self.0.GetPoseActionDataRelativeToNow.unwrap()(action.0,universe,seconds_from_now,data.as_mut_ptr().cast(),size_of::<VRPoseActionData>() as u32,restrict.0)
         };
 
-        VRInputError::from(err);
+        VRInputError::new(err)?;
         Ok(VRPoseActionData(unsafe { data.assume_init().0 }))
     }
 
@@ -196,7 +196,7 @@ impl Input {
         let err = unsafe {
             self.0.GetActionOrigins.unwrap()(action_set.0,digital_action_handle.0,origins.as_mut_ptr().cast(),16)
         };
-        VRInputError::from(err);
+        VRInputError::new(err)?;
         Ok(origins)
     }
 
@@ -216,7 +216,7 @@ impl Input {
             )
         };
 
-        VRInputError::from(err);
+        VRInputError::new(err)?;
         let trimmed_str = name
             .iter()
             .map(|&c| c as u8)
@@ -239,7 +239,7 @@ impl Input {
             )
         };
 
-        VRInputError::from(err);
+        VRInputError::new(err)?;
         Ok(VROriginInfo(unsafe { data.assume_init() }))
     }
 
@@ -250,7 +250,7 @@ impl Input {
     ) -> Result<()> {
         let err = unsafe { self.0.ShowActionOrigins.unwrap()(set.0, action.0) };
 
-        Err(VRInputError::from(err))
+        VRInputError::new(err)
     }
 
     pub fn show_bindings_for_action_set(
@@ -267,7 +267,7 @@ impl Input {
             )
         };
 
-        Err(VRInputError::from(err))
+        VRInputError::new(err)
     }
 
     pub fn trigger_haptic_vibration_action(
@@ -283,7 +283,7 @@ impl Input {
             self.0.TriggerHapticVibrationAction.unwrap()(action.0,start_seconds_from_now,duration.as_secs_f32(),frequency,amplitude,restrict.0)
         };
 
-        Err(VRInputError::from(err))
+        VRInputError::new(err)
     }
 
     pub fn open_binding_ui(
@@ -304,7 +304,7 @@ impl Input {
         let err = unsafe {
             self.0.OpenBindingUI.unwrap()(app_key_cstr_ptr.cast_mut().cast(),action_set,input_device.0,show_on_desktop)
         };
-        Err(VRInputError::from(err))
+        VRInputError::new(err)
     }
 
     pub fn get_action_binding_info(
@@ -317,10 +317,7 @@ impl Input {
         let err = unsafe {
             self.0.GetActionBindingInfo.unwrap()(action.0,data.as_mut_ptr().cast(),size_of::<openvr_sys::InputBindingInfo_t>() as u32,16,count.as_mut_ptr().cast())
         };
-        let err = VRInputError::from(err);
-        if !matches!(err,VRInputError::None) {
-            return std::result::Result::Err(err);
-        };
+        VRInputError::new(err)?;
 
         let mut data_vec = vec![];
 

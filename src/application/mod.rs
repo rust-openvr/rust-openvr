@@ -22,7 +22,7 @@ impl Application {
         let err = unsafe {
             self.0.AddApplicationManifest.unwrap()(path.as_ptr().cast_mut().cast(), temporary)
         };
-        Err(VRApplicationError::from(err))
+        VRApplicationError::new(err)
     }
 
     pub fn remove_application_manifest(&mut self, path: &Path) -> Result<()> {
@@ -37,7 +37,7 @@ impl Application {
     pub fn remove_application_manifest_raw(&mut self, path: &CStr) -> Result<()> {
         let err =
             unsafe { self.0.RemoveApplicationManifest.unwrap()(path.as_ptr().cast_mut().cast()) };
-        Err(VRApplicationError::from(err))
+        VRApplicationError::new(err)
     }
 
     pub fn is_application_installed(&mut self, key: &str) -> Result<bool> {

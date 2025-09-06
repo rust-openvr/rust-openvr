@@ -36,6 +36,16 @@ impl From<openvr_sys::EVRApplicationError> for VRApplicationError {
         unsafe { core::mem::transmute(val as i16) }
     }
 }
+impl VRApplicationError{
+    pub fn new(value:openvr_sys::EVRInputError)->Result<(),Self>{
+        let err=Self::from(value);
+        match err {
+            VRApplicationError::None => return Ok(()),
+            _=>return Err(err)
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 pub enum VRInputError {
     None = openvr_sys::EVRInputError_VRInputError_None as isize,
@@ -64,5 +74,14 @@ pub enum VRInputError {
 impl From<openvr_sys::EVRInputError> for VRInputError {
     fn from(value: openvr_sys::EVRInputError) -> Self {
         unsafe { core::mem::transmute(value as i8) }
+    }
+}
+impl VRInputError{
+    pub fn new(value:openvr_sys::EVRInputError)->Result<(),Self>{
+        let err=Self::from(value);
+        match err {
+            VRInputError::None => return Ok(()),
+            _=>return Err(err)
+        }
     }
 }

@@ -31,7 +31,10 @@ windows = { version = "0.51.1", optional = true, features = [
     "Win32_Graphics_Direct3D11",
 ] }
 enumset = "1.1.10"
+nalgebra = { version = "0.33.2", optional = true }
+
 
 [features]
 default = []
 submit_d3d11 = ["dep:windows"]
+nalgebra=["dep:nalgebra"]
