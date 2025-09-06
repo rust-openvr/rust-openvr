@@ -36,12 +36,12 @@ impl From<openvr_sys::EVRApplicationError> for VRApplicationError {
         unsafe { core::mem::transmute(val as i16) }
     }
 }
-impl VRApplicationError{
-    pub fn new(value:openvr_sys::EVRInputError)->Result<(),Self>{
-        let err=Self::from(value);
+impl VRApplicationError {
+    pub fn new(value: openvr_sys::EVRInputError) -> Result<(), Self> {
+        let err = Self::from(value);
         match err {
             VRApplicationError::None => return Ok(()),
-            _=>return Err(err)
+            _ => return Err(err),
         }
     }
 }
@@ -76,12 +76,37 @@ impl From<openvr_sys::EVRInputError> for VRInputError {
         unsafe { core::mem::transmute(value as i8) }
     }
 }
-impl VRInputError{
-    pub fn new(value:openvr_sys::EVRInputError)->Result<(),Self>{
-        let err=Self::from(value);
+impl VRInputError {
+    pub fn new(value: openvr_sys::EVRInputError) -> Result<(), Self> {
+        let err = Self::from(value);
         match err {
             VRInputError::None => return Ok(()),
-            _=>return Err(err)
+            _ => return Err(err),
+        }
+    }
+}
+
+pub enum VRSettingsError {
+    None = openvr_sys::EVRSettingsError_VRSettingsError_None as isize,
+    IPCFailed = openvr_sys::EVRSettingsError_VRSettingsError_IPCFailed as isize,
+    WriteFailed = openvr_sys::EVRSettingsError_VRSettingsError_WriteFailed as isize,
+    ReadFailed = openvr_sys::EVRSettingsError_VRSettingsError_ReadFailed as isize,
+    JsonParseFailed = openvr_sys::EVRSettingsError_VRSettingsError_JsonParseFailed as isize,
+    UnsetSettingHasNoDefault =
+        openvr_sys::EVRSettingsError_VRSettingsError_UnsetSettingHasNoDefault as isize,
+    AccessDenied = openvr_sys::EVRSettingsError_VRSettingsError_AccessDenied as isize,
+}
+impl From<openvr_sys::EVRSettingsError> for VRSettingsError {
+    fn from(value: openvr_sys::EVRSettingsError) -> Self {
+        unsafe { core::mem::transmute(value as i8) }
+    }
+}
+impl VRSettingsError {
+    pub fn new(value: openvr_sys::EVRSettingsError) -> Result<(), Self> {
+        let err = Self::from(value);
+        match err {
+            VRSettingsError::None => return Ok(()),
+            _ => return Err(err),
         }
     }
 }
