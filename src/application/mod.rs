@@ -1,7 +1,7 @@
 use std::ffi::{CStr, CString};
 use std::path::Path;
 
-use crate::error::VRApplicationError;
+use crate::errors::VRApplicationError;
 use crate::Application;
 
 type Result<T> = std::result::Result<T, VRApplicationError>;

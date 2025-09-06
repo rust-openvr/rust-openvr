@@ -24,8 +24,8 @@ pub use sys::VkDevice_T;
 pub use sys::VkInstance_T;
 pub use sys::VkPhysicalDevice_T;
 pub use sys::VkQueue_T;
-mod input;
-pub mod error;
+pub mod input;
+pub mod errors;
 
 static INITIALIZED: AtomicBool = AtomicBool::new(false);
 
@@ -70,6 +70,7 @@ pub struct Application(&'static sys::VR_IVRApplications_FnTable);
 pub struct Compositor(&'static sys::VR_IVRCompositor_FnTable);
 pub struct RenderModels(&'static sys::VR_IVRRenderModels_FnTable);
 pub struct Chaperone(&'static sys::VR_IVRChaperone_FnTable);
+pub struct Input(&'static sys::VR_IVRInput_FnTable);
 
 /// Entry points into OpenVR.
 ///
@@ -107,6 +108,9 @@ impl Context {
     }
     pub fn chaperone(&self) -> Result<Chaperone, InitError> {
         load(sys::IVRChaperone_Version).map(|x| unsafe { Chaperone(&*x) })
+    }
+    pub fn input(&self) -> Result<Input, InitError> {
+        load(sys::IVRInput_Version).map(|x| unsafe { Input(&*x) })
     }
 }
 
