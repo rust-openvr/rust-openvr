@@ -7,11 +7,11 @@ extern crate lazy_static;
 
 use std::ffi::{CStr, CString};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::{error, fmt, ptr};
+use std::{fmt, ptr};
 
 use openvr_sys as sys;
 mod tracking;
-
+pub mod application;
 pub mod chaperone;
 pub mod compositor;
 pub mod property;
@@ -24,7 +24,8 @@ pub use sys::VkDevice_T;
 pub use sys::VkInstance_T;
 pub use sys::VkPhysicalDevice_T;
 pub use sys::VkQueue_T;
-
+mod input;
+pub mod error;
 
 static INITIALIZED: AtomicBool = AtomicBool::new(false);
 
@@ -65,6 +66,7 @@ pub fn is_runtime_installed()->bool{
 }
 
 pub struct System(&'static sys::VR_IVRSystem_FnTable);
+pub struct Application(&'static sys::VR_IVRApplications_FnTable);
 pub struct Compositor(&'static sys::VR_IVRCompositor_FnTable);
 pub struct RenderModels(&'static sys::VR_IVRRenderModels_FnTable);
 pub struct Chaperone(&'static sys::VR_IVRChaperone_FnTable);
@@ -93,6 +95,9 @@ fn load<T>(suffix: &[u8]) -> Result<*const T, InitError> {
 impl Context {
     pub fn system(&self) -> Result<System, InitError> {
         load(sys::IVRSystem_Version).map(|x| unsafe { System(&*x) })
+    }
+    pub fn application(&self) -> Result<Application, InitError> {
+        load(sys::IVRApplications_Version).map(|x| unsafe { Application(&*x) })
     }
     pub fn compositor(&self) -> Result<Compositor, InitError> {
         load(sys::IVRCompositor_Version).map(|x| unsafe { Compositor(&*x) })
@@ -167,7 +172,7 @@ impl fmt::Debug for InitError {
     }
 }
 
-impl error::Error for InitError {
+impl std::error::Error for InitError {
 
 }
 
