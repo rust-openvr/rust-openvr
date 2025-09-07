@@ -6,13 +6,13 @@ extern crate openvr_sys;
 extern crate lazy_static;
 
 use std::ffi::{CStr, CString};
+use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::{error, fmt, ptr};
+use std::{fmt, ptr};
 
 use openvr_sys as sys;
-
 mod tracking;
-
+pub mod application;
 pub mod chaperone;
 pub mod compositor;
 pub mod property;
@@ -25,6 +25,11 @@ pub use sys::VkDevice_T;
 pub use sys::VkInstance_T;
 pub use sys::VkPhysicalDevice_T;
 pub use sys::VkQueue_T;
+pub mod input;
+pub mod errors;
+pub mod settings;
+pub mod overlay;
+pub mod pose;
 
 static INITIALIZED: AtomicBool = AtomicBool::new(false);
 
@@ -54,8 +59,8 @@ pub unsafe fn init(ty: ApplicationType) -> Result<Context, InitError> {
     if INITIALIZED.swap(true, Ordering::Acquire) {
         panic!("OpenVR has already been initialized!");
     }
-
-    Ok(Context { live: AtomicBool::new(true) })
+    INITIALIZED.store(true,Ordering::Release);
+    Ok(Context { })
 }
 pub fn is_hmd_present()->bool{
     unsafe {sys::VR_IsHmdPresent()}
@@ -64,17 +69,22 @@ pub fn is_runtime_installed()->bool{
     unsafe {sys::VR_IsRuntimeInstalled()}
 }
 
+
 pub struct System(&'static sys::VR_IVRSystem_FnTable);
+pub struct Application(&'static sys::VR_IVRApplications_FnTable);
 pub struct Compositor(&'static sys::VR_IVRCompositor_FnTable);
 pub struct RenderModels(&'static sys::VR_IVRRenderModels_FnTable);
 pub struct Chaperone(&'static sys::VR_IVRChaperone_FnTable);
+pub struct Input(&'static sys::VR_IVRInput_FnTable);
+pub struct Settings(&'static sys::VR_IVRSettings_FnTable);
+pub struct Overlay(&'static sys::VR_IVROverlay_FnTable);
 
 /// Entry points into OpenVR.
 ///
 /// At most one of this object may exist at a time.
 ///
 /// See safety notes in `init`.
-pub struct Context { live: AtomicBool }
+pub struct Context { }
 
 fn load<T>(suffix: &[u8]) -> Result<*const T, InitError> {
     let mut magic = Vec::from(b"FnTable:".as_ref());
@@ -93,6 +103,9 @@ impl Context {
     pub fn system(&self) -> Result<System, InitError> {
         load(sys::IVRSystem_Version).map(|x| unsafe { System(&*x) })
     }
+    pub fn application(&self) -> Result<Application, InitError> {
+        load(sys::IVRApplications_Version).map(|x| unsafe { Application(&*x) })
+    }
     pub fn compositor(&self) -> Result<Compositor, InitError> {
         load(sys::IVRCompositor_Version).map(|x| unsafe { Compositor(&*x) })
     }
@@ -101,6 +114,15 @@ impl Context {
     }
     pub fn chaperone(&self) -> Result<Chaperone, InitError> {
         load(sys::IVRChaperone_Version).map(|x| unsafe { Chaperone(&*x) })
+    }
+    pub fn input(&self) -> Result<Input, InitError> {
+        load(sys::IVRInput_Version).map(|x| unsafe { Input(&*x) })
+    }
+    pub fn settings(&self) -> Result<Settings, InitError> {
+        load(sys::IVRSettings_Version).map(|x| unsafe { Settings(&*x) })
+    }
+    pub fn overlay(&self) -> Result<Overlay, InitError> {
+        load(sys::IVROverlay_Version).map(|x| unsafe { Overlay(&*x) })
     }
 }
 
@@ -124,7 +146,7 @@ impl Context {
    
     /// constructed.
     pub unsafe fn shutdown(&self) {
-        if self.live.swap(false, Ordering::Acquire) {
+        if INITIALIZED.load(Ordering::Acquire) {
             sys::VR_ShutdownInternal();
             INITIALIZED.store(false, Ordering::Release);
         }
@@ -166,7 +188,7 @@ impl fmt::Debug for InitError {
     }
 }
 
-impl error::Error for InitError {
+impl std::error::Error for InitError {
 
 }
 
@@ -240,7 +262,45 @@ pub mod button_id {
     pub const DASHBOARD_BACK: sys::EVRButtonId = sys::EVRButtonId_k_EButton_Dashboard_Back;
     pub const MAX: sys::EVRButtonId = sys::EVRButtonId_k_EButton_Max;
 }
-
+pub struct TextureBounds(pub sys::VRTextureBounds_t);
+impl Clone for TextureBounds {
+    fn clone(&self) -> Self {
+        Self(sys::VRTextureBounds_t {
+            uMin: self.0.uMin,
+            vMin: self.0.vMin,
+            uMax: self.0.uMax,
+            vMax: self.0.vMax,
+        })
+    }
+}
+impl Debug for TextureBounds {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("TextureBounds")
+            .field("uMin", &self.0.uMin)
+            .field("vMin", &self.0.vMin)
+            .field("uMax", &self.0.uMax)
+            .field("vMax", &self.0.vMax)
+            .finish()
+    }
+}
+/// Tints each color channel by multiplying it with the given f32
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub struct ColorTint {
+    pub r: f32,
+    pub g: f32,
+    pub b: f32,
+    pub a: f32,
+}
+impl Default for ColorTint {
+    fn default() -> Self {
+        Self {
+            r: 1.,
+            g: 1.,
+            b: 1.,
+            a: 1.,
+        }
+    }
+}
 #[cfg(test)]
 mod tests {
     use super::*;

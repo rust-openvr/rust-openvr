@@ -6,10 +6,20 @@ pub enum TrackingUniverseOrigin {
     Standing = sys::ETrackingUniverseOrigin_TrackingUniverseStanding as isize,
     RawAndUncalibrated = sys::ETrackingUniverseOrigin_TrackingUniverseRawAndUncalibrated as isize,
 }
-
+impl From<TrackingUniverseOrigin> for isize{
+    fn from(value: TrackingUniverseOrigin) -> Self {
+        unsafe {core::mem::transmute::<TrackingUniverseOrigin,i8>(value) as isize}
+    }
+}
+impl From<TrackingUniverseOrigin> for i32{
+    fn from(value: TrackingUniverseOrigin) -> Self {
+        unsafe {core::mem::transmute::<TrackingUniverseOrigin,i8>(value) as i32}
+    }
+}
+ 
 #[repr(C)]
 #[derive(Default, Debug, Copy, Clone)]
-pub struct TrackedDevicePose(sys::TrackedDevicePose_t);
+pub struct TrackedDevicePose(pub sys::TrackedDevicePose_t);
 
 impl TrackedDevicePose {
     pub fn device_to_absolute_tracking(&self) -> &[[f32; 4]; 3] {
@@ -79,6 +89,11 @@ pub type TrackedDeviceProperty = sys::ETrackedDeviceProperty;
 pub enum TrackedControllerRole {
     LeftHand = sys::ETrackedControllerRole_TrackedControllerRole_LeftHand as isize,
     RightHand = sys::ETrackedControllerRole_TrackedControllerRole_RightHand as isize,
+    Invalid= sys::ETrackedControllerRole_TrackedControllerRole_Invalid as isize,
+    OptOut= sys::ETrackedControllerRole_TrackedControllerRole_OptOut as isize,
+    Treadmill= sys::ETrackedControllerRole_TrackedControllerRole_Treadmill as isize,
+    Stylus= sys::ETrackedControllerRole_TrackedControllerRole_Stylus as isize,
+
 }
 
 pub const MAX_TRACKED_DEVICE_COUNT: usize = sys::k_unMaxTrackedDeviceCount as usize;
