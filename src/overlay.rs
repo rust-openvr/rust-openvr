@@ -236,7 +236,7 @@ impl Overlay {
         origin_to_overlay: &Matrix3x4,
     ) -> Result<(), VROverlayError> {
         let origin_to_overlay: &sys::HmdMatrix34_t = origin_to_overlay.into();
-        #[cfg(target_os="linux")]
+        #[cfg(not(target_os="windows"))] //idk abt macos, idk even why bindings differr between linux and windows
         let err = unsafe {
             self.0
                 .SetOverlayTransformAbsolute.unwrap()(overlay.0, (origin as u32).into(), (&raw const *origin_to_overlay).cast_mut()) 
