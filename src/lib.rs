@@ -68,6 +68,12 @@ pub fn is_hmd_present()->bool{
 pub fn is_runtime_installed()->bool{
     unsafe {sys::VR_IsRuntimeInstalled()}
 }
+pub fn is_hmd_present()->bool{
+    unsafe {sys::VR_IsHmdPresent()}
+}
+pub fn is_runtime_installed()->bool{
+    unsafe {sys::VR_IsRuntimeInstalled()}
+}
 
 pub struct System(&'static sys::VR_IVRSystem_FnTable);
 pub struct Application(&'static sys::VR_IVRApplications_FnTable);

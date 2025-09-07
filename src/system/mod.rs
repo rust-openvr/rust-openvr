@@ -146,10 +146,17 @@ impl System {
             None
         }
     }
-    pub fn poll_next_event(&self) -> Option<EventInfo> {
+
+    pub fn poll_next_event(
+        &self,
+    ) -> Option<EventInfo> {
         let mut event = mem::MaybeUninit::uninit();
         if unsafe {
-            self.0.PollNextEvent.unwrap()(event.as_mut_ptr(), mem::size_of_val(&event) as u32)
+            self.0.PollNextEvent.unwrap()(
+                event.as_mut_ptr(),
+                mem::size_of_val(&event) as u32,
+            )
+
         } {
             unsafe { Some(event.assume_init().into()) }
         } else {
