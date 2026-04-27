@@ -1,6 +1,8 @@
 
 #[cfg(feature = "submit_d3d11")]
 use windows::Win32::Graphics::Direct3D11::ID3D11Texture2D;
+#[cfg(feature = "submit_d3d12")]
+use windows::Win32::Graphics::Direct3D12::{ID3D12CommandQueue, ID3D12Resource};
 
 use super::{sys, VkDevice_T, VkInstance_T, VkPhysicalDevice_T, VkQueue_T};
 
@@ -36,6 +38,18 @@ pub mod vulkan {
     unsafe impl Sync for Texture {}
 }
 
+#[cfg(feature = "submit_d3d12")]
+pub mod d3d12 {
+    use super::*;
+
+    #[derive(Debug, Copy, Clone)]
+    pub struct Texture {
+        pub resource: *mut ID3D12Resource,
+        pub command_queue: *mut ID3D12CommandQueue,
+        pub node_mask: u32,
+    }
+}
+
 #[derive(Debug, Copy, Clone)]
 pub enum Handle {
     Vulkan(vulkan::Texture),
@@ -43,6 +57,8 @@ pub enum Handle {
     OpenGLRenderBuffer(usize),
     #[cfg(feature = "submit_d3d11")]
     DirectX(*mut ID3D11Texture2D),
+    #[cfg(feature = "submit_d3d12")]
+    DirectX12(d3d12::Texture),
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]

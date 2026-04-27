@@ -116,11 +116,15 @@ impl Compositor {
             OpenGLRenderBuffer(_) => sys::EVRSubmitFlags_Submit_GlRenderBuffer,
             #[cfg(feature = "submit_d3d11")]
             DirectX(_) => sys::EVRSubmitFlags_Submit_Default,
+            #[cfg(feature = "submit_d3d12")]
+            DirectX12(_) => sys::EVRSubmitFlags_Submit_Default,
         } | if pose.is_some() {
             sys::EVRSubmitFlags_Submit_TextureWithPose
         } else {
             0
         };
+        #[cfg(feature = "submit_d3d12")]
+        let mut d3d12_texture_data = mem::MaybeUninit::<sys::D3D12TextureData_t>::uninit();
         let texture = sys::VRTextureWithPose_t_real {
             handle: match texture.handle {
                 Vulkan(ref x) => x as *const _ as *mut _,
@@ -131,6 +135,26 @@ impl Compositor {
                     use windows::core::Interface;
                     x.as_ref().expect("COM pointer must be valid").as_raw()
                 }
+                #[cfg(feature = "submit_d3d12")]
+                DirectX12(x) => {
+                    use windows::core::Interface;
+                    d3d12_texture_data.write(sys::D3D12TextureData_t {
+                        m_pResource: x
+                            .resource
+                            .as_ref()
+                            .expect("COM pointer must be valid")
+                            .as_raw()
+                            .cast(),
+                        m_pCommandQueue: x
+                            .command_queue
+                            .as_ref()
+                            .expect("COM pointer must be valid")
+                            .as_raw()
+                            .cast(),
+                        m_nNodeMask: x.node_mask,
+                    });
+                    d3d12_texture_data.as_mut_ptr() as *mut _
+                }
             },
             eType: match texture.handle {
                 Vulkan(_) => sys::ETextureType_TextureType_Vulkan,
@@ -138,6 +162,8 @@ impl Compositor {
                 OpenGLRenderBuffer(_) => sys::ETextureType_TextureType_OpenGL,
                 #[cfg(feature = "submit_d3d11")]
                 DirectX(_) => sys::ETextureType_TextureType_DirectX,
+                #[cfg(feature = "submit_d3d12")]
+                DirectX12(_) => sys::ETextureType_TextureType_DirectX12,
             },
             eColorSpace: texture.color_space as sys::EColorSpace,
             mDeviceToAbsoluteTracking: sys::HmdMatrix34_t {
