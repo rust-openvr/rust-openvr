@@ -117,7 +117,7 @@ impl RenderModels {
     /// returns `Ok(Some(texture))`.
     pub fn load_texture(&self, id: TextureId) -> Result<Option<Texture>> {
         let mut ptr = ptr::null_mut();
-        let r = unsafe { self.0.LoadTexture_Async.unwrap()(id, &mut ptr) };
+        let r = unsafe { self.0.LoadTexture_Async.unwrap()(id.0, &mut ptr) };
         match Error(r) {
             error::NONE => Ok(Some(Texture {
                 ptr: ptr,
@@ -222,7 +222,7 @@ impl<'a> Model<'a> {
         if id < 0 {
             None
         } else {
-            Some(id)
+            Some(TextureId(id))
         }
     }
 }
@@ -262,7 +262,7 @@ impl<'a> Drop for Texture<'a> {
     }
 }
 
-pub type TextureId = sys::TextureID_t;
+pub struct TextureId(pub sys::TextureID_t);
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]

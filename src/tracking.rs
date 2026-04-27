@@ -6,10 +6,39 @@ pub enum TrackingUniverseOrigin {
     Standing = sys::ETrackingUniverseOrigin_TrackingUniverseStanding as isize,
     RawAndUncalibrated = sys::ETrackingUniverseOrigin_TrackingUniverseRawAndUncalibrated as isize,
 }
-
+impl From<TrackingUniverseOrigin> for isize{
+    fn from(value: TrackingUniverseOrigin) -> Self {
+        match value {
+            TrackingUniverseOrigin::Seated => sys::ETrackingUniverseOrigin_TrackingUniverseSeated as isize,
+            TrackingUniverseOrigin::Standing => sys::ETrackingUniverseOrigin_TrackingUniverseStanding as isize,
+            TrackingUniverseOrigin::RawAndUncalibrated => sys::ETrackingUniverseOrigin_TrackingUniverseRawAndUncalibrated as isize,
+        }
+    }
+}
+//fixme:
+//for some reason bindings to SetOverlayTransformAbsolute expect origin to be u32 on linux (at least on my OS) and i32 on windows
+//this enum can be: 0,1,2 so it shouldn't cause any issues as underlaying bits are the same
+impl From<TrackingUniverseOrigin> for i32{
+    fn from(value: TrackingUniverseOrigin) -> Self {
+       match value {
+            TrackingUniverseOrigin::Seated => sys::ETrackingUniverseOrigin_TrackingUniverseSeated as i32,
+            TrackingUniverseOrigin::Standing => sys::ETrackingUniverseOrigin_TrackingUniverseStanding as i32,
+            TrackingUniverseOrigin::RawAndUncalibrated => sys::ETrackingUniverseOrigin_TrackingUniverseRawAndUncalibrated as i32,
+        }
+    }
+}
+impl From<TrackingUniverseOrigin> for u32{
+    fn from(value: TrackingUniverseOrigin) -> Self {
+       match value {
+            TrackingUniverseOrigin::Seated => sys::ETrackingUniverseOrigin_TrackingUniverseSeated as u32,
+            TrackingUniverseOrigin::Standing => sys::ETrackingUniverseOrigin_TrackingUniverseStanding as u32,
+            TrackingUniverseOrigin::RawAndUncalibrated => sys::ETrackingUniverseOrigin_TrackingUniverseRawAndUncalibrated as u32,
+        }
+    }
+}
 #[repr(C)]
 #[derive(Default, Debug, Copy, Clone)]
-pub struct TrackedDevicePose(sys::TrackedDevicePose_t);
+pub struct TrackedDevicePose(pub sys::TrackedDevicePose_t);
 
 impl TrackedDevicePose {
     pub fn device_to_absolute_tracking(&self) -> &[[f32; 4]; 3] {
@@ -64,23 +93,27 @@ pub enum TrackedDeviceClass {
     TrackingReference = sys::ETrackedDeviceClass_TrackedDeviceClass_TrackingReference as isize,
     DisplayRedirect = sys::ETrackedDeviceClass_TrackedDeviceClass_DisplayRedirect as isize,
 }
-
-pub type TrackedDeviceIndex = sys::TrackedDeviceIndex_t;
+#[derive(Clone, Copy,PartialEq,Debug)]
+pub struct TrackedDeviceIndex(pub sys::TrackedDeviceIndex_t);
 
 pub mod tracked_device_index {
     use super::*;
-    pub const HMD: TrackedDeviceIndex = sys::k_unTrackedDeviceIndex_Hmd as TrackedDeviceIndex;
-    pub const INVALID: TrackedDeviceIndex = sys::k_unTrackedDeviceIndexInvalid as TrackedDeviceIndex;
+    pub const HMD: TrackedDeviceIndex = TrackedDeviceIndex(sys::k_unTrackedDeviceIndex_Hmd as u32);
+    pub const INVALID: TrackedDeviceIndex = TrackedDeviceIndex(sys::k_unTrackedDeviceIndexInvalid as u32);
 }
+#[derive(Clone, Copy,PartialEq,Debug)]
+pub struct TrackedDeviceProperty(pub sys::ETrackedDeviceProperty);
 
-pub type TrackedDeviceProperty = sys::ETrackedDeviceProperty;
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Clone, Copy,PartialEq,Debug)]
 pub enum TrackedControllerRole {
     LeftHand = sys::ETrackedControllerRole_TrackedControllerRole_LeftHand as isize,
     RightHand = sys::ETrackedControllerRole_TrackedControllerRole_RightHand as isize,
+    Invalid= sys::ETrackedControllerRole_TrackedControllerRole_Invalid as isize,
+    OptOut= sys::ETrackedControllerRole_TrackedControllerRole_OptOut as isize,
+    Treadmill= sys::ETrackedControllerRole_TrackedControllerRole_Treadmill as isize,
+    Stylus= sys::ETrackedControllerRole_TrackedControllerRole_Stylus as isize,
+
 }
 
 pub const MAX_TRACKED_DEVICE_COUNT: usize = sys::k_unMaxTrackedDeviceCount as usize;
-
-pub type TrackedDevicePoses = [TrackedDevicePose; MAX_TRACKED_DEVICE_COUNT];
+pub type TrackedDevicePoses=[TrackedDevicePose; MAX_TRACKED_DEVICE_COUNT];

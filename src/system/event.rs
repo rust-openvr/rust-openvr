@@ -17,7 +17,7 @@ impl From<sys::VREvent_t> for EventInfo {
         // https://doc.rust-lang.org/error_codes/E0793.html
         let data = x.data;
         EventInfo {
-            tracked_device_index: x.trackedDeviceIndex,
+            tracked_device_index: tracking::TrackedDeviceIndex(x.trackedDeviceIndex),
             age: x.eventAgeSeconds,
             event: Event::from_sys(x.eventType as sys::EVREventType, &data),
         }
@@ -185,7 +185,7 @@ impl FromEventData for Property {
         let x: &sys::VREvent_Property_t = &*(x as *const _ as *const _); // Field is missing from union
         Property {
             container: x.container,
-            property: x.prop,
+            property: tracking::TrackedDeviceProperty(x.prop),
         }
     }
 }
