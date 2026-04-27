@@ -3,7 +3,8 @@ use crate::tracking;
 
 use super::TrackedDeviceProperty;
 use openvr_sys as sys;
-pub const Invalid: TrackedDeviceProperty = tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_Invalid);
+pub const Invalid: TrackedDeviceProperty =
+    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_Invalid);
 pub const TrackingSystemName_String: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_TrackingSystemName_String);
 pub const ModelNumber_String: TrackedDeviceProperty =
@@ -16,28 +17,34 @@ pub const WillDriftInYaw_Bool: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_WillDriftInYaw_Bool);
 pub const ManufacturerName_String: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_ManufacturerName_String);
-pub const TrackingFirmwareVersion_String: TrackedDeviceProperty =
-    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_TrackingFirmwareVersion_String);
+pub const TrackingFirmwareVersion_String: TrackedDeviceProperty = tracking::TrackedDeviceProperty(
+    sys::ETrackedDeviceProperty_Prop_TrackingFirmwareVersion_String,
+);
 pub const HardwareRevision_String: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_HardwareRevision_String);
 pub const AllWirelessDongleDescriptions_String: TrackedDeviceProperty =
-    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_AllWirelessDongleDescriptions_String);
-pub const ConnectedWirelessDongle_String: TrackedDeviceProperty =
-    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_ConnectedWirelessDongle_String);
+    tracking::TrackedDeviceProperty(
+        sys::ETrackedDeviceProperty_Prop_AllWirelessDongleDescriptions_String,
+    );
+pub const ConnectedWirelessDongle_String: TrackedDeviceProperty = tracking::TrackedDeviceProperty(
+    sys::ETrackedDeviceProperty_Prop_ConnectedWirelessDongle_String,
+);
 pub const DeviceIsWireless_Bool: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_DeviceIsWireless_Bool);
 pub const DeviceIsCharging_Bool: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_DeviceIsCharging_Bool);
 pub const DeviceBatteryPercentage_Float: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_DeviceBatteryPercentage_Float);
-pub const StatusDisplayTransform_Matrix34: TrackedDeviceProperty =
-    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_StatusDisplayTransform_Matrix34);
+pub const StatusDisplayTransform_Matrix34: TrackedDeviceProperty = tracking::TrackedDeviceProperty(
+    sys::ETrackedDeviceProperty_Prop_StatusDisplayTransform_Matrix34,
+);
 pub const Firmware_UpdateAvailable_Bool: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_Firmware_UpdateAvailable_Bool);
 pub const Firmware_ManualUpdate_Bool: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_Firmware_ManualUpdate_Bool);
-pub const Firmware_ManualUpdateURL_String: TrackedDeviceProperty =
-    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_Firmware_ManualUpdateURL_String);
+pub const Firmware_ManualUpdateURL_String: TrackedDeviceProperty = tracking::TrackedDeviceProperty(
+    sys::ETrackedDeviceProperty_Prop_Firmware_ManualUpdateURL_String,
+);
 pub const HardwareRevision_Uint64: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_HardwareRevision_Uint64);
 pub const FirmwareVersion_Uint64: TrackedDeviceProperty =
@@ -53,40 +60,52 @@ pub const DongleVersion_Uint64: TrackedDeviceProperty =
 pub const BlockServerShutdown_Bool: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_BlockServerShutdown_Bool);
 pub const CanUnifyCoordinateSystemWithHmd_Bool: TrackedDeviceProperty =
-    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_CanUnifyCoordinateSystemWithHmd_Bool);
+    tracking::TrackedDeviceProperty(
+        sys::ETrackedDeviceProperty_Prop_CanUnifyCoordinateSystemWithHmd_Bool,
+    );
 pub const ContainsProximitySensor_Bool: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_ContainsProximitySensor_Bool);
-pub const DeviceProvidesBatteryStatus_Bool: TrackedDeviceProperty =
-    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_DeviceProvidesBatteryStatus_Bool);
+pub const DeviceProvidesBatteryStatus_Bool: TrackedDeviceProperty = tracking::TrackedDeviceProperty(
+    sys::ETrackedDeviceProperty_Prop_DeviceProvidesBatteryStatus_Bool,
+);
 pub const DeviceCanPowerOff_Bool: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_DeviceCanPowerOff_Bool);
 pub const Firmware_ProgrammingTarget_String: TrackedDeviceProperty =
-    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_Firmware_ProgrammingTarget_String);
+    tracking::TrackedDeviceProperty(
+        sys::ETrackedDeviceProperty_Prop_Firmware_ProgrammingTarget_String,
+    );
 pub const DeviceClass_Int32: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_DeviceClass_Int32);
-pub const HasCamera_Bool: TrackedDeviceProperty = tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_HasCamera_Bool);
+pub const HasCamera_Bool: TrackedDeviceProperty =
+    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_HasCamera_Bool);
 pub const DriverVersion_String: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_DriverVersion_String);
 pub const Firmware_ForceUpdateRequired_Bool: TrackedDeviceProperty =
-    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_Firmware_ForceUpdateRequired_Bool);
-pub const ViveSystemButtonFixRequired_Bool: TrackedDeviceProperty =
-    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_ViveSystemButtonFixRequired_Bool);
+    tracking::TrackedDeviceProperty(
+        sys::ETrackedDeviceProperty_Prop_Firmware_ForceUpdateRequired_Bool,
+    );
+pub const ViveSystemButtonFixRequired_Bool: TrackedDeviceProperty = tracking::TrackedDeviceProperty(
+    sys::ETrackedDeviceProperty_Prop_ViveSystemButtonFixRequired_Bool,
+);
 pub const ParentDriver_Uint64: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_ParentDriver_Uint64);
 pub const ResourceRoot_String: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_ResourceRoot_String);
 pub const ReportsTimeSinceVSync_Bool: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_ReportsTimeSinceVSync_Bool);
-pub const SecondsFromVsyncToPhotons_Float: TrackedDeviceProperty =
-    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_SecondsFromVsyncToPhotons_Float);
+pub const SecondsFromVsyncToPhotons_Float: TrackedDeviceProperty = tracking::TrackedDeviceProperty(
+    sys::ETrackedDeviceProperty_Prop_SecondsFromVsyncToPhotons_Float,
+);
 pub const DisplayFrequency_Float: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_DisplayFrequency_Float);
 pub const UserIpdMeters_Float: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_UserIpdMeters_Float);
 pub const CurrentUniverseId_Uint64: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_CurrentUniverseId_Uint64);
-pub const PreviousUniverseId_Uint64: TrackedDeviceProperty =
-    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_PreviousUniverseId_Uint64);
+#[deprecated(note = "OpenVR deprecated this property; openvr_sys now maps it to Prop_Invalid.")]
+pub const PreviousUniverseId_Uint64: TrackedDeviceProperty = tracking::TrackedDeviceProperty(
+    sys::ETrackedDeviceProperty_Prop_PreviousUniverseId_Uint64_deprecated,
+);
 pub const DisplayFirmwareVersion_Uint64: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_DisplayFirmwareVersion_Uint64);
 pub const IsOnDesktop_Bool: TrackedDeviceProperty =
@@ -107,8 +126,9 @@ pub const DisplayGCBlackClamp_Float: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_DisplayGCBlackClamp_Float);
 pub const EdidProductID_Int32: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_EdidProductID_Int32);
-pub const CameraToHeadTransform_Matrix34: TrackedDeviceProperty =
-    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_CameraToHeadTransform_Matrix34);
+pub const CameraToHeadTransform_Matrix34: TrackedDeviceProperty = tracking::TrackedDeviceProperty(
+    sys::ETrackedDeviceProperty_Prop_CameraToHeadTransform_Matrix34,
+);
 pub const DisplayGCType_Int32: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_DisplayGCType_Int32);
 pub const DisplayGCOffset_Float: TrackedDeviceProperty =
@@ -127,16 +147,19 @@ pub const LensCenterRightU_Float: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_LensCenterRightU_Float);
 pub const LensCenterRightV_Float: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_LensCenterRightV_Float);
-pub const UserHeadToEyeDepthMeters_Float: TrackedDeviceProperty =
-    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_UserHeadToEyeDepthMeters_Float);
+pub const UserHeadToEyeDepthMeters_Float: TrackedDeviceProperty = tracking::TrackedDeviceProperty(
+    sys::ETrackedDeviceProperty_Prop_UserHeadToEyeDepthMeters_Float,
+);
 pub const CameraFirmwareVersion_Uint64: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_CameraFirmwareVersion_Uint64);
-pub const CameraFirmwareDescription_String: TrackedDeviceProperty =
-    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_CameraFirmwareDescription_String);
+pub const CameraFirmwareDescription_String: TrackedDeviceProperty = tracking::TrackedDeviceProperty(
+    sys::ETrackedDeviceProperty_Prop_CameraFirmwareDescription_String,
+);
 pub const DisplayFPGAVersion_Uint64: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_DisplayFPGAVersion_Uint64);
-pub const DisplayBootloaderVersion_Uint64: TrackedDeviceProperty =
-    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_DisplayBootloaderVersion_Uint64);
+pub const DisplayBootloaderVersion_Uint64: TrackedDeviceProperty = tracking::TrackedDeviceProperty(
+    sys::ETrackedDeviceProperty_Prop_DisplayBootloaderVersion_Uint64,
+);
 pub const DisplayHardwareVersion_Uint64: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_DisplayHardwareVersion_Uint64);
 pub const AudioFirmwareVersion_Uint64: TrackedDeviceProperty =
@@ -144,9 +167,13 @@ pub const AudioFirmwareVersion_Uint64: TrackedDeviceProperty =
 pub const CameraCompatibilityMode_Int32: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_CameraCompatibilityMode_Int32);
 pub const ScreenshotHorizontalFieldOfViewDegrees_Float: TrackedDeviceProperty =
-    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_ScreenshotHorizontalFieldOfViewDegrees_Float);
+    tracking::TrackedDeviceProperty(
+        sys::ETrackedDeviceProperty_Prop_ScreenshotHorizontalFieldOfViewDegrees_Float,
+    );
 pub const ScreenshotVerticalFieldOfViewDegrees_Float: TrackedDeviceProperty =
-    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_ScreenshotVerticalFieldOfViewDegrees_Float);
+    tracking::TrackedDeviceProperty(
+        sys::ETrackedDeviceProperty_Prop_ScreenshotVerticalFieldOfViewDegrees_Float,
+    );
 pub const DisplaySuppressed_Bool: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_DisplaySuppressed_Bool);
 pub const DisplayAllowNightMode_Bool: TrackedDeviceProperty =
@@ -155,14 +182,18 @@ pub const DisplayMCImageWidth_Int32: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_DisplayMCImageWidth_Int32);
 pub const DisplayMCImageHeight_Int32: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_DisplayMCImageHeight_Int32);
-pub const DisplayMCImageNumChannels_Int32: TrackedDeviceProperty =
-    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_DisplayMCImageNumChannels_Int32);
+pub const DisplayMCImageNumChannels_Int32: TrackedDeviceProperty = tracking::TrackedDeviceProperty(
+    sys::ETrackedDeviceProperty_Prop_DisplayMCImageNumChannels_Int32,
+);
 pub const DisplayMCImageData_Binary: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_DisplayMCImageData_Binary);
-pub const SecondsFromPhotonsToVblank_Float: TrackedDeviceProperty =
-    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_SecondsFromPhotonsToVblank_Float);
+pub const SecondsFromPhotonsToVblank_Float: TrackedDeviceProperty = tracking::TrackedDeviceProperty(
+    sys::ETrackedDeviceProperty_Prop_SecondsFromPhotonsToVblank_Float,
+);
 pub const DriverDirectModeSendsVsyncEvents_Bool: TrackedDeviceProperty =
-    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_DriverDirectModeSendsVsyncEvents_Bool);
+    tracking::TrackedDeviceProperty(
+        sys::ETrackedDeviceProperty_Prop_DriverDirectModeSendsVsyncEvents_Bool,
+    );
 pub const DisplayDebugMode_Bool: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_DisplayDebugMode_Bool);
 pub const GraphicsAdapterLuid_Uint64: TrackedDeviceProperty =
@@ -171,11 +202,16 @@ pub const AttachedDeviceId_String: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_AttachedDeviceId_String);
 pub const SupportedButtons_Uint64: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_SupportedButtons_Uint64);
-pub const Axis0Type_Int32: TrackedDeviceProperty = tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_Axis0Type_Int32);
-pub const Axis1Type_Int32: TrackedDeviceProperty = tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_Axis1Type_Int32);
-pub const Axis2Type_Int32: TrackedDeviceProperty = tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_Axis2Type_Int32);
-pub const Axis3Type_Int32: TrackedDeviceProperty = tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_Axis3Type_Int32);
-pub const Axis4Type_Int32: TrackedDeviceProperty = tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_Axis4Type_Int32);
+pub const Axis0Type_Int32: TrackedDeviceProperty =
+    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_Axis0Type_Int32);
+pub const Axis1Type_Int32: TrackedDeviceProperty =
+    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_Axis1Type_Int32);
+pub const Axis2Type_Int32: TrackedDeviceProperty =
+    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_Axis2Type_Int32);
+pub const Axis3Type_Int32: TrackedDeviceProperty =
+    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_Axis3Type_Int32);
+pub const Axis4Type_Int32: TrackedDeviceProperty =
+    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_Axis4Type_Int32);
 pub const ControllerRoleHint_Int32: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_ControllerRoleHint_Int32);
 pub const FieldOfViewLeftDegrees_Float: TrackedDeviceProperty =
@@ -184,12 +220,15 @@ pub const FieldOfViewRightDegrees_Float: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_FieldOfViewRightDegrees_Float);
 pub const FieldOfViewTopDegrees_Float: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_FieldOfViewTopDegrees_Float);
-pub const FieldOfViewBottomDegrees_Float: TrackedDeviceProperty =
-    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_FieldOfViewBottomDegrees_Float);
-pub const TrackingRangeMinimumMeters_Float: TrackedDeviceProperty =
-    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_TrackingRangeMinimumMeters_Float);
-pub const TrackingRangeMaximumMeters_Float: TrackedDeviceProperty =
-    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_TrackingRangeMaximumMeters_Float);
+pub const FieldOfViewBottomDegrees_Float: TrackedDeviceProperty = tracking::TrackedDeviceProperty(
+    sys::ETrackedDeviceProperty_Prop_FieldOfViewBottomDegrees_Float,
+);
+pub const TrackingRangeMinimumMeters_Float: TrackedDeviceProperty = tracking::TrackedDeviceProperty(
+    sys::ETrackedDeviceProperty_Prop_TrackingRangeMinimumMeters_Float,
+);
+pub const TrackingRangeMaximumMeters_Float: TrackedDeviceProperty = tracking::TrackedDeviceProperty(
+    sys::ETrackedDeviceProperty_Prop_TrackingRangeMaximumMeters_Float,
+);
 pub const ModeLabel_String: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_ModeLabel_String);
 pub const IconPathName_String: TrackedDeviceProperty =
@@ -197,21 +236,35 @@ pub const IconPathName_String: TrackedDeviceProperty =
 pub const NamedIconPathDeviceOff_String: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_NamedIconPathDeviceOff_String);
 pub const NamedIconPathDeviceSearching_String: TrackedDeviceProperty =
-    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_NamedIconPathDeviceSearching_String);
+    tracking::TrackedDeviceProperty(
+        sys::ETrackedDeviceProperty_Prop_NamedIconPathDeviceSearching_String,
+    );
 pub const NamedIconPathDeviceSearchingAlert_String: TrackedDeviceProperty =
-    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_NamedIconPathDeviceSearchingAlert_String);
-pub const NamedIconPathDeviceReady_String: TrackedDeviceProperty =
-    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_NamedIconPathDeviceReady_String);
+    tracking::TrackedDeviceProperty(
+        sys::ETrackedDeviceProperty_Prop_NamedIconPathDeviceSearchingAlert_String,
+    );
+pub const NamedIconPathDeviceReady_String: TrackedDeviceProperty = tracking::TrackedDeviceProperty(
+    sys::ETrackedDeviceProperty_Prop_NamedIconPathDeviceReady_String,
+);
 pub const NamedIconPathDeviceReadyAlert_String: TrackedDeviceProperty =
-    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_NamedIconPathDeviceReadyAlert_String);
+    tracking::TrackedDeviceProperty(
+        sys::ETrackedDeviceProperty_Prop_NamedIconPathDeviceReadyAlert_String,
+    );
 pub const NamedIconPathDeviceNotReady_String: TrackedDeviceProperty =
-    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_NamedIconPathDeviceNotReady_String);
+    tracking::TrackedDeviceProperty(
+        sys::ETrackedDeviceProperty_Prop_NamedIconPathDeviceNotReady_String,
+    );
 pub const NamedIconPathDeviceStandby_String: TrackedDeviceProperty =
-    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_NamedIconPathDeviceStandby_String);
+    tracking::TrackedDeviceProperty(
+        sys::ETrackedDeviceProperty_Prop_NamedIconPathDeviceStandby_String,
+    );
 pub const NamedIconPathDeviceAlertLow_String: TrackedDeviceProperty =
-    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_NamedIconPathDeviceAlertLow_String);
-pub const DisplayHiddenArea_Binary_Start: TrackedDeviceProperty =
-    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_DisplayHiddenArea_Binary_Start);
+    tracking::TrackedDeviceProperty(
+        sys::ETrackedDeviceProperty_Prop_NamedIconPathDeviceAlertLow_String,
+    );
+pub const DisplayHiddenArea_Binary_Start: TrackedDeviceProperty = tracking::TrackedDeviceProperty(
+    sys::ETrackedDeviceProperty_Prop_DisplayHiddenArea_Binary_Start,
+);
 pub const DisplayHiddenArea_Binary_End: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_DisplayHiddenArea_Binary_End);
 pub const UserConfigPath_String: TrackedDeviceProperty =
@@ -225,9 +278,12 @@ pub const HasControllerComponent_Bool: TrackedDeviceProperty =
 pub const HasCameraComponent_Bool: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_HasCameraComponent_Bool);
 pub const HasDriverDirectModeComponent_Bool: TrackedDeviceProperty =
-    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_HasDriverDirectModeComponent_Bool);
-pub const HasVirtualDisplayComponent_Bool: TrackedDeviceProperty =
-    tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_HasVirtualDisplayComponent_Bool);
+    tracking::TrackedDeviceProperty(
+        sys::ETrackedDeviceProperty_Prop_HasDriverDirectModeComponent_Bool,
+    );
+pub const HasVirtualDisplayComponent_Bool: TrackedDeviceProperty = tracking::TrackedDeviceProperty(
+    sys::ETrackedDeviceProperty_Prop_HasVirtualDisplayComponent_Bool,
+);
 pub const VendorSpecific_Reserved_Start: TrackedDeviceProperty =
     tracking::TrackedDeviceProperty(sys::ETrackedDeviceProperty_Prop_VendorSpecific_Reserved_Start);
 pub const VendorSpecific_Reserved_End: TrackedDeviceProperty =
