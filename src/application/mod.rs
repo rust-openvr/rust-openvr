@@ -56,4 +56,36 @@ impl Application {
             unsafe { self.0.IsApplicationInstalled.unwrap()(key.as_ptr().cast_mut().cast()) };
         Ok(installed)
     }
+
+    pub fn set_application_auto_launch_raw(&mut self, key: &CStr, auto_launch: bool) -> Result<()> {
+        let err = unsafe {
+            self.0.SetApplicationAutoLaunch.unwrap()(key.as_ptr().cast_mut().cast(), auto_launch)
+        };
+        VRApplicationError::new(err)
+    }
+
+    pub fn set_application_auto_launch(&mut self, key: &str, auto_launch: bool) -> Result<()> {
+        let name = if let Ok(s) = CString::new(key) {
+            s
+        } else {
+            unreachable!()
+        };
+        self.set_application_auto_launch_raw(&name, auto_launch)
+    }
+
+    pub fn get_application_auto_launch_raw(&mut self, key: &CStr) -> Result<bool> {
+        let auto_launch =
+            unsafe { self.0.GetApplicationAutoLaunch.unwrap()(key.as_ptr().cast_mut().cast()) };
+        Ok(auto_launch)
+    }
+
+    pub fn get_application_auto_launch(&mut self, key: &str) -> Result<bool> {
+        let name = if let Ok(s) = CString::new(key) {
+            s
+        } else {
+            unreachable!()
+        };
+
+        self.get_application_auto_launch_raw(&name)
+    }
 }
